@@ -1,7 +1,10 @@
-import { Placeholder } from "@/components/shell/placeholder"
+import { SignUpForm } from "@/components/auth/sign-up-form"
 
 export const metadata = { title: "Sign Up" }
 
-export default function Page() {
-  return <Placeholder title="Sign Up" description="" spec="FR-AUTH-01" />
+type Props = { searchParams: Promise<{ next?: string }> }
+
+export default async function SignUpPage({ searchParams }: Props) {
+  const { next } = await searchParams
+  return <SignUpForm next={next} />
 }

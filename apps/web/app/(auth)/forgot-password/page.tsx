@@ -1,7 +1,7 @@
-import { Placeholder } from "@/components/shell/placeholder"
+import { ForgotPasswordForm } from "@/components/auth/forgot-password-form"
 
 export const metadata = { title: "Forgot Password" }
 
-export default function Page() {
-  return <Placeholder title="Forgot Password" description="We will send you a reset code." spec="FR-AUTH-06" />
+export default function ForgotPasswordPage() {
+  return <ForgotPasswordForm />
 }

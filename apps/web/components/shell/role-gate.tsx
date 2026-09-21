@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { RiLockLine } from "@remixicon/react"
 
 import { useSession } from "@/components/providers/session-provider"
@@ -25,6 +26,7 @@ export function RoleGate({
   children: React.ReactNode
 }) {
   const { role, ready } = useSession()
+  const pathname = usePathname()
 
   if (!ready) return <Skeleton className="h-64 w-full" />
   if (hasAnyRole(role, allow)) return <>{children}</>
@@ -47,7 +49,7 @@ export function RoleGate({
           </Button>
         ) : (
           <Button asChild>
-            <Link href="/sign-in">Sign In</Link>
+            <Link href={`/sign-in?next=${encodeURIComponent(pathname)}`}>Sign In</Link>
           </Button>
         )}
       </EmptyContent>

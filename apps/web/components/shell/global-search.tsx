@@ -4,6 +4,7 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { RiFireLine, RiSearchLine } from "@remixicon/react"
 
+import { startNavigationProgress } from "@/components/shell/route-progress"
 import { Button } from "@/components/ui/button"
 import {
   CommandDialog,
@@ -44,6 +45,7 @@ export function GlobalSearch() {
 
   function go(query: string) {
     setOpen(false)
+    startNavigationProgress()
     router.push(`/fact-checks?q=${encodeURIComponent(query)}`)
   }
 

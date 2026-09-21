@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   RiChat3Line,
   RiThumbDownFill,
@@ -45,6 +46,7 @@ export function RatingPanel({
   className?: string
 }) {
   const { user, role } = useSession()
+  const pathname = usePathname()
   const [counts, setCounts] = React.useState(initial)
   const [vote, setVote] = React.useState<Vote | null>(null)
   const [comment, setComment] = React.useState("")
@@ -116,7 +118,10 @@ export function RatingPanel({
 
       {!user ? (
         <p className="text-xs text-muted-foreground">
-          <Link href="/sign-in" className="font-medium text-primary underline-offset-4 hover:underline">
+          <Link
+            href={`/sign-in?next=${encodeURIComponent(pathname)}`}
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
             Sign in
           </Link>{" "}
           to rate this verdict. Ratings help retrain Zuula.

@@ -1,0 +1,45 @@
+/* Loader motion: the lens scans, settles, the check draws in, and a "found" ping ripples out. */
+
+.lens {
+  transform-box: view-box;
+  animation: zuula-scan 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.check {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: zuula-check 2.8s ease-out infinite;
+}
+
+.ping {
+  opacity: 0;
+  transform-box: view-box;
+  transform-origin: 26px 26px;
+  animation: zuula-ping 2.8s ease-out infinite;
+}
+
+@keyframes zuula-scan {
+  0% { transform: translate(0, 0); }
+  12% { transform: translate(-3px, 2px); }
+  26% { transform: translate(3px, -2px); }
+  40% { transform: translate(-2px, -2px); }
+  52%, 100% { transform: translate(0, 0); }
+}
+
+@keyframes zuula-check {
+  0%, 50% { stroke-dashoffset: 1; opacity: 1; }
+  64%, 88% { stroke-dashoffset: 0; opacity: 1; }
+  97% { stroke-dashoffset: 0; opacity: 0; }
+  100% { stroke-dashoffset: 1; opacity: 0; }
+}
+
+@keyframes zuula-ping {
+  0%, 62% { opacity: 0; transform: scale(1); }
+  65% { opacity: 0.5; }
+  92%, 100% { opacity: 0; transform: scale(1.5); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lens, .ping { animation: none; }
+  .check { animation: none; stroke-dashoffset: 0; }
+}

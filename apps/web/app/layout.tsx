@@ -1,8 +1,10 @@
+import { Suspense } from "react"
 import type { Metadata } from "next"
 import { Geist, Geist_Mono, Lora, Raleway } from "next/font/google"
 
 import "./globals.css"
 import { SessionProvider } from "@/components/providers/session-provider"
+import { RouteProgress } from "@/components/shell/route-progress"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -60,6 +62,9 @@ export default function RootLayout({
         >
           Skip to content
         </a>
+        <Suspense fallback={null}>
+          <RouteProgress />
+        </Suspense>
         <ThemeProvider>
           <SessionProvider>
             <TooltipProvider>

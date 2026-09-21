@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner"
 
 import { useSession } from "@/components/providers/session-provider"
+import { startNavigationProgress } from "@/components/shell/route-progress"
 import { AnalysisProgress, type AnalysisState } from "@/components/submission/analysis-progress"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -105,6 +106,7 @@ function Tracker({ trackingId, submission }: { trackingId: string; submission: S
   React.useEffect(() => {
     if (state !== "done" || countdown === null) return
     if (countdown === 0) {
+      startNavigationProgress()
       router.push(reportFor(submission))
       return
     }

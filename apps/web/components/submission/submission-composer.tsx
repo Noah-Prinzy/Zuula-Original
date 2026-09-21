@@ -15,6 +15,7 @@ import { Controller, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 
 import { useSession } from "@/components/providers/session-provider"
+import { startNavigationProgress } from "@/components/shell/route-progress"
 import { CaptchaField } from "@/components/submission/captcha-field"
 import { MediaDropzone } from "@/components/submission/media-dropzone"
 import { Button } from "@/components/ui/button"
@@ -126,6 +127,7 @@ export function SubmissionComposer({
       submittedAt: new Date().toISOString(),
     })
     toast.success("Submitted for checking", { description: `Tracking ID ${trackingId}` })
+    startNavigationProgress()
     router.push(`/submissions/${trackingId}`)
   }
 

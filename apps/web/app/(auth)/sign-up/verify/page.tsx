@@ -1,7 +1,7 @@
-import { Placeholder } from "@/components/shell/placeholder"
+import { VerifyAccountForm } from "@/components/auth/verify-account-form"
 
 export const metadata = { title: "Verify Account" }
 
-export default function Page() {
-  return <Placeholder title="Verify Account" description="Enter the code we sent you." spec="FR-AUTH-03" />
+export default function VerifyAccountPage() {
+  return <VerifyAccountForm />
 }

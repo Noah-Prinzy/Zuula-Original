@@ -1,7 +1,7 @@
-import { Placeholder } from "@/components/shell/placeholder"
+import { TwoFactorForm } from "@/components/auth/two-factor-form"
 
 export const metadata = { title: "Two-Factor" }
 
-export default function Page() {
-  return <Placeholder title="Two-Factor" description="Enter the code from your authenticator app." spec="FR-AUTH-05" />
+export default function TwoFactorPage() {
+  return <TwoFactorForm />
 }

@@ -74,10 +74,10 @@ Updated 21 Sep 2026. All pages run on mock data (`apps/web/lib/mock`); there is 
 
 | Area | Built | In progress | Placeholder |
 |---|---|---|---|
-| Public | Home, Verify, Status, Library, Report | — | About, API, Privacy, Terms, Offline |
+| Public | Home, Verify, Status, Library, Report, About, Privacy, Terms, Offline | — | API |
 | Authentication | All 6 | — | — |
 | Account | All 6 | — | — |
 | Review | All 4 | — | — |
-| Admin | — | All 8 | — |
+| Admin | All 8 | — | — |
 
 Not yet done across all pages: translations for the 5 languages (the switcher only stores the chosen locale), PWA manifest and service worker, accessibility and Lighthouse pass.

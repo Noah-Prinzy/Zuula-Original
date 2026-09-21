@@ -1,4 +1,4 @@
-import { SplitText } from "@/components/motion/split-text"
+import { KineticText } from "@/components/motion/text/kinetic-text"
 import { cn } from "@/lib/utils"
 
 const delay = (d: number) => ({ "--d": d }) as React.CSSProperties
@@ -18,7 +18,7 @@ export function PageHeader({
     <div className={cn("flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between", className)}>
       <div className="flex flex-col gap-1">
         <h1 className="font-heading text-2xl font-bold tracking-tight">
-          <SplitText text={title} />
+          <KineticText text={title} />
         </h1>
         {description && (
           <p className="enter text-sm text-muted-foreground" style={delay(2)}>

@@ -1,7 +1,13 @@
-import { Placeholder } from "@/components/shell/placeholder"
+import { PageHeader } from "@/components/shell/page-header"
+import { SourceManager } from "@/components/admin/source-manager"
 
 export const metadata = { title: "Sources" }
 
 export default function Page() {
-  return <Placeholder title="Sources" description="Trusted sources used to cross-reference claims." spec="FR-ADMIN-03" />
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader title="Sources" description="The trusted sources claims are cross-referenced against." />
+      <SourceManager />
+    </div>
+  )
 }

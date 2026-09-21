@@ -1,3 +1,5 @@
+import { KineticText } from "@/components/motion/text/kinetic-text"
+import { ScrambleText } from "@/components/motion/text/scramble-text"
 import { cn } from "@/lib/utils"
 
 // A page band that fills the viewport below the sticky header (see `section-screen` in
@@ -46,14 +48,14 @@ export function SectionTitle({
     >
       {eyebrow && (
         <p className="font-heading text-xs font-semibold tracking-widest text-primary uppercase">
-          {eyebrow}
+          <ScrambleText text={eyebrow} />
         </p>
       )}
       <h2
         id={id}
         className="rule-draw font-heading text-3xl font-bold tracking-tight text-balance md:text-4xl"
       >
-        {title}
+        <KineticText text={title} />
       </h2>
       {description && (
         <p className="max-w-2xl text-base text-balance text-muted-foreground md:text-lg">

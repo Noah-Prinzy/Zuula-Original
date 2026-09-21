@@ -1,0 +1,265 @@
+"use client"
+
+import * as React from "react"
+import { RiMore2Line, RiSearchLine } from "@remixicon/react"
+import { toast } from "sonner"
+
+import { DataTable, SortableHeader, type AdminColumn } from "@/components/admin/data-table"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { Textarea } from "@/components/ui/textarea"
+import { SAMPLE_USERS, type AdminUser, type UserStatus } from "@/lib/mock/admin"
+import { ROLE_LABELS, ROLES, type Role } from "@/lib/roles"
+import { cn, initials } from "@/lib/utils"
+
+const STATUS_STYLE: Record<UserStatus, string> = {
+  active: "border-verdict-authentic/40 bg-verdict-authentic/10 text-verdict-authentic",
+  suspended: "border-verdict-false/40 bg-verdict-false/10 text-verdict-false",
+  pending: "border-verdict-likely-false/40 bg-verdict-likely-false/10 text-verdict-likely-false",
+}
+
+type Pending =
+  | { kind: "role"; user: AdminUser; role: Role }
+  | { kind: "suspend"; user: AdminUser }
+  | null
+
+// FR-ADMIN-02: activate, suspend and change roles.
+export function UserManagement() {
+  const [users, setUsers] = React.useState(SAMPLE_USERS)
+  const [query, setQuery] = React.useState("")
+  const [role, setRole] = React.useState<Role | "">("")
+  const [status, setStatus] = React.useState<UserStatus | "">("")
+  const [pending, setPending] = React.useState<Pending>(null)
+  const [reason, setReason] = React.useState("")
+
+  const update = React.useCallback((id: string, patch: Partial<AdminUser>) => {
+    setUsers((us) => us.map((u) => (u.id === id ? { ...u, ...patch } : u)))
+  }, [])
+
+  const rows = React.useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return users.filter(
+      (u) =>
+        (!q || `${u.name} ${u.email}`.toLowerCase().includes(q)) &&
+        (!role || u.role === role) &&
+        (!status || u.status === status)
+    )
+  }, [users, query, role, status])
+
+  const columns = React.useMemo<AdminColumn<AdminUser>[]>(
+    () => [
+      {
+        id: "name",
+        accessorFn: (u) => u.name,
+        sortFn: "alphanumeric",
+        header: ({ column }) => <SortableHeader column={column} label="User" />,
+        cell: ({ row: { original: u } }) => (
+          <div className="flex min-w-48 items-center gap-3">
+            <Avatar className="size-8">
+              <AvatarFallback>{initials(u.name)}</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+              <span className="font-medium">{u.name}</span>
+              <span className="text-xs text-muted-foreground">{u.email}</span>
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: "role",
+        header: "Role",
+        cell: ({ row: { original: u } }) => <Badge variant="outline">{ROLE_LABELS[u.role]}</Badge>,
+      },
+      {
+        id: "status",
+        header: "Status",
+        cell: ({ row: { original: u } }) => (
+          <span className={cn("inline-flex h-5 items-center border px-1.5 text-xs capitalize", STATUS_STYLE[u.status])}>
+            {u.status === "pending" ? "Pending accreditation" : u.status}
+          </span>
+        ),
+      },
+      {
+        id: "ratings",
+        accessorFn: (u) => u.ratings,
+        sortFn: "basic",
+        header: ({ column }) => <SortableHeader column={column} label="Ratings" />,
+        cell: ({ row: { original: u } }) => <span className="font-mono tabular-nums">{u.ratings}</span>,
+      },
+      {
+        id: "lastActive",
+        accessorFn: (u) => u.lastActive,
+        sortFn: "alphanumeric",
+        header: ({ column }) => <SortableHeader column={column} label="Last active" />,
+        cell: ({ row: { original: u } }) => (
+          <span className="text-xs whitespace-nowrap text-muted-foreground">
+            {u.lastActive} <br /> joined {u.joined}
+          </span>
+        ),
+      },
+      {
+        id: "actions",
+        header: () => <span className="sr-only">Actions</span>,
+        cell: ({ row: { original: u } }) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${u.name}`}>
+                <RiMore2Line aria-hidden />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-52">
+              <DropdownMenuLabel>{u.name}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {u.status === "pending" && (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    update(u.id, { status: "active", role: "journalist" })
+                    toast.success(`${u.name} is now a Verified Journalist`)
+                  }}
+                >
+                  Approve accreditation
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Change role</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuRadioGroup
+                    value={u.role}
+                    onValueChange={(r) => r !== u.role && setPending({ kind: "role", user: u, role: r as Role })}
+                  >
+                    {ROLES.map((r) => (
+                      <DropdownMenuRadioItem key={r} value={r}>
+                        {ROLE_LABELS[r]}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
+              {u.status === "suspended" ? (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    update(u.id, { status: "active" })
+                    toast.success(`${u.name} reactivated`)
+                  }}
+                >
+                  Reactivate
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem variant="destructive" onSelect={() => setPending({ kind: "suspend", user: u })}>
+                  Suspend
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
+      },
+    ],
+    [update]
+  )
+
+  function confirmPending() {
+    if (!pending) return
+    if (pending.kind === "role") {
+      update(pending.user.id, { role: pending.role })
+      toast.success(`${pending.user.name} is now ${ROLE_LABELS[pending.role]}`, { description: "Logged in the audit trail." })
+    } else {
+      update(pending.user.id, { status: "suspended" })
+      toast.success(`${pending.user.name} suspended`, { description: "Their ratings no longer count. Logged in the audit trail." })
+    }
+    setPending(null)
+    setReason("")
+  }
+
+  const counts = {
+    total: users.length,
+    suspended: users.filter((u) => u.status === "suspended").length,
+    pending: users.filter((u) => u.status === "pending").length,
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+        <div className="relative flex-1">
+          <RiSearchLine className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by name or email…" aria-label="Search users" className="pl-9" />
+        </div>
+        <label htmlFor="users-role" className="sr-only">Role</label>
+        <NativeSelect id="users-role" value={role} onChange={(e) => setRole(e.target.value as Role | "")}>
+          <NativeSelectOption value="">All roles</NativeSelectOption>
+          {ROLES.map((r) => (
+            <NativeSelectOption key={r} value={r}>{ROLE_LABELS[r]}</NativeSelectOption>
+          ))}
+        </NativeSelect>
+        <label htmlFor="users-status" className="sr-only">Status</label>
+        <NativeSelect id="users-status" value={status} onChange={(e) => setStatus(e.target.value as UserStatus | "")}>
+          <NativeSelectOption value="">All statuses</NativeSelectOption>
+          <NativeSelectOption value="active">Active</NativeSelectOption>
+          <NativeSelectOption value="pending">Pending accreditation</NativeSelectOption>
+          <NativeSelectOption value="suspended">Suspended</NativeSelectOption>
+        </NativeSelect>
+      </div>
+      <p className="text-sm text-muted-foreground" aria-live="polite">
+        {rows.length} of {counts.total} users · {counts.pending} pending accreditation · {counts.suspended} suspended
+      </p>
+
+      <DataTable data={rows} columns={columns} getRowId={(u) => u.id} initialSorting={[{ id: "name", desc: false }]} />
+
+      <AlertDialog open={pending !== null} onOpenChange={(o) => !o && setPending(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pending?.kind === "role"
+                ? `Make ${pending.user.name} ${ROLE_LABELS[pending.role]}?`
+                : `Suspend ${pending?.user.name}?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pending?.kind === "role"
+                ? pending.role === "expert" || pending.role === "admin"
+                  ? "They'll need to set up two-factor authentication at next sign-in."
+                  : "Their access changes immediately."
+                : "They can't sign in, and their ratings stop counting towards scores."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason (recorded in the audit log)" aria-label="Reason" rows={3} />
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={reason.trim().length < 5}
+              onClick={confirmPending}
+              className={pending?.kind === "suspend" ? "bg-destructive text-white hover:bg-destructive/90" : undefined}
+            >
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  )
+}

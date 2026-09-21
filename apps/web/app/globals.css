@@ -328,3 +328,200 @@ html:has(.snap-page) {
 .link-grow:focus-visible {
   background-size: 100% 1px;
 }
+
+/* Text emphasis ----------------------------------------------------------------------------
+   Text-level effects from components/motion/text/*: hover-reactive headlines (KineticText),
+   marker and scribble emphasis (Emphasis), word carousels (WordRotator) and decoding labels
+   (ScrambleText). Same rules as "Motion + sections": motion only under
+   prefers-reduced-motion: no-preference, and anything inside an unrevealed [data-reveal]
+   waits for the reveal. Static styles (the marker, the underline) show either way. */
+
+:root {
+  --mark: color-mix(in oklch, var(--primary) 26%, transparent);
+  --scribble: var(--primary);
+  --kinetic-accent: var(--primary);
+}
+
+@keyframes zuula-mark {
+  from {
+    background-size: 0% var(--mark-height, 0.36em);
+  }
+}
+@keyframes zuula-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes zuula-redraw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes zuula-roll-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0.85em, 0) rotateX(-70deg);
+    filter: blur(4px);
+  }
+}
+@keyframes zuula-roll-out {
+  to {
+    opacity: 0;
+    transform: translate3d(0, -0.85em, 0) rotateX(70deg);
+    filter: blur(4px);
+  }
+}
+
+/* Marker: a highlighter band low on the line; on hover it floods up behind the whole word. */
+.em-mark {
+  background-image: linear-gradient(var(--mark), var(--mark));
+  background-repeat: no-repeat;
+  background-position: 0 92%;
+  background-size: 100% var(--mark-height, 0.36em);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding-inline: 0.08em;
+  margin-inline: -0.08em;
+  transition: background-size 450ms var(--ease-out-soft);
+}
+.em-mark:hover {
+  background-size: 100% 88%;
+}
+.em-mark-light {
+  --mark: oklch(1 0 0 / 0.22);
+}
+.em-mark-solid {
+  --mark: color-mix(in oklch, var(--primary) 78%, transparent);
+}
+
+/* Scribble: a hand-drawn stroke under the text. */
+.em-scribble {
+  position: relative;
+  white-space: nowrap;
+}
+.em-scribble svg {
+  position: absolute;
+  left: -3%;
+  bottom: -0.3em;
+  width: 106%;
+  height: 0.45em;
+  overflow: visible;
+  fill: none;
+  stroke: var(--scribble);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+.em-scribble path {
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+}
+.em-scribble-light {
+  --scribble: var(--chart-1);
+}
+
+/* Word carousel: one grid cell holds every word; the slot's width eases to the active one. */
+.word-rotator {
+  display: inline-grid;
+  justify-items: start;
+  vertical-align: bottom;
+  overflow: clip;
+  padding-block: 0.1em;
+  margin-block: -0.1em;
+  padding-inline: 0.08em;
+  margin-inline: -0.08em;
+  perspective: 600px;
+  text-align: left;
+  box-sizing: content-box;
+  transition: width 600ms var(--ease-out-soft);
+}
+.word-rotator-item {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+.word-rotator-item:not([data-state="in"]) {
+  visibility: hidden;
+}
+.word-rotator-char {
+  display: inline-block;
+}
+.word-rotator-marker {
+  background: linear-gradient(var(--mark), var(--mark)) no-repeat 0 90% / 100% 0.36em;
+}
+
+/* Decoding label: each letter keeps its real width while it flickers. */
+.scramble-char {
+  display: inline-grid;
+}
+.scramble-char > * {
+  grid-area: 1 / 1;
+}
+.scramble-ghost {
+  visibility: hidden;
+}
+.scramble-char[data-busy] {
+  opacity: 0.55;
+}
+
+.kinetic-char {
+  display: inline-block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .em-mark {
+    animation: zuula-mark 900ms var(--ease-out-soft) backwards;
+    animation-delay: var(--mark-delay, 600ms);
+  }
+  .em-scribble path {
+    animation: zuula-draw 1100ms var(--ease-out-soft) backwards;
+    animation-delay: var(--mark-delay, 600ms);
+  }
+  .em-scribble:hover path {
+    animation: zuula-redraw 700ms var(--ease-out-soft);
+  }
+  html[data-motion] [data-reveal]:not([data-revealed]) .em-mark,
+  html[data-motion] [data-reveal]:not([data-revealed]) .em-scribble path {
+    animation-play-state: paused;
+  }
+
+  .word-rotator-item[data-state="out"] {
+    visibility: visible;
+  }
+  .word-rotator-item[data-state="in"] .word-rotator-char {
+    animation: zuula-roll-in 650ms var(--ease-out-soft) backwards;
+    animation-delay: calc(var(--base, 0ms) + var(--c, 0) * 32ms);
+  }
+  .word-rotator-item[data-state="out"] .word-rotator-char {
+    animation: zuula-roll-out 420ms cubic-bezier(0.5, 0, 0.75, 0) forwards;
+    animation-delay: calc(var(--c, 0) * 22ms);
+  }
+
+  /* Hover-reactive headline: the hovered word's letters lift in a wave and take the accent
+     colour; the other words step back. Only on devices that really hover. */
+  @media (hover: hover) {
+    .kinetic-word {
+      transition: opacity 300ms ease-out;
+    }
+    .kinetic-char {
+      transition:
+        transform 380ms var(--ease-out-soft),
+        color 250ms ease-out;
+      transition-delay: calc(var(--c, 0) * 24ms);
+    }
+    .kinetic-word:hover .kinetic-char {
+      transform: translate3d(0, -0.12em, 0);
+      color: var(--kinetic-accent);
+    }
+    /* Scoped to the heading, so a line built from several fragments (KineticText +
+       WordRotator) dims as one. */
+    :has(> .kinetic .kinetic-word:hover) > .kinetic .kinetic-word:not(:hover),
+    :has(> .kinetic .kinetic-word:hover) > .word-rotator {
+      opacity: 0.5;
+    }
+    .word-rotator {
+      transition:
+        width 600ms var(--ease-out-soft),
+        opacity 300ms ease-out;
+    }
+  }
+}

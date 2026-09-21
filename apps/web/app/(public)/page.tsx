@@ -14,7 +14,10 @@ import Image from "next/image"
 import { PHOTO_QUALITY, PhotoCredit, PhotoHero } from "@/components/decor/photo-hero"
 import { PHOTOS } from "@/components/decor/photos"
 import { ScreenSection, SectionTitle, SnapPage } from "@/components/motion/section"
-import { SplitText } from "@/components/motion/split-text"
+import { Emphasis } from "@/components/motion/text/emphasis"
+import { KineticText } from "@/components/motion/text/kinetic-text"
+import { ScrambleText } from "@/components/motion/text/scramble-text"
+import { WordRotator } from "@/components/motion/text/word-rotator"
 import { SubmissionComposer } from "@/components/submission/submission-composer"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -70,15 +73,26 @@ export default function HomePage() {
           >
             Uganda Fact-Guard · Victoria University CIT
           </Badge>
-          <h1 className="max-w-4xl font-heading text-4xl font-bold tracking-tight text-balance drop-shadow-sm md:text-5xl xl:text-6xl">
-            <SplitText text="Check a claim before you share it" delay={120} />
+          <h1 className="max-w-4xl font-heading [--kinetic-accent:var(--chart-1)] text-4xl font-bold tracking-tight text-balance drop-shadow-sm md:text-5xl xl:text-6xl">
+            <KineticText text="Check a" delay={120} />{" "}
+            <WordRotator
+              words={["claim", "rumour", "photo", "video", "voice note"]}
+              delay={230}
+              marker
+              className="em-mark-solid"
+            />{" "}
+            <KineticText text="before you share it" delay={120} offset={3} />
           </h1>
           <p
             className="enter max-w-3xl text-base text-balance text-white/85 md:text-lg xl:text-xl"
             style={delay(4)}
           >
             Paste a message, a link or upload media. Zuula tells you whether it is authentic, false
-            or AI-generated — and shows you the sources.
+            or AI-generated — and{" "}
+            <Emphasis variant="scribble" tone="light" delay={900}>
+              shows you the sources
+            </Emphasis>
+            .
           </p>
 
           <div className="enter mt-4 w-full max-w-5xl" style={delay(6)}>
@@ -210,13 +224,13 @@ export default function HomePage() {
         <div className="page-container flex flex-col gap-12 py-16 text-primary-foreground">
           <div data-reveal className="flex max-w-3xl flex-col gap-3">
             <p className="font-heading text-xs font-semibold tracking-widest uppercase opacity-80">
-              Why Zuula
+              <ScrambleText text="Why Zuula" />
             </p>
             <h2
               id="why-title"
-              className="font-heading text-3xl font-bold tracking-tight text-balance md:text-5xl"
+              className="font-heading text-3xl font-bold tracking-tight text-balance [--kinetic-accent:var(--chart-1)] [--mark:oklch(1_0_0/0.22)] md:text-5xl"
             >
-              <SplitText text="Built for the way news travels in Uganda." />
+              <KineticText text="Built for the way news travels in Uganda." highlight={["Uganda"]} />
             </h2>
           </div>
           <div data-reveal="stagger" className="grid gap-4 md:grid-cols-3">

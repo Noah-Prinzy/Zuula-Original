@@ -1,7 +1,13 @@
-import { Placeholder } from "@/components/shell/placeholder"
+import { PageHeader } from "@/components/shell/page-header"
+import { UserManagement } from "@/components/admin/user-management"
 
 export const metadata = { title: "Users" }
 
 export default function Page() {
-  return <Placeholder title="Users" description="Activate, suspend and change user roles." spec="FR-ADMIN-02" />
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader title="Users" description="Activate, suspend, approve accreditations and change roles." />
+      <UserManagement />
+    </div>
+  )
 }

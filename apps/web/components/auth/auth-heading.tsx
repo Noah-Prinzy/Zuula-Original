@@ -1,6 +1,6 @@
 import type { RemixiconComponentType } from "@remixicon/react"
 
-import { SplitText } from "@/components/motion/split-text"
+import { KineticText } from "@/components/motion/text/kinetic-text"
 
 export function AuthHeading({
   title,
@@ -19,7 +19,7 @@ export function AuthHeading({
         </span>
       )}
       <h1 className="font-heading text-2xl font-bold tracking-tight">
-        <SplitText text={title} delay={Icon ? 90 : 0} />
+        <KineticText text={title} delay={Icon ? 90 : 0} />
       </h1>
       {description && (
         <p className="enter text-sm text-muted-foreground" style={{ "--d": 2 } as React.CSSProperties}>

@@ -1,7 +1,13 @@
-import { Placeholder } from "@/components/shell/placeholder"
+import { PageHeader } from "@/components/shell/page-header"
+import { Accreditation } from "@/components/account/accreditation"
 
 export const metadata = { title: "Accreditation" }
 
 export default function Page() {
-  return <Placeholder title="Accreditation" description="Apply for or manage Verified Journalist status." spec="FR-AUTH-02, FR-RATE-06" />
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader title="Accreditation" description="Verified Journalists help the community judge verdicts." />
+      <Accreditation />
+    </div>
+  )
 }

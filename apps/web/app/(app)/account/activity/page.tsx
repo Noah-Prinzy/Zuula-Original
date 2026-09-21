@@ -1,7 +1,13 @@
-import { Placeholder } from "@/components/shell/placeholder"
+import { PageHeader } from "@/components/shell/page-header"
+import { ActivityList } from "@/components/account/activity-list"
 
 export const metadata = { title: "Activity" }
 
 export default function Page() {
-  return <Placeholder title="Activity" description="Your submissions and ratings." spec="FR-SUBMIT-07, FR-NOTIFY-03" />
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader title="Activity" description="Everything you've submitted and rated." />
+      <ActivityList />
+    </div>
+  )
 }

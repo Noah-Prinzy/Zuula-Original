@@ -9,6 +9,7 @@ import {
 
 import { PageHeader } from "@/components/shell/page-header"
 import { SubmissionComposer } from "@/components/submission/submission-composer"
+import { TrackingLookup } from "@/components/submission/tracking-lookup"
 
 export const metadata = {
   title: "Verify",
@@ -74,6 +75,13 @@ export default function VerifyPage() {
                 </li>
               ))}
             </ul>
+          </section>
+
+          <section aria-labelledby="track-title" className="border bg-card p-4">
+            <h2 id="track-title" className="mb-3 font-heading text-sm font-bold">
+              Already submitted?
+            </h2>
+            <TrackingLookup />
           </section>
 
           <div className="flex flex-col gap-3 text-sm text-muted-foreground">

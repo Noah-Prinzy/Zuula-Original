@@ -135,6 +135,164 @@
     "body": "This area requires {roles} access.",
     "or": "or"
   },
+  "Validation": {
+    "identifierRequired": "Enter your email or phone number.",
+    "identifierInvalid": "Enter a valid email or Ugandan phone number (07XX XXX XXX).",
+    "passwordRequired": "Enter your password.",
+    "passwordMin": "Use at least {min} characters.",
+    "passwordWeak": "Make it stronger: mix letters, numbers and symbols.",
+    "passwordsMismatch": "Passwords don't match.",
+    "nameRequired": "Enter your full name.",
+    "consentRequired": "You need to accept the Terms and Privacy Policy.",
+    "codeSixDigits": "Enter the 6-digit code.",
+    "codeAllDigits": "Enter all 6 digits.",
+    "codeInvalid": "That code is incorrect or has expired."
+  },
+  "Auth": {
+    "layout": {
+      "headline": "Stop misinformation before it spreads.",
+      "point1": "Check messages, links, photos, voice notes and videos",
+      "point2": "See the sources behind every verdict",
+      "point3": "Rate verdicts and help train Zuula",
+      "point4": "Get alerts about misinformation on topics you follow",
+      "headlineHighlight": "spreads.",
+      "developedBy": "Developed by the Centre for Intelligent Technologies, Victoria University Kampala."
+    },
+    "meta": {
+      "signIn": "Sign In",
+      "signUp": "Sign Up",
+      "verify": "Verify Account",
+      "twoFactor": "Two-Factor",
+      "forgot": "Forgot Password",
+      "reset": "Reset Password"
+    },
+    "fields": {
+      "identifier": "Email or phone",
+      "identifierPlaceholder": "you@example.com or 07XX XXX XXX",
+      "password": "Password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "confirmNewPassword": "Confirm new password",
+      "fullName": "Full name"
+    },
+    "password": {
+      "show": "Show password",
+      "hide": "Hide password",
+      "met": "(met)",
+      "notMet": "(not met)",
+      "rules": {
+        "length": "At least {min} characters",
+        "case": "Upper and lower case letters",
+        "number": "A number",
+        "symbol": "A symbol"
+      },
+      "strength": {
+        "0": "Too weak",
+        "1": "Weak",
+        "2": "Fair",
+        "3": "Good",
+        "4": "Strong"
+      }
+    },
+    "demo": {
+      "roles": "Demo: any password works. Use <code>journalist@</code>, <code>expert@</code> or <code>admin@</code> any domain to try other roles.",
+      "code": "Demo: any 6 digits work, except 000000.",
+      "twoFactor": "Demo: any 6 digits work except 000000. Backup codes look like ABCD-1234."
+    },
+    "social": {
+      "divider": "or continue with",
+      "notConnected": "{provider} sign-in isn't connected yet",
+      "notConnectedBody": "It will work once the authentication API is live."
+    },
+    "resend": {
+      "prompt": "Didn't get it?",
+      "wait": "Resend in {seconds}s",
+      "action": "Resend code",
+      "sent": "New code sent",
+      "sentTo": "Sent to {destination}"
+    },
+    "signIn": {
+      "title": "Sign in",
+      "description": "Welcome back. Sign in to rate verdicts, track your checks and get alerts.",
+      "forgot": "Forgot password?",
+      "remember": "Keep me signed in on this device",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "newHere": "New to Zuula?",
+      "createAccount": "Create an account",
+      "toastTitle": "Signed in",
+      "toastBody": "Welcome back. You're signed in as {role}."
+    },
+    "signUp": {
+      "title": "Create your account",
+      "description": "Free for everyone. Rate verdicts, follow topics and track your checks.",
+      "identifierHint": "We'll send a code to confirm it.",
+      "consent": "I agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>, and to Zuula processing my data under the Data Protection and Privacy Act, 2019.",
+      "submit": "Create account",
+      "submitting": "Creating account…",
+      "haveAccount": "Already have an account?",
+      "signIn": "Sign in"
+    },
+    "verify": {
+      "title": "Verify your account",
+      "sentTo": "We sent a 6-digit code by {channel, select, sms {SMS} other {email}} to <strong>{destination}</strong>.",
+      "codeLabel": "Verification code",
+      "submit": "Verify",
+      "submitting": "Verifying…",
+      "wrongAddress": "Wrong address?",
+      "goBack": "Go back",
+      "nothingTitle": "Nothing to verify",
+      "nothingBody": "Your sign-up session has expired or was started on another device.",
+      "startSignUp": "Start sign-up",
+      "welcome": "Welcome to Zuula!",
+      "welcomeName": "Welcome to Zuula, {name}!",
+      "ready": "Your account is ready."
+    },
+    "twoFactor": {
+      "title": "Two-factor authentication",
+      "descriptionApp": "Enter the 6-digit code from your authenticator app.",
+      "descriptionBackup": "Enter one of the backup codes you saved when you set up two-factor.",
+      "codeLabel": "Authentication code",
+      "backupLabel": "Backup code",
+      "backupHint": "Each backup code works once.",
+      "trust": "Trust this device for 30 days",
+      "submit": "Continue",
+      "submitting": "Checking…",
+      "useBackup": "Use a backup code instead",
+      "useApp": "Use your authenticator app",
+      "lostAccess": "Lost access to both?",
+      "contactAdmin": "Contact an administrator",
+      "wrongCode": "That code is incorrect. Codes change every 30 seconds.",
+      "wrongBackup": "That backup code isn't valid.",
+      "signInFirstTitle": "Sign in first",
+      "signInFirstBody": "Two-factor authentication follows your password sign-in.",
+      "goToSignIn": "Go to sign in",
+      "toastTitle": "Signed in",
+      "trusted": "{role} · this device is trusted for 30 days"
+    },
+    "forgot": {
+      "title": "Forgot your password?",
+      "description": "Enter the email or phone number on your account and we'll send you a reset code.",
+      "submit": "Send reset code",
+      "submitting": "Sending…",
+      "sentTitle": "Check your messages",
+      "sentBody": "If an account exists for <strong>{destination}</strong>, we've sent a 6-digit reset code by {channel, select, sms {SMS} other {email}}. It expires in 15 minutes.",
+      "enterCode": "Enter reset code",
+      "backToSignIn": "Back to sign in"
+    },
+    "reset": {
+      "title": "Set a new password",
+      "descriptionTo": "Enter the code sent to <strong>{destination}</strong> and choose a new password.",
+      "description": "Enter the reset code we sent you and choose a new password.",
+      "codeLabel": "Reset code",
+      "submit": "Update password",
+      "submitting": "Updating…",
+      "noCode": "No code?",
+      "requestNew": "Request a new one",
+      "toastTitle": "Password updated",
+      "toastBody": "Sign in with your new password."
+    }
+  },
   "Pwa": {
     "name": "Zuula — Uganda Fact-Guard",
     "shortName": "Zuula",

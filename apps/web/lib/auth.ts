@@ -4,6 +4,7 @@ import type { Role } from "@/lib/roles"
 
 // FR-AUTH-01 / 04 / 06. Validation shared by the auth pages; the same rules are
 // enforced server-side in Phase 3 (passwords hashed with bcrypt there).
+// Error messages are Validation.* translation keys, rendered by useValidationMessage().
 
 export const PASSWORD_MIN = 12
 
@@ -25,8 +26,8 @@ export function identifierKind(v: string): "email" | "phone" | null {
 export const identifier = z
   .string()
   .trim()
-  .min(1, "Enter your email or phone number.")
-  .refine((v) => identifierKind(v) !== null, "Enter a valid email or Ugandan phone number (07XX XXX XXX).")
+  .min(1, "identifierRequired")
+  .refine((v) => identifierKind(v) !== null, "identifierInvalid")
 
 // Mask for "we sent a code to …" messages.
 export function maskIdentifier(v: string) {
@@ -39,50 +40,50 @@ export function maskIdentifier(v: string) {
   return `${digits.slice(0, -7).replace(/\d/g, "•")}${"•".repeat(4)}${digits.slice(-3)}`
 }
 
+// Labels live in Auth.password.rules.<id> and Auth.password.strength.<score>.
 export const PASSWORD_RULES = [
-  { id: "length", label: `At least ${PASSWORD_MIN} characters`, test: (p: string) => p.length >= PASSWORD_MIN },
-  { id: "case", label: "Upper and lower case letters", test: (p: string) => /[a-z]/.test(p) && /[A-Z]/.test(p) },
-  { id: "number", label: "A number", test: (p: string) => /\d/.test(p) },
-  { id: "symbol", label: "A symbol", test: (p: string) => /[^A-Za-z0-9]/.test(p) },
+  { id: "length", test: (p: string) => p.length >= PASSWORD_MIN },
+  { id: "case", test: (p: string) => /[a-z]/.test(p) && /[A-Z]/.test(p) },
+  { id: "number", test: (p: string) => /\d/.test(p) },
+  { id: "symbol", test: (p: string) => /[^A-Za-z0-9]/.test(p) },
 ] as const
 
 export function passwordStrength(p: string) {
-  const passed = PASSWORD_RULES.filter((r) => r.test(p)).length
-  const labels = ["Too weak", "Weak", "Fair", "Good", "Strong"] as const
-  return { score: passed, label: labels[passed] }
+  const score = PASSWORD_RULES.filter((r) => r.test(p)).length as 0 | 1 | 2 | 3 | 4
+  return { score }
 }
 
 // FR-AUTH-04: 12-character minimum is required; the other rules guide towards strength.
 const newPassword = z
   .string()
-  .min(PASSWORD_MIN, `Use at least ${PASSWORD_MIN} characters.`)
-  .refine((p) => passwordStrength(p).score >= 3, "Make it stronger: mix letters, numbers and symbols.")
+  .min(PASSWORD_MIN, "passwordMin")
+  .refine((p) => passwordStrength(p).score >= 3, "passwordWeak")
 
 export const signInSchema = z.object({
   identifier,
-  password: z.string().min(1, "Enter your password."),
+  password: z.string().min(1, "passwordRequired"),
   remember: z.boolean(),
 })
 
 export const signUpSchema = z
   .object({
-    name: z.string().trim().min(2, "Enter your full name."),
+    name: z.string().trim().min(2, "nameRequired"),
     identifier,
     password: newPassword,
     confirm: z.string(),
-    consent: z.boolean().refine((v) => v, "You need to accept the Terms and Privacy Policy."),
+    consent: z.boolean().refine((v) => v, "consentRequired"),
   })
-  .refine((v) => v.password === v.confirm, { path: ["confirm"], message: "Passwords don't match." })
+  .refine((v) => v.password === v.confirm, { path: ["confirm"], message: "passwordsMismatch" })
 
 export const forgotSchema = z.object({ identifier })
 
 export const resetSchema = z
   .object({
-    code: z.string().regex(/^\d{6}$/, "Enter the 6-digit code."),
+    code: z.string().regex(/^\d{6}$/, "codeSixDigits"),
     password: newPassword,
     confirm: z.string(),
   })
-  .refine((v) => v.password === v.confirm, { path: ["confirm"], message: "Passwords don't match." })
+  .refine((v) => v.password === v.confirm, { path: ["confirm"], message: "passwordsMismatch" })
 
 export const OTP_LENGTH = 6
 export const RESEND_SECONDS = 30

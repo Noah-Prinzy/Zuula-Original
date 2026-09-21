@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useTranslations } from "next-intl"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import type { z } from "zod"
 
@@ -16,12 +17,15 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
+import { useValidationMessage } from "@/hooks/use-validation-message"
 import { safeNext, setPendingAuth, signUpSchema } from "@/lib/auth"
 
 type Values = z.infer<typeof signUpSchema>
 
 export function SignUpForm({ next }: { next?: string }) {
   const router = useRouter()
+  const t = useTranslations("Auth")
+  const v = useValidationMessage()
   const form = useForm<Values>({
     resolver: zodResolver(signUpSchema),
     defaultValues: { name: "", identifier: "", password: "", confirm: "", consent: false },
@@ -29,19 +33,16 @@ export function SignUpForm({ next }: { next?: string }) {
   const { control, handleSubmit, formState } = form
   const password = useWatch({ control, name: "password" })
 
-  async function onSubmit(v: Values) {
+  async function onSubmit(values: Values) {
     await new Promise((r) => setTimeout(r, 600)) // mock network
-    setPendingAuth({ role: "public", identifier: v.identifier, name: v.name, next: safeNext(next, "/") })
+    setPendingAuth({ role: "public", identifier: values.identifier, name: values.name, next: safeNext(next, "/") })
     startNavigationProgress()
     router.push("/sign-up/verify")
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <AuthHeading
-        title="Create your account"
-        description="Free for everyone. Rate verdicts, follow topics and track your checks."
-      />
+      <AuthHeading title={t("signUp.title")} description={t("signUp.description")} />
 
       <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <Controller
@@ -49,9 +50,9 @@ export function SignUpForm({ next }: { next?: string }) {
           name="name"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="signup-name">Full name</FieldLabel>
+              <FieldLabel htmlFor="signup-name">{t("fields.fullName")}</FieldLabel>
               <Input {...field} id="signup-name" autoComplete="name" aria-invalid={fieldState.invalid} className="h-10" />
-              <FieldError errors={[fieldState.error]} />
+              <FieldError>{v(fieldState.error?.message)}</FieldError>
             </Field>
           )}
         />
@@ -60,17 +61,17 @@ export function SignUpForm({ next }: { next?: string }) {
           name="identifier"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="signup-identifier">Email or phone</FieldLabel>
+              <FieldLabel htmlFor="signup-identifier">{t("fields.identifier")}</FieldLabel>
               <Input
                 {...field}
                 id="signup-identifier"
                 autoComplete="username"
                 aria-invalid={fieldState.invalid}
-                placeholder="you@example.com or 07XX XXX XXX"
+                placeholder={t("fields.identifierPlaceholder")}
                 className="h-10"
               />
-              <FieldDescription>We&apos;ll send a code to confirm it.</FieldDescription>
-              <FieldError errors={[fieldState.error]} />
+              <FieldDescription>{t("signUp.identifierHint")}</FieldDescription>
+              <FieldError>{v(fieldState.error?.message)}</FieldError>
             </Field>
           )}
         />
@@ -79,7 +80,7 @@ export function SignUpForm({ next }: { next?: string }) {
           name="password"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="signup-password">Password</FieldLabel>
+              <FieldLabel htmlFor="signup-password">{t("fields.password")}</FieldLabel>
               <PasswordInput
                 {...field}
                 id="signup-password"
@@ -89,7 +90,7 @@ export function SignUpForm({ next }: { next?: string }) {
                 className="h-10"
               />
               <PasswordStrength id="signup-password-strength" password={password} />
-              <FieldError errors={[fieldState.error]} />
+              <FieldError>{v(fieldState.error?.message)}</FieldError>
             </Field>
           )}
         />
@@ -98,7 +99,7 @@ export function SignUpForm({ next }: { next?: string }) {
           name="confirm"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="signup-confirm">Confirm password</FieldLabel>
+              <FieldLabel htmlFor="signup-confirm">{t("fields.confirmPassword")}</FieldLabel>
               <PasswordInput
                 {...field}
                 id="signup-confirm"
@@ -106,7 +107,7 @@ export function SignUpForm({ next }: { next?: string }) {
                 aria-invalid={fieldState.invalid}
                 className="h-10"
               />
-              <FieldError errors={[fieldState.error]} />
+              <FieldError>{v(fieldState.error?.message)}</FieldError>
             </Field>
           )}
         />
@@ -124,36 +125,39 @@ export function SignUpForm({ next }: { next?: string }) {
                   className="mt-0.5"
                 />
                 <FieldLabel htmlFor="signup-consent" className="block font-normal leading-snug">
-                  I agree to the{" "}
-                  <Link href="/legal/terms" className="text-primary underline underline-offset-2">
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link href="/legal/privacy" className="text-primary underline underline-offset-2">
-                    Privacy Policy
-                  </Link>
-                  , and to Zuula processing my data under the Data Protection and Privacy Act, 2019.
+                  {t.rich("signUp.consent", {
+                    terms: (chunks) => (
+                      <Link href="/legal/terms" className="text-primary underline underline-offset-2">
+                        {chunks}
+                      </Link>
+                    ),
+                    privacy: (chunks) => (
+                      <Link href="/legal/privacy" className="text-primary underline underline-offset-2">
+                        {chunks}
+                      </Link>
+                    ),
+                  })}
                 </FieldLabel>
               </div>
-              <FieldError errors={[fieldState.error]} />
+              <FieldError>{v(fieldState.error?.message)}</FieldError>
             </Field>
           )}
         />
         <Button type="submit" size="lg" className="h-10" disabled={formState.isSubmitting}>
           {formState.isSubmitting && <Spinner />}
-          {formState.isSubmitting ? "Creating account…" : "Create account"}
+          {formState.isSubmitting ? t("signUp.submitting") : t("signUp.submit")}
         </Button>
       </form>
 
       <SocialButtons disabled={formState.isSubmitting} />
 
       <p className="text-center text-sm text-muted-foreground">
-        Already have an account?{" "}
+        {t("signUp.haveAccount")}{" "}
         <Link
           href={next ? `/sign-in?next=${encodeURIComponent(next)}` : "/sign-in"}
           className="font-medium text-primary underline-offset-4 hover:underline"
         >
-          Sign in
+          {t("signUp.signIn")}
         </Link>
       </p>
     </div>

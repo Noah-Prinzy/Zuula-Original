@@ -1,12 +1,14 @@
 import { RiCheckLine, RiCloseLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
-import { PASSWORD_RULES, passwordStrength } from "@/lib/auth"
+import { PASSWORD_MIN, PASSWORD_RULES, passwordStrength } from "@/lib/auth"
 import { cn } from "@/lib/utils"
 
 const BAR = ["bg-destructive", "bg-destructive", "bg-verdict-likely-false", "bg-verdict-authentic", "bg-verdict-authentic"]
 
 export function PasswordStrength({ password, id }: { password: string; id?: string }) {
-  const { score, label } = passwordStrength(password)
+  const { score } = passwordStrength(password)
+  const t = useTranslations("Auth.password")
 
   return (
     <div id={id} className="flex flex-col gap-2">
@@ -17,7 +19,7 @@ export function PasswordStrength({ password, id }: { password: string; id?: stri
           ))}
         </div>
         <span className="w-16 text-right text-xs text-muted-foreground" aria-live="polite">
-          {password ? label : ""}
+          {password ? t(`strength.${score}`) : ""}
         </span>
       </div>
       <ul className="grid gap-1 text-xs sm:grid-cols-2">
@@ -26,8 +28,8 @@ export function PasswordStrength({ password, id }: { password: string; id?: stri
           return (
             <li key={r.id} className={cn("flex items-center gap-1", ok ? "text-verdict-authentic" : "text-muted-foreground")}>
               {ok ? <RiCheckLine className="size-3.5" aria-hidden /> : <RiCloseLine className="size-3.5" aria-hidden />}
-              {r.label}
-              <span className="sr-only">{ok ? "(met)" : "(not met)"}</span>
+              {t(`rules.${r.id}`, { min: PASSWORD_MIN })}
+              <span className="sr-only">{ok ? t("met") : t("notMet")}</span>
             </li>
           )
         })}

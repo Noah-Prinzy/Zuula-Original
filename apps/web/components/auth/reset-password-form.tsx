@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { RiFlaskLine, RiLockPasswordLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import type { z } from "zod"
@@ -18,6 +19,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Spinner } from "@/components/ui/spinner"
+import { useValidationMessage } from "@/hooks/use-validation-message"
 import { clearPendingAuth, isDemoCodeValid, maskIdentifier, resetSchema } from "@/lib/auth"
 
 type Values = z.infer<typeof resetSchema>
@@ -25,6 +27,8 @@ type Values = z.infer<typeof resetSchema>
 // FR-AUTH-06: set a new password using the emailed/SMS code.
 export function ResetPasswordForm() {
   const router = useRouter()
+  const t = useTranslations("Auth")
+  const v = useValidationMessage()
   const pending = usePendingAuth()
   const form = useForm<Values>({
     resolver: zodResolver(resetSchema),
@@ -33,14 +37,14 @@ export function ResetPasswordForm() {
   const { control, handleSubmit, formState, setError } = form
   const password = useWatch({ control, name: "password" })
 
-  async function onSubmit(v: Values) {
+  async function onSubmit(values: Values) {
     await new Promise((r) => setTimeout(r, 600))
-    if (!isDemoCodeValid(v.code)) {
-      setError("code", { message: "That code is incorrect or has expired." })
+    if (!isDemoCodeValid(values.code)) {
+      setError("code", { message: "codeInvalid" })
       return
     }
     clearPendingAuth()
-    toast.success("Password updated", { description: "Sign in with your new password." })
+    toast.success(t("reset.toastTitle"), { description: t("reset.toastBody") })
     startNavigationProgress()
     router.push("/sign-in")
   }
@@ -49,21 +53,19 @@ export function ResetPasswordForm() {
     <div className="flex flex-col gap-6">
       <AuthHeading
         icon={RiLockPasswordLine}
-        title="Set a new password"
+        title={t("reset.title")}
         description={
-          pending ? (
-            <>
-              Enter the code sent to <span className="font-medium text-foreground">{maskIdentifier(pending.identifier)}</span>{" "}
-              and choose a new password.
-            </>
-          ) : (
-            "Enter the reset code we sent you and choose a new password."
-          )
+          pending
+            ? t.rich("reset.descriptionTo", {
+                destination: maskIdentifier(pending.identifier),
+                strong: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+              })
+            : t("reset.description")
         }
       />
       <Alert>
         <RiFlaskLine aria-hidden />
-        <AlertDescription>Demo: any 6 digits work, except 000000.</AlertDescription>
+        <AlertDescription>{t("demo.code")}</AlertDescription>
       </Alert>
 
       <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
@@ -72,7 +74,7 @@ export function ResetPasswordForm() {
           name="code"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="reset-code">Reset code</FieldLabel>
+              <FieldLabel htmlFor="reset-code">{t("reset.codeLabel")}</FieldLabel>
               <CodeInput
                 id="reset-code"
                 value={field.value}
@@ -80,7 +82,7 @@ export function ResetPasswordForm() {
                 invalid={fieldState.invalid}
                 disabled={formState.isSubmitting}
               />
-              <FieldError errors={[fieldState.error]} />
+              <FieldError>{v(fieldState.error?.message)}</FieldError>
             </Field>
           )}
         />
@@ -89,7 +91,7 @@ export function ResetPasswordForm() {
           name="password"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="reset-password">New password</FieldLabel>
+              <FieldLabel htmlFor="reset-password">{t("fields.newPassword")}</FieldLabel>
               <PasswordInput
                 {...field}
                 id="reset-password"
@@ -99,7 +101,7 @@ export function ResetPasswordForm() {
                 className="h-10"
               />
               <PasswordStrength id="reset-password-strength" password={password} />
-              <FieldError errors={[fieldState.error]} />
+              <FieldError>{v(fieldState.error?.message)}</FieldError>
             </Field>
           )}
         />
@@ -108,7 +110,7 @@ export function ResetPasswordForm() {
           name="confirm"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="reset-confirm">Confirm new password</FieldLabel>
+              <FieldLabel htmlFor="reset-confirm">{t("fields.confirmNewPassword")}</FieldLabel>
               <PasswordInput
                 {...field}
                 id="reset-confirm"
@@ -116,20 +118,20 @@ export function ResetPasswordForm() {
                 aria-invalid={fieldState.invalid}
                 className="h-10"
               />
-              <FieldError errors={[fieldState.error]} />
+              <FieldError>{v(fieldState.error?.message)}</FieldError>
             </Field>
           )}
         />
         <Button type="submit" size="lg" className="h-10" disabled={formState.isSubmitting}>
           {formState.isSubmitting && <Spinner />}
-          {formState.isSubmitting ? "Updating…" : "Update password"}
+          {formState.isSubmitting ? t("reset.submitting") : t("reset.submit")}
         </Button>
       </form>
 
       <p className="text-sm text-muted-foreground">
-        No code?{" "}
+        {t("reset.noCode")}{" "}
         <Link href="/forgot-password" className="text-primary underline-offset-4 hover:underline">
-          Request a new one
+          {t("reset.requestNew")}
         </Link>
       </p>
     </div>

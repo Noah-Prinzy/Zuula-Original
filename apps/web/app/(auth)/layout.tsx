@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { RiCheckLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { ZuulaMarkOutline } from "@/components/brand/zuula-mark"
 import { PhotoSlideshow } from "@/components/decor/photo-slideshow"
@@ -18,12 +19,7 @@ const SLIDES = [
   PHOTOS.manTexting,
 ]
 
-const POINTS = [
-  "Check messages, links, photos, voice notes and videos",
-  "See the sources behind every verdict",
-  "Rate verdicts and help train Zuula",
-  "Get alerts about misinformation on topics you follow",
-]
+const POINTS = ["point1", "point2", "point3", "point4"] as const
 
 // Split screen: form on the left, brand panel on the right (large screens only).
 export default function AuthLayout({
@@ -31,6 +27,9 @@ export default function AuthLayout({
 }: {
   children: React.ReactNode
 }) {
+  const t = useTranslations("Auth.layout")
+  const tf = useTranslations("Footer")
+  const tc = useTranslations("Common")
   return (
     <div className="flex min-h-svh flex-col">
       <RoleSwitcher />
@@ -53,7 +52,7 @@ export default function AuthLayout({
             />
             <div className="absolute inset-0 -z-10 bg-linear-to-r from-primary via-primary/70 to-primary/20 dark:from-black/85 dark:via-primary/60" />
             <p className="flex h-full page-container max-w-sm items-center font-heading text-xl leading-tight font-bold text-balance text-primary-foreground sm:text-2xl">
-              Stop misinformation before it spreads.
+              {t("headline")}
             </p>
           </div>
           <main
@@ -63,15 +62,13 @@ export default function AuthLayout({
             <div className="w-full max-w-md">{children}</div>
           </main>
           <footer className="flex page-container flex-wrap justify-between gap-2 py-6 text-xs text-muted-foreground">
-            <span>
-              © {new Date().getFullYear()} Zuula · Victoria University CIT
-            </span>
+            <span>{tf("copyright", { year: new Date().getFullYear() })}</span>
             <span className="flex gap-4">
               <Link href="/legal/privacy" className="hover:text-foreground">
-                Privacy
+                {tf("privacy")}
               </Link>
               <Link href="/legal/terms" className="hover:text-foreground">
-                Terms
+                {tf("terms")}
               </Link>
             </span>
           </footer>
@@ -89,14 +86,14 @@ export default function AuthLayout({
           <div className="absolute inset-0 -z-10 bg-linear-to-t from-primary via-primary/75 to-primary/10 dark:from-black/90 dark:via-primary/70" />
           <ZuulaMarkOutline className="pointer-events-none absolute -right-24 -bottom-24 size-[36rem] opacity-10" />
           <p className="enter font-heading text-sm font-semibold tracking-widest uppercase opacity-80">
-            <ScrambleText text="Uganda Fact-Guard" />
+            <ScrambleText text={tc("tagline")} />
           </p>
           <div className="relative flex max-w-lg flex-col gap-8">
             <h2 className="font-heading text-4xl leading-tight font-bold text-balance [--kinetic-accent:var(--chart-1)] [--mark:oklch(1_0_0/0.22)] xl:text-5xl">
               <KineticText
-                text="Stop misinformation before it spreads."
+                text={t("headline")}
                 delay={150}
-                highlight={["spreads."]}
+                highlight={[t("headlineHighlight")]}
               />
             </h2>
             <ul className="flex flex-col gap-3 text-base">
@@ -107,14 +104,13 @@ export default function AuthLayout({
                   style={{ "--d": 5 + i } as React.CSSProperties}
                 >
                   <RiCheckLine className="mt-0.5 size-5 shrink-0" />
-                  {p}
+                  {t(p)}
                 </li>
               ))}
             </ul>
           </div>
           <p className="enter relative text-sm opacity-80 [--d:9]">
-            Developed by the Centre for Intelligent Technologies, Victoria
-            University Kampala.
+            {t("developedBy")}
           </p>
         </aside>
       </div>

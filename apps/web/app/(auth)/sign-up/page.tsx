@@ -1,6 +1,11 @@
+import { getTranslations } from "next-intl/server"
+
 import { SignUpForm } from "@/components/auth/sign-up-form"
 
-export const metadata = { title: "Sign Up" }
+export async function generateMetadata() {
+  const t = await getTranslations("Auth.meta")
+  return { title: t("signUp") }
+}
 
 type Props = { searchParams: Promise<{ next?: string }> }
 

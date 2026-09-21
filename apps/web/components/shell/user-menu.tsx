@@ -24,15 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ADMINS, REVIEWERS } from "@/lib/navigation"
 import { hasAnyRole, ROLE_LABELS } from "@/lib/roles"
-
-export function initials(name: string) {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase()
-}
+import { initials } from "@/lib/utils"
 
 export function UserMenu() {
   const { user, role, signOut } = useSession()

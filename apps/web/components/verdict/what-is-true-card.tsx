@@ -1,0 +1,52 @@
+import { RiCheckLine, RiCloseLine } from "@remixicon/react"
+
+import { cn } from "@/lib/utils"
+
+// FR-EXPLAIN-07: "What is True" alongside "What is False".
+export function WhatIsTrueCard({
+  whatIsFalse,
+  whatIsTrue,
+  className,
+}: {
+  whatIsFalse: string[]
+  whatIsTrue: string[]
+  className?: string
+}) {
+  if (whatIsFalse.length === 0 && whatIsTrue.length === 0) return null
+
+  const columns = [
+    {
+      title: "What is false",
+      items: whatIsFalse,
+      icon: RiCloseLine,
+      tone: "text-verdict-false",
+      bar: "bg-verdict-false",
+    },
+    {
+      title: "What is true",
+      items: whatIsTrue,
+      icon: RiCheckLine,
+      tone: "text-verdict-authentic",
+      bar: "bg-verdict-authentic",
+    },
+  ].filter((c) => c.items.length > 0)
+
+  return (
+    <div className={cn("grid gap-px border bg-border md:grid-cols-2", className)}>
+      {columns.map((col) => (
+        <section key={col.title} className="relative bg-card p-4 pl-5">
+          <span className={cn("absolute inset-y-0 left-0 w-1", col.bar)} aria-hidden />
+          <h3 className={cn("mb-2 font-heading text-sm font-bold", col.tone)}>{col.title}</h3>
+          <ul className="flex flex-col gap-2">
+            {col.items.map((item) => (
+              <li key={item} className="flex gap-2 text-sm">
+                <col.icon className={cn("mt-0.5 size-4 shrink-0", col.tone)} aria-hidden />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  )
+}

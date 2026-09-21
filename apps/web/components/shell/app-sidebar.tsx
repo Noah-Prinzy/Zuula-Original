@@ -6,7 +6,6 @@ import { RiArrowLeftLine, RiLogoutBoxRLine } from "@remixicon/react"
 
 import { useSession } from "@/components/providers/session-provider"
 import { Logo } from "@/components/shell/logo"
-import { initials } from "@/components/shell/user-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   Sidebar,
@@ -23,6 +22,7 @@ import {
 } from "@/components/ui/sidebar"
 import { APP_NAV, isActivePath } from "@/lib/navigation"
 import { hasAnyRole, ROLE_LABELS } from "@/lib/roles"
+import { initials } from "@/lib/utils"
 
 export function AppSidebar() {
   const pathname = usePathname()

@@ -1,0 +1,65 @@
+import type { Metadata } from "next"
+import { Geist, Geist_Mono, Lora, Raleway } from "next/font/google"
+
+import "./globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/sonner"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
+
+// latin-ext is required for ŋ (Luganda, Acholi).
+const ralewayHeading = Raleway({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-heading",
+})
+
+const lora = Lora({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-serif",
+})
+
+const fontSans = Geist({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-sans",
+})
+
+const fontMono = Geist_Mono({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-mono",
+})
+
+export const metadata: Metadata = {
+  title: "Zuula — Uganda Fact-Guard",
+  description:
+    "AI-powered fake news and misinformation detection for Uganda. Developed by Victoria University CIT.",
+}
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
+  return (
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={cn(
+        "antialiased",
+        fontSans.variable,
+        fontMono.variable,
+        "font-serif",
+        lora.variable,
+        ralewayHeading.variable
+      )}
+    >
+      <body>
+        <ThemeProvider>
+          <TooltipProvider>
+            {children}
+            <Toaster />
+          </TooltipProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  )
+}

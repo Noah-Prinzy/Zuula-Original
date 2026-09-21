@@ -1,6 +1,7 @@
 // SAMPLE DATA — fictional claims, articles and people for UI development only.
 // Replaced by the API in Phase 3. Source URLs point to outlet home pages, not real articles.
 
+import { QUICK_REPORTS } from "@/lib/mock/quick-reports"
 import type { FactCheckReport } from "@/lib/types/fact-check"
 
 const TEXT_1 =
@@ -12,7 +13,7 @@ function span(text: string, phrase: string) {
   return { start, end: start + phrase.length }
 }
 
-export const SAMPLE_REPORTS: FactCheckReport[] = [
+const DETAILED_REPORTS: FactCheckReport[] = [
   {
     id: "fc-2026-0142",
     trackingId: "ZL-7K3P-Q9",
@@ -262,6 +263,10 @@ export const SAMPLE_REPORTS: FactCheckReport[] = [
     processingSeconds: 38.2,
   },
 ]
+
+export const SAMPLE_REPORTS: FactCheckReport[] = [...DETAILED_REPORTS, ...QUICK_REPORTS].sort(
+  (a, b) => b.checkedAt.localeCompare(a.checkedAt)
+)
 
 export function getSampleReport(id: string) {
   return SAMPLE_REPORTS.find((r) => r.id === id)

@@ -1,0 +1,228 @@
+// SAMPLE DATA — fictional claims for the feed and Library. Same shape as the detailed
+// samples, with fewer details. Source URLs point to organisation home pages.
+
+import type { CitationStance, FactCheckReport } from "@/lib/types/fact-check"
+
+type Quick = Pick<
+  FactCheckReport,
+  "id" | "title" | "contentType" | "language" | "verdict" | "confidence" | "summary" | "category" | "checkedAt"
+> & {
+  text: string
+  sourceName: string
+  sourceUrl: string
+  stance?: CitationStance
+  /** [public, journalist, expert] */
+  accurate: [number, number, number]
+  inaccurate: [number, number, number]
+  whatIsFalse?: string[]
+  whatIsTrue?: string[]
+}
+
+function quick(q: Quick): FactCheckReport {
+  const n = q.id.slice(-4)
+  return {
+    id: q.id,
+    trackingId: `ZL-${n.replace(/[01]/g, "7")}-QK`,
+    title: q.title,
+    contentType: q.contentType,
+    language: q.language,
+    submittedText: q.text,
+    verdict: q.verdict,
+    confidence: q.confidence,
+    summary: q.summary,
+    whatIsFalse: q.whatIsFalse ?? [],
+    whatIsTrue: q.whatIsTrue ?? [],
+    claims: [],
+    citations: [
+      {
+        id: "s1",
+        sourceName: `${q.sourceName} (sample)`,
+        title: "Related official information (sample)",
+        url: q.sourceUrl,
+        publishedAt: q.checkedAt,
+        stance: q.stance ?? (q.verdict === "authentic" ? "supports" : "contradicts"),
+        trusted: true,
+      },
+    ],
+    aiSignals: [],
+    annotations: [],
+    community: {
+      accurate: { public: q.accurate[0], journalist: q.accurate[1], expert: q.accurate[2] },
+      inaccurate: { public: q.inaccurate[0], journalist: q.inaccurate[1], expert: q.inaccurate[2] },
+      comments: [],
+    },
+    category: q.category,
+    checkedAt: q.checkedAt,
+    processingSeconds: q.contentType === "text" || q.contentType === "url" ? 7.1 : 41.5,
+  }
+}
+
+export const QUICK_REPORTS: FactCheckReport[] = [
+  quick({
+    id: "fc-2026-0161",
+    title: "“Boiled banana leaves cure malaria in three days”",
+    contentType: "text",
+    language: "Luganda",
+    text: "Sample WhatsApp message in Luganda claiming a home remedy cures malaria.",
+    verdict: "false",
+    confidence: 95,
+    summary:
+      "No evidence supports this remedy. Health authorities advise testing and approved treatment for malaria.",
+    category: "Health",
+    checkedAt: "2026-09-21",
+    sourceName: "Ministry of Health",
+    sourceUrl: "https://www.health.go.ug",
+    accurate: [312, 20, 4],
+    inaccurate: [9, 0, 0],
+    whatIsFalse: ["Banana leaves do not cure malaria."],
+    whatIsTrue: ["Malaria is treatable with approved medicine after a test."],
+  }),
+  quick({
+    id: "fc-2026-0160",
+    title: "Video of a “new 50,000 shilling note” entering circulation",
+    contentType: "video",
+    language: "English",
+    text: "Short video showing a banknote design said to be released next month.",
+    verdict: "ai-generated",
+    confidence: 83,
+    summary: "The note in the video was digitally created. No new denomination has been announced.",
+    category: "Economy",
+    checkedAt: "2026-09-21",
+    sourceName: "Bank of Uganda",
+    sourceUrl: "https://www.bou.or.ug",
+    accurate: [140, 6, 1],
+    inaccurate: [22, 1, 0],
+  }),
+  quick({
+    id: "fc-2026-0159",
+    title: "“All schools to close for the rest of the term next week”",
+    contentType: "text",
+    language: "English",
+    text: "Message claiming the Ministry has ordered all schools to close early.",
+    verdict: "likely-false",
+    confidence: 74,
+    summary:
+      "No closure order was issued. The message appears to mix an old circular with a new date.",
+    category: "Education",
+    checkedAt: "2026-09-20",
+    sourceName: "Ministry of Education and Sports",
+    sourceUrl: "https://www.education.go.ug",
+    accurate: [48, 3, 0],
+    inaccurate: [41, 2, 0],
+  }),
+  quick({
+    id: "fc-2026-0158",
+    title: "Voice note on fuel prices doubling from October",
+    contentType: "audio",
+    language: "Runyankole",
+    text: "Voice note in Runyankole saying fuel prices will double next month.",
+    verdict: "unverifiable",
+    confidence: 58,
+    summary:
+      "We found no official announcement either way. Treat specific price forecasts with caution.",
+    category: "Economy",
+    checkedAt: "2026-09-20",
+    sourceName: "Ministry of Energy and Mineral Development",
+    sourceUrl: "https://www.energyandminerals.go.ug",
+    stance: "context",
+    accurate: [36, 1, 0],
+    inaccurate: [30, 2, 0],
+  }),
+  quick({
+    id: "fc-2026-0156",
+    title: "New national examination timetable published",
+    contentType: "url",
+    language: "English",
+    text: "https://example.org/sample-timetable",
+    verdict: "authentic",
+    confidence: 91,
+    summary: "The timetable matches the version published by the examinations board.",
+    category: "Education",
+    checkedAt: "2026-09-19",
+    sourceName: "UNEB",
+    sourceUrl: "https://uneb.ac.ug",
+    accurate: [120, 8, 2],
+    inaccurate: [6, 0, 0],
+  }),
+  quick({
+    id: "fc-2026-0155",
+    title: "“Voting will move to mobile phones at the next election”",
+    contentType: "text",
+    language: "Acholi",
+    text: "Message in Acholi claiming voting will be done by phone.",
+    verdict: "false",
+    confidence: 88,
+    summary: "Voting remains in person. The electoral body has made no such change.",
+    category: "Elections",
+    checkedAt: "2026-09-18",
+    sourceName: "Electoral Commission",
+    sourceUrl: "https://www.ec.or.ug",
+    accurate: [36, 1, 0],
+    inaccurate: [98, 6, 1],
+  }),
+  quick({
+    id: "fc-2026-0154",
+    title: "Photo of record water levels at a lakeside landing site",
+    contentType: "image",
+    language: "English",
+    text: "Photo said to show this week's water levels.",
+    verdict: "likely-false",
+    confidence: 69,
+    summary: "The photo is real but from 2020. Current levels are lower.",
+    category: "Weather",
+    checkedAt: "2026-09-17",
+    sourceName: "Ministry of Water and Environment",
+    sourceUrl: "https://www.mwe.go.ug",
+    accurate: [55, 4, 1],
+    inaccurate: [12, 0, 0],
+  }),
+  quick({
+    id: "fc-2026-0153",
+    title: "Free mobile data offer circulating on social media",
+    contentType: "url",
+    language: "English",
+    text: "https://example.org/sample-offer",
+    verdict: "false",
+    confidence: 97,
+    summary: "The link is a phishing page imitating a telecom operator.",
+    category: "Technology",
+    checkedAt: "2026-09-16",
+    sourceName: "Uganda Communications Commission",
+    sourceUrl: "https://www.ucc.co.ug",
+    accurate: [402, 15, 3],
+    inaccurate: [4, 0, 0],
+  }),
+  quick({
+    id: "fc-2026-0152",
+    title: "Speech clip attributed to a district official",
+    contentType: "video",
+    language: "Ateso",
+    text: "Clip of a speech in Ateso shared with a misleading caption.",
+    verdict: "ai-generated",
+    confidence: 79,
+    summary:
+      "The voice track shows signs of synthesis and does not match the original recording.",
+    category: "Politics",
+    checkedAt: "2026-09-15",
+    sourceName: "Uganda Radio Network",
+    sourceUrl: "https://ugandaradionetwork.net",
+    accurate: [18, 0, 0],
+    inaccurate: [196, 10, 1],
+  }),
+  quick({
+    id: "fc-2026-0151",
+    title: "Cholera vaccination campaign announced for border districts",
+    contentType: "text",
+    language: "English",
+    text: "Message announcing a vaccination campaign and its dates.",
+    verdict: "authentic",
+    confidence: 93,
+    summary: "The campaign and dates match the official announcement.",
+    category: "Health",
+    checkedAt: "2026-09-14",
+    sourceName: "Ministry of Health",
+    sourceUrl: "https://www.health.go.ug",
+    accurate: [88, 5, 2],
+    inaccurate: [7, 0, 0],
+  }),
+]

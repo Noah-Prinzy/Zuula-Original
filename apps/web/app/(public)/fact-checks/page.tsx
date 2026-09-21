@@ -1,43 +1,29 @@
-import Link from "next/link"
+import { Suspense } from "react"
 
-import { CommunityBadge } from "@/components/community/community-status"
+import { LibraryBrowser } from "@/components/library/library-browser"
 import { PageHeader } from "@/components/shell/page-header"
-import { ConfidenceMeter } from "@/components/verdict/confidence-meter"
-import { VerdictBadge } from "@/components/verdict/verdict-badge"
-import { communityScore } from "@/lib/community"
+import { Skeleton } from "@/components/ui/skeleton"
+import { facets } from "@/lib/library"
 import { SAMPLE_REPORTS } from "@/lib/mock/fact-checks"
-import { formatDate } from "@/lib/verdicts"
 
-export const metadata = { title: "Library" }
+export const metadata = {
+  title: "Library",
+  description: "Search claims and articles that Zuula has already checked.",
+}
 
-// Temporary list of sample reports; search and filters (FR-SEARCH) come later in Phase 1.
 export default function LibraryPage() {
+  const { categories, languages } = facets(SAMPLE_REPORTS)
+
   return (
     <div className="page-container flex flex-col gap-6 py-10">
-      <PageHeader title="Library" description="Browse previously verified claims and articles." />
-      <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-        {SAMPLE_REPORTS.map((r) => (
-          <li key={r.id}>
-            <Link
-              href={`/fact-checks/${r.id}`}
-              className="flex h-full items-start gap-4 border bg-card p-4 transition-colors hover:border-primary/50"
-            >
-              <div className="flex min-w-0 flex-1 flex-col gap-2">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <VerdictBadge verdict={r.verdict} size="sm" />
-                  <CommunityBadge status={communityScore(r.community).status} />
-                </div>
-                <p className="font-heading font-semibold">{r.title}</p>
-                <p className="line-clamp-2 text-sm text-muted-foreground">{r.summary}</p>
-                <p className="text-xs text-muted-foreground">
-                  {r.category} · {formatDate(r.checkedAt)}
-                </p>
-              </div>
-              <ConfidenceMeter value={r.confidence} verdict={r.verdict} size="sm" showLabel={false} />
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <PageHeader
+        title="Library"
+        description="Search claims and articles that have already been checked."
+      />
+      {/* useSearchParams needs a Suspense boundary for static rendering. */}
+      <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+        <LibraryBrowser reports={SAMPLE_REPORTS} categories={categories} languages={languages} />
+      </Suspense>
     </div>
   )
 }

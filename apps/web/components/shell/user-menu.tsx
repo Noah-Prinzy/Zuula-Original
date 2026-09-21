@@ -4,7 +4,9 @@ import Link from "next/link"
 import {
   RiDashboardLine,
   RiLogoutBoxRLine,
-  RiNotification3Line,
+  RiNotificationBadgeLine,
+  RiPieChartLine,
+  RiTimeLine,
   RiUserSettingsLine,
 } from "@remixicon/react"
 
@@ -20,6 +22,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ADMINS, REVIEWERS } from "@/lib/navigation"
 import { hasAnyRole, ROLE_LABELS } from "@/lib/roles"
 
 export function initials(name: string) {
@@ -38,14 +41,19 @@ export function UserMenu() {
     return (
       <div className="flex items-center gap-1">
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/login">Log in</Link>
+          <Link href="/sign-in">Sign In</Link>
         </Button>
         <Button size="sm" asChild>
-          <Link href="/register">Register</Link>
+          <Link href="/sign-up">Sign Up</Link>
         </Button>
       </div>
     )
   }
+
+  const workspace = [
+    { title: "Review", href: "/review", icon: RiDashboardLine, show: hasAnyRole(role, REVIEWERS) },
+    { title: "Admin", href: "/admin", icon: RiPieChartLine, show: hasAnyRole(role, ADMINS) },
+  ].filter((i) => i.show)
 
   return (
     <DropdownMenu>
@@ -62,28 +70,40 @@ export function UserMenu() {
           <span className="font-normal text-muted-foreground">{ROLE_LABELS[user.role]}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {workspace.length > 0 && (
+          <>
+            <DropdownMenuGroup>
+              {workspace.map((i) => (
+                <DropdownMenuItem key={i.href} asChild>
+                  <Link href={i.href}>
+                    <i.icon aria-hidden /> {i.title}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+          </>
+        )}
         <DropdownMenuGroup>
-          {hasAnyRole(role, ["expert", "admin"]) && (
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard">
-                <RiDashboardLine aria-hidden /> Dashboard
-              </Link>
-            </DropdownMenuItem>
-          )}
+          <DropdownMenuItem asChild>
+            <Link href="/account/activity">
+              <RiTimeLine aria-hidden /> Activity
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/account/notifications">
+              <RiNotificationBadgeLine aria-hidden /> Notifications
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/account">
               <RiUserSettingsLine aria-hidden /> Profile
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/account/alerts">
-              <RiNotification3Line aria-hidden /> Alerts
-            </Link>
-          </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={signOut}>
-          <RiLogoutBoxRLine aria-hidden /> Log out
+          <RiLogoutBoxRLine aria-hidden /> Sign Out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

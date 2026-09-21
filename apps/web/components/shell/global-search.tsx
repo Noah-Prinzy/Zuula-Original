@@ -44,7 +44,7 @@ export function GlobalSearch() {
 
   function go(query: string) {
     setOpen(false)
-    router.push(`/search?q=${encodeURIComponent(query)}`)
+    router.push(`/fact-checks?q=${encodeURIComponent(query)}`)
   }
 
   return (

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { ROUTE_TITLES } from "@/lib/navigation"
+import { NON_PAGE_ROUTES, ROUTE_TITLES } from "@/lib/navigation"
 
 function titleFor(href: string) {
   const last = href.split("/").pop() ?? ""
@@ -41,6 +41,8 @@ export function AppHeader() {
               <BreadcrumbItem>
                 {i === crumbs.length - 1 ? (
                   <BreadcrumbPage>{titleFor(href)}</BreadcrumbPage>
+                ) : NON_PAGE_ROUTES.has(href) ? (
+                  <span>{titleFor(href)}</span>
                 ) : (
                   <BreadcrumbLink asChild>
                     <Link href={href}>{titleFor(href)}</Link>

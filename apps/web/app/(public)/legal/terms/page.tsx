@@ -1,11 +1,11 @@
 import { Placeholder } from "@/components/shell/placeholder"
 
-export const metadata = { title: "Terms of service · Zuula" }
+export const metadata = { title: "Terms" }
 
 export default function Page() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <Placeholder title="Terms of service" description="The terms for using Zuula." spec="" />
+      <Placeholder title="Terms" description="The terms for using Zuula." spec="" />
     </div>
   )
 }

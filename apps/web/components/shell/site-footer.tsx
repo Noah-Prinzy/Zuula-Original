@@ -7,16 +7,16 @@ const COLUMNS = [
   {
     title: "Product",
     links: [
-      { label: "Check a claim", href: "/" },
-      { label: "Fact-checks", href: "/search" },
+      { label: "Verify", href: "/verify" },
+      { label: "Library", href: "/fact-checks" },
       { label: "WhatsApp bot", href: "/about#whatsapp" },
-      { label: "Public API", href: "/about#api" },
+      { label: "API", href: "/developers" },
     ],
   },
   {
     title: "Organisation",
     links: [
-      { label: "About Zuula", href: "/about" },
+      { label: "About", href: "/about" },
       { label: "Methodology", href: "/about#methodology" },
       { label: "Editorial independence", href: "/about#independence" },
       { label: "Contact", href: "/about#contact" },
@@ -25,8 +25,8 @@ const COLUMNS = [
   {
     title: "Legal",
     links: [
-      { label: "Privacy policy", href: "/legal/privacy" },
-      { label: "Terms of service", href: "/legal/terms" },
+      { label: "Privacy", href: "/legal/privacy" },
+      { label: "Terms", href: "/legal/terms" },
       { label: "Data protection (DPPA 2019)", href: "/legal/privacy#dppa" },
     ],
   },

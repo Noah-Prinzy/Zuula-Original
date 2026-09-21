@@ -20,7 +20,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { isActivePath, PUBLIC_NAV } from "@/lib/navigation"
+import { isInSection, PUBLIC_NAV } from "@/lib/navigation"
 import { hasAnyRole } from "@/lib/roles"
 import { cn } from "@/lib/utils"
 
@@ -28,10 +28,7 @@ export function SiteHeader() {
   const pathname = usePathname()
   const { user, role } = useSession()
 
-  const nav = [
-    ...PUBLIC_NAV,
-    ...(hasAnyRole(role, ["expert", "admin"]) ? [{ title: "Dashboard", href: "/dashboard" }] : []),
-  ]
+  const nav = PUBLIC_NAV.filter((item) => hasAnyRole(role, item.roles))
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
@@ -40,7 +37,7 @@ export function SiteHeader() {
 
         <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
           {nav.map((item) => {
-            const active = isActivePath(pathname, item.href)
+            const active = isInSection(pathname, item.href)
             return (
               <Link
                 key={item.href}
@@ -89,7 +86,7 @@ export function SiteHeader() {
                     <SheetClose asChild key={item.href}>
                       <Link
                         href={item.href}
-                        aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
+                        aria-current={isInSection(pathname, item.href) ? "page" : undefined}
                         className="border-b py-3 text-sm aria-[current=page]:font-semibold aria-[current=page]:text-primary"
                       >
                         {item.title}

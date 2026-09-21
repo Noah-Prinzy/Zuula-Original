@@ -1,7 +1,7 @@
 import { Placeholder } from "@/components/shell/placeholder"
 
-export const metadata = { title: "Trusted sources · Zuula" }
+export const metadata = { title: "Sources" }
 
 export default function Page() {
-  return <Placeholder title="Trusted sources" description="Sources used to cross-reference claims." spec="FR-ADMIN-03" />
+  return <Placeholder title="Sources" description="Trusted sources used to cross-reference claims." spec="FR-ADMIN-03" />
 }

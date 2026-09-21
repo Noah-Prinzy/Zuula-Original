@@ -1,11 +1,11 @@
 import { Placeholder } from "@/components/shell/placeholder"
 
-export const metadata = { title: "About" }
+export const metadata = { title: "Offline" }
 
 export default function Page() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <Placeholder title="About" description="Our mission, methodology and editorial independence." spec="" />
+      <Placeholder title="Offline" description="You are offline. Recently viewed reports are still available." spec="" />
     </div>
   )
 }

@@ -47,7 +47,7 @@ export function RoleGate({
           </Button>
         ) : (
           <Button asChild>
-            <Link href="/login">Log in</Link>
+            <Link href="/sign-in">Sign In</Link>
           </Button>
         )}
       </EmptyContent>

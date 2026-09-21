@@ -163,3 +163,21 @@ Bubble, Message, Message Scroller, Marker, Questionnaire (chat/agent UI), Contex
 ## 5. Outside shadcn (public marketing pages only)
 
 PrebuiltUI / ReactJSTemplates offer Tailwind landing-page templates and sections (hero, features, FAQ, footer, testimonials). They do not cover app screens. Use: borrow individual sections for Home/About/FAQ if they speed things up, restyled to Zuula tokens. Check each template's licence before copying.
+
+## 6. Brand
+
+Owner: CREST. Import brand pieces from `apps/web/components/brand/*`; check with CREST before editing those files, `components/shell/logo.tsx`, `public/brand/*` or the favicons (`app/favicon.ico`, `app/icon.svg`, `app/apple-icon.png`).
+
+| Colour | Hex |
+|---|---|
+| Crimson (primary) | `#C70036` |
+| Crimson deep | `#A50036` |
+| Ink | `#0B0F11` |
+| Blush | `#FFF1F2` |
+| White | `#FFFFFF` |
+
+| Asset | Where |
+|---|---|
+| `ZuulaMark` (the right theme variant is picked automatically), `ZuulaMarkLight`, `ZuulaMarkDark`, `ZuulaMarkOutline`, `BRAND_CRIMSON` | `components/brand/zuula-mark.tsx`; pass `animated` for the loader |
+| `Logo` (mark + wordmark) | `components/shell/logo.tsx` |
+| SVG mark, wordmark and lockups (light/dark) | `public/brand/` |

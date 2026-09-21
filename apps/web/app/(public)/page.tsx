@@ -8,6 +8,10 @@ import {
   RiTrophyLine,
 } from "@remixicon/react"
 
+import Image from "next/image"
+
+import { PHOTO_QUALITY, PhotoCredit, PhotoHero } from "@/components/decor/photo-hero"
+import { PHOTOS } from "@/components/decor/photos"
 import { SubmissionComposer } from "@/components/submission/submission-composer"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -63,20 +67,22 @@ export default function HomePage() {
 
   return (
     <>
-      <section className="border-b bg-muted/30">
-        <div className="page-container flex flex-col items-center gap-5 py-16 text-center md:py-24">
-          <Badge variant="outline">Uganda Fact-Guard · Victoria University CIT</Badge>
-          <h1 className="max-w-4xl font-heading text-4xl font-bold tracking-tight text-balance md:text-5xl xl:text-6xl">
+      <PhotoHero photo={PHOTOS.kampalaSkyline} priority position="center 40%" className="border-b">
+        <div className="page-container flex flex-col items-center gap-5 py-16 text-center md:py-24 xl:py-28">
+          <Badge variant="outline" className="border-white/40 bg-black/20 text-white backdrop-blur-sm">
+            Uganda Fact-Guard · Victoria University CIT
+          </Badge>
+          <h1 className="max-w-4xl font-heading text-4xl font-bold tracking-tight text-balance drop-shadow-sm md:text-5xl xl:text-6xl">
             Check a claim before you share it
           </h1>
-          <p className="max-w-3xl text-base text-muted-foreground text-balance md:text-lg xl:text-xl">
+          <p className="max-w-3xl text-base text-white/85 text-balance md:text-lg xl:text-xl">
             Paste a message, a link or upload media. Zuula tells you whether it is authentic, false
             or AI-generated — and shows you the sources.
           </p>
 
-          <SubmissionComposer variant="compact" className="mt-4 w-full max-w-5xl" />
+          <SubmissionComposer variant="compact" className="mt-4 w-full max-w-5xl text-foreground shadow-2xl" />
         </div>
-      </section>
+      </PhotoHero>
 
       <div className="page-container grid items-start gap-10 py-12 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_26rem]">
         {/* FR-SEARCH-05: real-time feed of recent and most debated checks. */}
@@ -166,16 +172,25 @@ export default function HomePage() {
         </aside>
       </div>
 
-      <section aria-label="Why Zuula" className="border-t bg-muted/30">
-        <div className="page-container grid gap-4 py-12 md:grid-cols-3">
+      <section aria-label="Why Zuula" className="relative isolate overflow-hidden border-t bg-primary">
+        <Image
+          src={PHOTOS.crimsonTexture.src}
+          alt=""
+          fill
+          quality={PHOTO_QUALITY}
+          sizes="100vw"
+          className="-z-10 object-cover opacity-90"
+        />
+        <div className="page-container grid gap-4 py-14 md:grid-cols-3 md:py-16">
           {FEATURES.map((f) => (
-            <div key={f.title} className="flex flex-col gap-2 border bg-card p-5">
+            <div key={f.title} className="flex flex-col gap-2 border bg-card/95 p-5 shadow-lg backdrop-blur-sm">
               <f.icon className="size-6 text-primary" aria-hidden />
               <h3 className="font-heading font-bold">{f.title}</h3>
               <p className="text-sm text-muted-foreground">{f.body}</p>
             </div>
           ))}
         </div>
+        <PhotoCredit photo={PHOTOS.crimsonTexture} className="absolute right-3 bottom-2" />
       </section>
     </>
   )

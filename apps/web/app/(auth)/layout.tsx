@@ -1,7 +1,10 @@
+import Image from "next/image"
 import Link from "next/link"
 import { RiCheckLine } from "@remixicon/react"
 
 import { ZuulaMarkOutline } from "@/components/brand/zuula-mark"
+import { PHOTO_QUALITY, PhotoCredit } from "@/components/decor/photo-hero"
+import { PHOTOS } from "@/components/decor/photos"
 import { Logo } from "@/components/shell/logo"
 import { RoleSwitcher } from "@/components/shell/role-switcher"
 import { ThemeToggle } from "@/components/shell/theme-toggle"
@@ -42,8 +45,18 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         <aside
           aria-hidden
-          className="relative hidden overflow-hidden bg-primary text-primary-foreground lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16"
+          className="relative isolate hidden overflow-hidden bg-primary text-primary-foreground lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16"
         >
+          <Image
+            src={PHOTOS.phoneOnCrimson.src}
+            alt=""
+            fill
+            priority
+            quality={PHOTO_QUALITY}
+            sizes="max(50vw, 150vh)"
+            className="-z-20 object-cover object-[30%_center]"
+          />
+          <div className="absolute inset-0 -z-10 bg-linear-to-t from-primary via-primary/75 to-primary/10 dark:from-black/90 dark:via-primary/70" />
           <ZuulaMarkOutline className="pointer-events-none absolute -right-24 -bottom-24 size-[36rem] opacity-10" />
           <p className="font-heading text-sm font-semibold tracking-widest uppercase opacity-80">
             Uganda Fact-Guard
@@ -64,6 +77,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <p className="relative text-sm opacity-80">
             Developed by the Centre for Intelligent Technologies, Victoria University Kampala.
           </p>
+          <PhotoCredit photo={PHOTOS.phoneOnCrimson} tabIndex={-1} className="absolute top-4 right-4" />
         </aside>
       </div>
     </div>

@@ -14,14 +14,17 @@ export function Placeholder({
   title,
   description,
   spec,
+  hideHeader,
 }: {
   title: string
   description?: string
   spec?: string
+  /** Set when the page already renders its own title (e.g. a PhotoBanner). */
+  hideHeader?: boolean
 }) {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={title} description={description} />
+      {!hideHeader && <PageHeader title={title} description={description} />}
       <Empty className="border border-dashed">
         <EmptyHeader>
           <EmptyMedia variant="icon">

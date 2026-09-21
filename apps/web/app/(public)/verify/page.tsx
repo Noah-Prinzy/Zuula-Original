@@ -7,6 +7,10 @@ import {
   RiWhatsappLine,
 } from "@remixicon/react"
 
+import Image from "next/image"
+
+import { PHOTO_QUALITY, PhotoCredit } from "@/components/decor/photo-hero"
+import { PHOTOS } from "@/components/decor/photos"
 import { PageHeader } from "@/components/shell/page-header"
 import { SubmissionComposer } from "@/components/submission/submission-composer"
 import { TrackingLookup } from "@/components/submission/tracking-lookup"
@@ -41,6 +45,20 @@ export default function VerifyPage() {
         <SubmissionComposer />
 
         <aside className="flex flex-col gap-6">
+          <figure className="relative isolate hidden aspect-[4/3] overflow-hidden border bg-muted lg:block">
+            <Image
+              src={PHOTOS.marketCall.src}
+              alt={PHOTOS.marketCall.alt}
+              fill
+              quality={PHOTO_QUALITY}
+              sizes="(min-width: 1280px) 26rem, 22rem"
+              className="-z-10 object-cover object-[center_30%]"
+            />
+            <figcaption className="absolute inset-x-0 bottom-0 flex flex-col gap-1 bg-linear-to-t from-black/85 via-black/50 to-transparent p-4 pt-12 text-white">
+              <span className="font-heading text-sm font-bold">Heard it on WhatsApp? Check it here.</span>
+              <PhotoCredit photo={PHOTOS.marketCall} />
+            </figcaption>
+          </figure>
           <section aria-labelledby="how-it-works" className="border bg-card p-4">
             <h2 id="how-it-works" className="mb-3 font-heading text-sm font-bold">
               How it works

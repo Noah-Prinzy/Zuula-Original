@@ -1,9 +1,13 @@
 import type { StaticImageData } from "next/image"
 
 import crimsonTexture from "@/public/images/crimson-texture.jpg"
+import couplePhone from "@/public/images/couple-phone.jpg"
 import crimsonWaves from "@/public/images/crimson-waves.jpg"
+import friendsPhone from "@/public/images/friends-phone.jpg"
 import hillRoad from "@/public/images/hill-road.jpg"
 import kampalaSkyline from "@/public/images/kampala-skyline.jpg"
+import kampalaStreet from "@/public/images/kampala-street.jpg"
+import manTexting from "@/public/images/man-texting.jpg"
 import marketCall from "@/public/images/market-call.jpg"
 import newspapers from "@/public/images/newspapers.jpg"
 import phoneOnCrimson from "@/public/images/phone-on-crimson.jpg"
@@ -80,6 +84,38 @@ export const PHOTOS = {
     credit: {
       name: "Pawel Czerwinski",
       url: "https://unsplash.com/photos/DQ2lqx_6RD0",
+    },
+  },
+  friendsPhone: {
+    src: friendsPhone,
+    alt: "Two men reading something together on a smartphone",
+    credit: {
+      name: "Mugabi Owen",
+      url: "https://unsplash.com/photos/oCq3LW3rCD8",
+    },
+  },
+  couplePhone: {
+    src: couplePhone,
+    alt: "A man and a woman checking a phone by the roadside",
+    credit: {
+      name: "Francis Odeyemi",
+      url: "https://unsplash.com/photos/O8SpYxOFnK8",
+    },
+  },
+  kampalaStreet: {
+    src: kampalaStreet,
+    alt: "Busy Kampala street with taxis and boda bodas",
+    credit: {
+      name: "Ssenyondo Gabriel",
+      url: "https://unsplash.com/photos/Bb3qLfKp0Bs",
+    },
+  },
+  manTexting: {
+    src: manTexting,
+    alt: "Young man reading a message on his phone",
+    credit: {
+      name: "Emmanuel Ikwuegbu",
+      url: "https://unsplash.com/photos/81fRHbVliQI",
     },
   },
 } satisfies Record<string, Photo>

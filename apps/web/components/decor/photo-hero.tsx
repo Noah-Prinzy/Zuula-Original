@@ -3,6 +3,7 @@ import Image from "next/image"
 import { SplitText } from "@/components/motion/split-text"
 import { cn } from "@/lib/utils"
 
+import { ParallaxLayer } from "./parallax"
 import type { Photo } from "./photos"
 
 // Quality 90 is allow-listed in next.config.ts (images.qualities).
@@ -37,6 +38,7 @@ export function PhotoHero({
   position = "center",
   scrim = "dark",
   sizes = "max(100vw, 1600px)",
+  parallax,
   className,
   children,
 }: {
@@ -46,9 +48,24 @@ export function PhotoHero({
   scrim?: "dark" | "crimson"
   /** The photo is cropped to cover a tall section, so request more than 100vw to avoid upscaling. */
   sizes?: string
+  /** On scroll, the photo drifts slower than the page and the content floats up over it. */
+  parallax?: boolean
   className?: string
   children: React.ReactNode
 }) {
+  const image = (
+    <Image
+      src={photo.src}
+      alt={photo.alt}
+      fill
+      priority={priority}
+      quality={PHOTO_QUALITY}
+      sizes={sizes}
+      className="-z-20 object-cover"
+      style={{ objectPosition: position }}
+    />
+  )
+
   return (
     <section
       className={cn(
@@ -56,16 +73,13 @@ export function PhotoHero({
         className
       )}
     >
-      <Image
-        src={photo.src}
-        alt={photo.alt}
-        fill
-        priority={priority}
-        quality={PHOTO_QUALITY}
-        sizes={sizes}
-        className="-z-20 object-cover"
-        style={{ objectPosition: position }}
-      />
+      {parallax ? (
+        <ParallaxLayer speed={0.4} className="absolute inset-0 -z-20">
+          {image}
+        </ParallaxLayer>
+      ) : (
+        image
+      )}
       <div
         aria-hidden
         className={cn(
@@ -76,7 +90,18 @@ export function PhotoHero({
             "bg-linear-to-br from-primary/95 via-primary/80 to-black/70 dark:from-primary/90"
         )}
       />
-      {children}
+      {parallax ? (
+        // Fills the section so absolutely positioned children (e.g. a scroll cue) keep their place.
+        <ParallaxLayer
+          speed={-0.12}
+          fade={0.5}
+          className="flex flex-1 flex-col justify-center"
+        >
+          {children}
+        </ParallaxLayer>
+      ) : (
+        children
+      )}
       <PhotoCredit photo={photo} className="absolute right-3 bottom-2" />
     </section>
   )

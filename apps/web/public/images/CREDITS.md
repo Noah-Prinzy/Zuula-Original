@@ -13,3 +13,7 @@ stored at 2400–3200px wide and registered in `components/decor/photos.ts`.
 | uganda-hills.jpg | Random Institute | https://unsplash.com/photos/KQ5djKAN35s | About banner |
 | crimson-waves.jpg | Pawel Czerwinski | https://unsplash.com/photos/DQ2lqx_6RD0 | Developers (API) banner |
 | hill-road.jpg | Random Institute | https://unsplash.com/photos/v6MSchd3bAU | Offline banner |
+| friends-phone.jpg | Mugabi Owen | https://unsplash.com/photos/oCq3LW3rCD8 | Auth side panel slideshow |
+| couple-phone.jpg | Francis Odeyemi | https://unsplash.com/photos/O8SpYxOFnK8 | Auth side panel slideshow |
+| kampala-street.jpg | Ssenyondo Gabriel | https://unsplash.com/photos/Bb3qLfKp0Bs | Auth side panel slideshow, mobile auth strip |
+| man-texting.jpg | Emmanuel Ikwuegbu | https://unsplash.com/photos/81fRHbVliQI | Auth side panel slideshow |

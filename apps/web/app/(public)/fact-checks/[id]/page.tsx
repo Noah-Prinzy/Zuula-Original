@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { RiArrowLeftLine, RiFlaskLine } from "@remixicon/react"
+import { getTranslations } from "next-intl/server"
 
 import { CommunityStatusBanner } from "@/components/community/community-status"
 import { RatingComments } from "@/components/community/rating-comments"
@@ -12,9 +13,11 @@ import { AISignalsList } from "@/components/verdict/ai-signals-list"
 import { CitationCard } from "@/components/verdict/citation-card"
 import { ClaimHighlighter } from "@/components/verdict/claim-highlighter"
 import { ExpertAnnotation } from "@/components/verdict/expert-annotation"
+import { FactCheckCard } from "@/components/verdict/fact-check-card"
 import { VerdictSummary } from "@/components/verdict/verdict-summary"
 import { WhatIsTrueCard } from "@/components/verdict/what-is-true-card"
 import { communityScore } from "@/lib/community"
+import { relatedReports } from "@/lib/library"
 import { getSampleReport, SAMPLE_REPORTS } from "@/lib/mock/fact-checks"
 import { VERDICT_META } from "@/lib/verdicts"
 
@@ -61,6 +64,8 @@ export default async function ReportPage({ params }: Props) {
   const report = getSampleReport((await params).id)
   if (!report) notFound()
   const community = communityScore(report.community)
+  const related = relatedReports(SAMPLE_REPORTS, report, 3)
+  const t = await getTranslations("Related")
 
   return (
     <div className="page-container flex flex-col gap-6 py-8">
@@ -156,6 +161,19 @@ export default async function ReportPage({ params }: Props) {
           </Section>
         </aside>
       </div>
+
+      {/* FR-SEARCH-03: related fact-checks. */}
+      {related.length > 0 && (
+        <Section id="related" title={t("title")} description={t("description")}>
+          <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {related.map((r) => (
+              <li key={r.id} className="hover-lift">
+                <FactCheckCard report={r} />
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
     </div>
   )
 }

@@ -177,3 +177,53 @@ export function trendingTopics(all: FactCheckReport[], n: number, now = new Date
     .slice(0, n)
     .map(([category, count]) => ({ category, count }))
 }
+
+const STOP_WORDS = new Set(
+  "a an and are as at be by for from has have in is it its of on or that the this to was were will with".split(" ")
+)
+
+function keywords(r: FactCheckReport) {
+  return new Set(
+    `${r.title} ${r.summary}`
+      .toLowerCase()
+      .split(/[^\p{L}\p{N}]+/u)
+      .filter((w) => w.length > 2 && !STOP_WORDS.has(w))
+  )
+}
+
+// FR-SEARCH-03: checks related to a report, by shared topic, overlapping wording, source
+// and language. Suspended verdicts are excluded like everywhere else in search.
+export function relatedReports(all: FactCheckReport[], report: FactCheckReport, n = 3) {
+  const words = keywords(report)
+  const domain = report.sourceUrl ? safeHost(report.sourceUrl) : null
+
+  return all
+    .filter((r) => r.id !== report.id && isListed(r))
+    .map((r) => {
+      const other = keywords(r)
+      const shared = [...words].filter((w) => other.has(w)).length
+      const overlap = shared / Math.max(1, Math.min(words.size, other.size))
+      const sameTopic = r.category === report.category
+      const sameSource = Boolean(domain && r.sourceUrl && safeHost(r.sourceUrl) === domain)
+      const score =
+        (sameTopic ? 3 : 0) +
+        4 * overlap +
+        (sameSource ? 1.5 : 0) +
+        (r.language === report.language ? 0.5 : 0) +
+        (r.verdict === report.verdict ? 0.25 : 0)
+      // Language and verdict only break ties; a match needs a shared topic, source or wording.
+      return { report: r, score, relevant: sameTopic || sameSource || overlap >= 0.2 }
+    })
+    .filter((x) => x.relevant)
+    .sort((a, b) => b.score - a.score || b.report.checkedAt.localeCompare(a.report.checkedAt))
+    .slice(0, n)
+    .map((x) => x.report)
+}
+
+function safeHost(url: string) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "")
+  } catch {
+    return null
+  }
+}

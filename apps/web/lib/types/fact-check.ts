@@ -71,6 +71,26 @@ export type HumanReview = {
   justification: string
 }
 
+// FR-RATE: raw rating counts by rater role (weights applied in lib/community.ts).
+export type RaterRole = "public" | "journalist" | "expert"
+
+export type RatingCounts = Record<RaterRole, number>
+
+export type RatingComment = {
+  id: string
+  author: string
+  role: RaterRole
+  vote: "accurate" | "inaccurate"
+  body: string
+  createdAt: string
+}
+
+export type CommunityRating = {
+  accurate: RatingCounts
+  inaccurate: RatingCounts
+  comments: RatingComment[]
+}
+
 export type FactCheckReport = {
   id: string
   trackingId: string
@@ -91,6 +111,7 @@ export type FactCheckReport = {
   aiSignals: AISignal[]
   annotations: ExpertAnnotation[]
   humanReview?: HumanReview
+  community: CommunityRating
   category: string
   checkedAt: string
   processingSeconds: number

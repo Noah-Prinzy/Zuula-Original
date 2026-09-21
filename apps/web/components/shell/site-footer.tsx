@@ -35,7 +35,7 @@ const COLUMNS = [
 export function SiteFooter() {
   return (
     <footer className="border-t bg-muted/40">
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 md:grid-cols-[1.5fr_repeat(3,1fr)]">
+      <div className="page-container grid gap-8 py-10 md:grid-cols-[1.5fr_repeat(3,1fr)]">
         <div className="flex flex-col gap-3">
           <Logo />
           <p className="max-w-xs text-sm text-muted-foreground">
@@ -59,7 +59,7 @@ export function SiteFooter() {
         ))}
       </div>
       <Separator />
-      <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-4 text-xs text-muted-foreground sm:flex-row sm:justify-between">
+      <div className="page-container flex flex-col gap-1 py-4 text-xs text-muted-foreground sm:flex-row sm:justify-between">
         <p>© {new Date().getFullYear()} Zuula · Victoria University CIT</p>
         <p>Uganda Fact-Guard</p>
       </div>

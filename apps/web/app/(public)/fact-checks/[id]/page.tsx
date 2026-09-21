@@ -3,6 +3,9 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { RiArrowLeftLine, RiFlaskLine } from "@remixicon/react"
 
+import { CommunityStatusBanner } from "@/components/community/community-status"
+import { RatingComments } from "@/components/community/rating-comments"
+import { RatingPanel } from "@/components/community/rating-panel"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { AISignalsList } from "@/components/verdict/ai-signals-list"
@@ -11,6 +14,7 @@ import { ClaimHighlighter } from "@/components/verdict/claim-highlighter"
 import { ExpertAnnotation } from "@/components/verdict/expert-annotation"
 import { VerdictSummary } from "@/components/verdict/verdict-summary"
 import { WhatIsTrueCard } from "@/components/verdict/what-is-true-card"
+import { communityScore } from "@/lib/community"
 import { getSampleReport, SAMPLE_REPORTS } from "@/lib/mock/fact-checks"
 import { VERDICT_META } from "@/lib/verdicts"
 
@@ -56,9 +60,10 @@ function Section({
 export default async function ReportPage({ params }: Props) {
   const report = getSampleReport((await params).id)
   if (!report) notFound()
+  const community = communityScore(report.community)
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8">
+    <div className="page-container flex flex-col gap-6 py-8">
       <div className="flex items-center justify-between gap-4">
         <Button variant="ghost" size="sm" asChild className="-ml-2">
           <Link href="/fact-checks">
@@ -77,9 +82,11 @@ export default async function ReportPage({ params }: Props) {
       </Alert>
 
       <VerdictSummary report={report} />
+      <CommunityStatusBanner status={community.status} />
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="flex flex-col gap-8">
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_26rem]">
+        {/* Two columns of sections on very wide screens so lines stay readable. */}
+        <div className="grid items-start gap-8 2xl:grid-cols-2">
           <Section
             id="submitted"
             title="What was checked"
@@ -112,6 +119,14 @@ export default async function ReportPage({ params }: Props) {
             </Section>
           )}
 
+          <Section
+            id="comments"
+            title="Community comments"
+            description="Reasons people gave with their ratings."
+          >
+            <RatingComments comments={report.community.comments} />
+          </Section>
+
           {report.annotations.length > 0 && (
             <Section id="expert-notes" title="Expert notes">
               <div className="flex flex-col gap-3">
@@ -124,6 +139,10 @@ export default async function ReportPage({ params }: Props) {
         </div>
 
         <aside className="flex flex-col gap-8">
+          <Section id="rating" title="Community rating">
+            <RatingPanel initial={report.community} />
+          </Section>
+
           <Section
             id="sources"
             title="Sources"

@@ -4,7 +4,7 @@ export const metadata = { title: "About" }
 
 export default function Page() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
+    <div className="page-container py-10">
       <Placeholder title="About" description="Our mission, methodology and editorial independence." spec="" />
     </div>
   )

@@ -132,6 +132,12 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Full-width page container with fluid side padding (16px on phones → 48px on large screens). */
+@utility page-container {
+  width: 100%;
+  padding-inline: clamp(1rem, 3vw, 3rem);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

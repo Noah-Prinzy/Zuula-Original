@@ -32,7 +32,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
+      <div className="page-container flex h-14 items-center gap-4">
         <Logo />
 
         <nav aria-label="Main" className="hidden items-center gap-1 md:flex">

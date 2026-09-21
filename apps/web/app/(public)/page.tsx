@@ -35,18 +35,18 @@ export default function HomePage() {
   return (
     <>
       <section className="border-b bg-muted/30">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-5 px-4 py-16 text-center md:py-24">
+        <div className="page-container flex flex-col items-center gap-5 py-16 text-center md:py-24">
           <Badge variant="outline">Uganda Fact-Guard · Victoria University CIT</Badge>
-          <h1 className="max-w-3xl font-heading text-4xl font-bold tracking-tight text-balance md:text-5xl">
+          <h1 className="max-w-4xl font-heading text-4xl font-bold tracking-tight text-balance md:text-5xl xl:text-6xl">
             Check a claim before you share it
           </h1>
-          <p className="max-w-2xl text-base text-muted-foreground text-balance md:text-lg">
+          <p className="max-w-3xl text-base text-muted-foreground text-balance md:text-lg xl:text-xl">
             Paste a message, a link or upload media. Zuula tells you whether it is authentic, false
             or AI-generated — and shows you the sources.
           </p>
 
           {/* SubmissionComposer lands here in Week 2. */}
-          <Empty className="mt-4 w-full max-w-3xl border border-dashed bg-background">
+          <Empty className="mt-4 w-full max-w-5xl border border-dashed bg-background">
             <EmptyHeader>
               <EmptyTitle>Submission composer</EmptyTitle>
               <EmptyDescription>
@@ -57,7 +57,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-6xl gap-4 px-4 py-12 md:grid-cols-3">
+      <section className="page-container grid gap-4 py-12 md:grid-cols-3">
         {FEATURES.map((f) => (
           <Card key={f.title}>
             <CardHeader>

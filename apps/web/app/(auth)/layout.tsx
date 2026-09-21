@@ -4,7 +4,8 @@ import { RiCheckLine } from "@remixicon/react"
 import { ZuulaMarkOutline } from "@/components/brand/zuula-mark"
 import { PhotoSlideshow } from "@/components/decor/photo-slideshow"
 import { PHOTOS } from "@/components/decor/photos"
-import { SplitText } from "@/components/motion/split-text"
+import { KineticText } from "@/components/motion/text/kinetic-text"
+import { ScrambleText } from "@/components/motion/text/scramble-text"
 import { Logo } from "@/components/shell/logo"
 import { RoleSwitcher } from "@/components/shell/role-switcher"
 import { ThemeToggle } from "@/components/shell/theme-toggle"
@@ -88,13 +89,14 @@ export default function AuthLayout({
           <div className="absolute inset-0 -z-10 bg-linear-to-t from-primary via-primary/75 to-primary/10 dark:from-black/90 dark:via-primary/70" />
           <ZuulaMarkOutline className="pointer-events-none absolute -right-24 -bottom-24 size-[36rem] opacity-10" />
           <p className="enter font-heading text-sm font-semibold tracking-widest uppercase opacity-80">
-            Uganda Fact-Guard
+            <ScrambleText text="Uganda Fact-Guard" />
           </p>
           <div className="relative flex max-w-lg flex-col gap-8">
-            <h2 className="font-heading text-4xl leading-tight font-bold text-balance xl:text-5xl">
-              <SplitText
+            <h2 className="font-heading text-4xl leading-tight font-bold text-balance [--kinetic-accent:var(--chart-1)] [--mark:oklch(1_0_0/0.22)] xl:text-5xl">
+              <KineticText
                 text="Stop misinformation before it spreads."
                 delay={150}
+                highlight={["spreads."]}
               />
             </h2>
             <ul className="flex flex-col gap-3 text-base">

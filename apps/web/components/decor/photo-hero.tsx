@@ -1,6 +1,6 @@
 import Image from "next/image"
 
-import { SplitText } from "@/components/motion/split-text"
+import { KineticText } from "@/components/motion/text/kinetic-text"
 import { cn } from "@/lib/utils"
 
 import { ParallaxLayer } from "./parallax"
@@ -129,8 +129,8 @@ export function PhotoBanner({
             {eyebrow}
           </p>
         )}
-        <h1 className="font-heading text-3xl font-bold tracking-tight text-balance drop-shadow-sm md:text-4xl xl:text-5xl">
-          <SplitText text={title} delay={eyebrow ? 90 : 0} />
+        <h1 className="font-heading text-3xl font-bold tracking-tight text-balance drop-shadow-sm [--kinetic-accent:var(--chart-1)] md:text-4xl xl:text-5xl">
+          <KineticText text={title} delay={eyebrow ? 90 : 0} />
         </h1>
         {description && (
           <p className="enter max-w-2xl text-base text-balance text-white/85 [--d:3] md:text-lg">

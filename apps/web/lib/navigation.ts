@@ -108,9 +108,14 @@ export const ROUTE_TITLES: Record<string, string> = Object.fromEntries([
 // Path segments that exist only as URL structure, with no page of their own.
 export const NON_PAGE_ROUTES = new Set(["/review/cases"])
 
+// Pages without a nav item of their own highlight their parent's item instead.
+const ACTIVE_ALIASES: [prefix: string, href: string][] = [["/review/cases", "/review/queue"]]
+
 export function isActivePath(pathname: string, href: string) {
   if (href === "/") return pathname === "/"
-  // Section roots only match exactly inside the sidebar.
+  const alias = ACTIVE_ALIASES.find(([prefix]) => pathname.startsWith(prefix))
+  if (alias) return alias[1] === href
+  // Section roots only match exactly inside the section nav.
   if (SECTION_ROOTS.includes(href)) return pathname === href
   return pathname === href || pathname.startsWith(`${href}/`)
 }

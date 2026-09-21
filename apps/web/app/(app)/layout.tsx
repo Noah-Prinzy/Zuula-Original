@@ -1,25 +1,17 @@
-import { cookies } from "next/headers"
-
-import { AppHeader } from "@/components/shell/app-header"
-import { AppSidebar } from "@/components/shell/app-sidebar"
 import { RoleSwitcher } from "@/components/shell/role-switcher"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { SectionLayout } from "@/components/shell/section-nav"
+import { SiteFooter } from "@/components/shell/site-footer"
+import { SiteHeader } from "@/components/shell/site-header"
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  // Remember collapsed/expanded state across reloads.
-  const cookieStore = await cookies()
-  const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false"
-
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider defaultOpen={defaultOpen}>
-      <AppSidebar />
-      <SidebarInset>
-        <RoleSwitcher />
-        <AppHeader />
-        <main id="main" className="flex-1 p-4 md:p-6">
-          {children}
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    <div className="flex min-h-svh flex-col">
+      <RoleSwitcher />
+      <SiteHeader />
+      <main id="main" className="flex-1">
+        <SectionLayout>{children}</SectionLayout>
+      </main>
+      <SiteFooter />
+    </div>
   )
 }

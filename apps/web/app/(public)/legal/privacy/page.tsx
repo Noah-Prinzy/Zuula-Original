@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-import { LegalSections, type LegalSection } from "@/components/shell/legal-sections"
+import { ArticleSections, type ArticleSection } from "@/components/shell/article-sections"
 import { PageHeader } from "@/components/shell/page-header"
 import { Badge } from "@/components/ui/badge"
 
@@ -11,7 +11,7 @@ export const metadata = {
 
 const LAST_UPDATED = "21 September 2026"
 
-const SECTIONS: LegalSection[] = [
+const SECTIONS: ArticleSection[] = [
   {
     id: "overview",
     title: "Overview",
@@ -155,7 +155,7 @@ export default function PrivacyPage() {
         description="How we collect, use and protect your data."
         actions={<Badge variant="outline">Last updated {LAST_UPDATED}</Badge>}
       />
-      <LegalSections sections={SECTIONS} />
+      <ArticleSections sections={SECTIONS} />
     </div>
   )
 }

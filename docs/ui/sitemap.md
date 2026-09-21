@@ -74,7 +74,7 @@ Updated 21 Sep 2026. All pages run on mock data (`apps/web/lib/mock`); there is 
 
 | Area | Built | In progress | Placeholder |
 |---|---|---|---|
-| Public | Home, Verify, Status, Library, Report, About, Privacy, Terms, Offline | — | API |
+| Public | All 9 (Home, Verify, Status, Library, Report, About, API, Privacy, Terms, Offline) | — | — |
 | Authentication | All 6 | — | — |
 | Account | All 6 | — | — |
 | Review | All 4 | — | — |

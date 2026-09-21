@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 
 import { useSession } from "@/components/providers/session-provider"
 import {
@@ -13,13 +14,19 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { APP_NAV, isActivePath, isInSection, NON_PAGE_ROUTES, ROUTE_TITLES, type NavGroup } from "@/lib/navigation"
+import { APP_NAV, isActivePath, isInSection, NON_PAGE_ROUTES, ROUTE_KEYS, type NavGroup } from "@/lib/navigation"
 import { hasAnyRole } from "@/lib/roles"
 import { cn } from "@/lib/utils"
 
-function titleFor(href: string) {
-  const last = href.split("/").pop() ?? ""
-  return ROUTE_TITLES[href] ?? last.replace(/-/g, " ").replace(/^\w/, (c) => c.toUpperCase())
+// Breadcrumb label: a translated nav label where one exists, else the raw segment (e.g. a case ID).
+function useTitleFor() {
+  const t = useTranslations("Nav")
+  return (href: string) => {
+    const key = ROUTE_KEYS[href]
+    if (key) return t(key)
+    const last = href.split("/").pop() ?? ""
+    return decodeURIComponent(last)
+  }
 }
 
 // The current section's nav group, filtered for the signed-in role.
@@ -36,10 +43,12 @@ function useSection(): NavGroup | null {
 }
 
 function SectionSidebar({ section, pathname }: { section: NavGroup; pathname: string }) {
+  const t = useTranslations("Nav")
+  const label = t(`groups.${section.key}`)
   return (
-    <nav aria-label={`${section.label} section`} className="sticky top-20 flex flex-col gap-2">
+    <nav aria-label={t("section", { section: label })} className="sticky top-20 flex flex-col gap-2">
       <p className="px-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-        {section.label}
+        {label}
       </p>
       <ul className="flex flex-col gap-0.5">
         {section.items.map((item) => {
@@ -56,7 +65,7 @@ function SectionSidebar({ section, pathname }: { section: NavGroup; pathname: st
                 )}
               >
                 {Icon && <Icon aria-hidden />}
-                <span className="truncate">{item.title}</span>
+                <span className="truncate">{t(`items.${item.key}`)}</span>
               </Link>
             </li>
           )
@@ -67,6 +76,7 @@ function SectionSidebar({ section, pathname }: { section: NavGroup; pathname: st
 }
 
 function SectionTabs({ section, pathname }: { section: NavGroup; pathname: string }) {
+  const t = useTranslations("Nav")
   const listRef = useRef<HTMLUListElement>(null)
 
   // Keep the active tab visible without scrolling the page.
@@ -78,7 +88,7 @@ function SectionTabs({ section, pathname }: { section: NavGroup; pathname: strin
   }, [pathname])
 
   return (
-    <nav aria-label={`${section.label} section`} className="border-b">
+    <nav aria-label={t("section", { section: t(`groups.${section.key}`) })} className="border-b">
       <ul
         ref={listRef}
         className="-mb-px flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -97,7 +107,7 @@ function SectionTabs({ section, pathname }: { section: NavGroup; pathname: strin
                 )}
               >
                 {Icon && <Icon aria-hidden />}
-                {item.title}
+                {t(`items.${item.key}`)}
               </Link>
             </li>
           )
@@ -108,6 +118,7 @@ function SectionTabs({ section, pathname }: { section: NavGroup; pathname: strin
 }
 
 function SectionBreadcrumbs({ pathname }: { pathname: string }) {
+  const titleFor = useTitleFor()
   const parts = pathname.split("/").filter(Boolean)
   const crumbs = parts.map((_, i) => "/" + parts.slice(0, i + 1).join("/"))
   if (crumbs.length < 2) return null

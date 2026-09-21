@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { RiFireLine, RiSearchLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { startNavigationProgress } from "@/components/shell/route-progress"
 import { Button } from "@/components/ui/button"
@@ -18,19 +19,15 @@ import {
 import { Kbd } from "@/components/ui/kbd"
 
 // Placeholder trending topics until the search API exists (FR-SEARCH-02).
-const TRENDING = [
-  "Ebola treatment claims",
-  "2026 election results",
-  "Fuel price increase",
-  "School calendar changes",
-  "Mobile money tax",
-]
+const TRENDING = ["ebola", "elections", "fuel", "school", "mobileMoney"] as const
 
-const CATEGORIES = ["Health", "Politics", "Elections", "Economy", "Education"]
+const CATEGORIES = ["Health", "Politics", "Elections", "Economy", "Education"] as const
 
 export function GlobalSearch() {
   const [open, setOpen] = React.useState(false)
   const router = useRouter()
+  const t = useTranslations("Search")
+  const tcat = useTranslations("Categories")
 
   React.useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -56,33 +53,36 @@ export function GlobalSearch() {
         size="sm"
         onClick={() => setOpen(true)}
         className="w-full justify-start text-muted-foreground md:w-56"
-        aria-label="Search fact-checks"
+        aria-label={t("label")}
       >
         <RiSearchLine aria-hidden />
-        <span className="truncate">Search fact-checks…</span>
-        <Kbd className="ml-auto hidden md:inline-flex">Ctrl K</Kbd>
+        <span className="truncate">{t("button")}</span>
+        <Kbd className="ml-auto hidden md:inline-flex">{t("shortcut")}</Kbd>
       </Button>
       <CommandDialog
         open={open}
         onOpenChange={setOpen}
-        title="Search fact-checks"
-        description="Search previously verified claims and articles"
+        title={t("dialogTitle")}
+        description={t("dialogDescription")}
       >
-        <CommandInput placeholder="Search claims, topics, sources…" />
+        <CommandInput placeholder={t("placeholder")} />
         <CommandList>
-          <CommandEmpty>No matches. Press Enter to search all fact-checks.</CommandEmpty>
-          <CommandGroup heading="Trending misinformation">
-            {TRENDING.map((t) => (
-              <CommandItem key={t} value={t} onSelect={() => go(t)}>
-                <RiFireLine aria-hidden /> {t}
-              </CommandItem>
-            ))}
+          <CommandEmpty>{t("empty")}</CommandEmpty>
+          <CommandGroup heading={t("trending")}>
+            {TRENDING.map((key) => {
+              const topic = t(`topics.${key}`)
+              return (
+                <CommandItem key={key} value={topic} onSelect={() => go(topic)}>
+                  <RiFireLine aria-hidden /> {topic}
+                </CommandItem>
+              )
+            })}
           </CommandGroup>
           <CommandSeparator />
-          <CommandGroup heading="Browse by category">
+          <CommandGroup heading={t("byCategory")}>
             {CATEGORIES.map((c) => (
-              <CommandItem key={c} value={`category ${c}`} onSelect={() => go(c)}>
-                <RiSearchLine aria-hidden /> {c}
+              <CommandItem key={c} value={`category ${tcat(c)}`} onSelect={() => go(c)}>
+                <RiSearchLine aria-hidden /> {tcat(c)}
               </CommandItem>
             ))}
           </CommandGroup>

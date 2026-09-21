@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl"
+
 import { ZuulaMark } from "@/components/brand/zuula-mark"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
@@ -6,19 +8,20 @@ import { cn } from "@/lib/utils"
 // then a skeleton of a typical page so the layout doesn't jump.
 export function PageLoader({
   className,
-  label = "Loading",
+  label,
   skeleton = true,
 }: {
   className?: string
   label?: string
   skeleton?: boolean
 }) {
+  const t = useTranslations("Common")
   return (
     <div role="status" aria-live="polite" className={cn("flex flex-col gap-10 py-10", className)}>
       <div className="flex flex-col items-center gap-4 py-6">
         <ZuulaMark animated className="size-16 overflow-visible" />
         <p className="font-heading text-sm font-semibold tracking-widest text-muted-foreground uppercase">
-          {label}
+          {label ?? t("loading")}
           <span className="motion-safe:animate-pulse">…</span>
         </p>
       </div>

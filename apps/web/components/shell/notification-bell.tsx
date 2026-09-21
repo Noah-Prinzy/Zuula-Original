@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { RiNotification3Line } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { NotificationIcon } from "@/components/account/notification-icon"
 import { markAllRead, markRead, useNotifications } from "@/components/account/notifications-store"
@@ -15,6 +16,7 @@ const LATEST = 5
 
 export function NotificationBell() {
   const { items, unread } = useNotifications()
+  const t = useTranslations("Notifications")
 
   return (
     <Popover>
@@ -23,7 +25,7 @@ export function NotificationBell() {
           variant="ghost"
           size="icon"
           className="relative"
-          aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}
+          aria-label={unread ? t("labelUnread", { count: unread }) : t("label")}
         >
           <RiNotification3Line aria-hidden />
           {unread > 0 && (
@@ -35,10 +37,10 @@ export function NotificationBell() {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[22rem] max-w-[calc(100vw-2rem)] p-0">
         <div className="flex items-center justify-between border-b px-3 py-2">
-          <p className="font-heading text-sm font-semibold">Notifications</p>
+          <p className="font-heading text-sm font-semibold">{t("title")}</p>
           {unread > 0 && (
             <Button variant="link" size="xs" className="px-0" onClick={markAllRead}>
-              Mark all read
+              {t("markAllRead")}
             </Button>
           )}
         </div>
@@ -57,7 +59,7 @@ export function NotificationBell() {
                     <span className="line-clamp-2 text-xs text-muted-foreground">{n.body}</span>
                     <span className="text-[11px] text-muted-foreground">{relativeTime(n.createdAt)}</span>
                   </span>
-                  {!n.read && <span className="mt-1.5 size-2 shrink-0 bg-primary" aria-label="Unread" />}
+                  {!n.read && <span className="mt-1.5 size-2 shrink-0 bg-primary" aria-label={t("unread")} />}
                 </Link>
               </li>
             ))}
@@ -65,7 +67,7 @@ export function NotificationBell() {
         </ScrollArea>
         <div className="border-t p-2">
           <Button variant="ghost" size="sm" className="w-full" asChild>
-            <Link href="/account/notifications">View all notifications</Link>
+            <Link href="/account/notifications">{t("viewAll")}</Link>
           </Button>
         </div>
       </PopoverContent>

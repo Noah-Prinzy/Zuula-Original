@@ -1,6 +1,7 @@
 "use client"
 
 import { RiComputerLine, RiMoonLine, RiSunLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
@@ -14,11 +15,12 @@ import {
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
+  const t = useTranslations("Theme")
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Change theme">
+        <Button variant="ghost" size="icon" aria-label={t("change")}>
           <RiSunLine className="dark:hidden" aria-hidden />
           <RiMoonLine className="hidden dark:block" aria-hidden />
         </Button>
@@ -26,13 +28,13 @@ export function ThemeToggle() {
       <DropdownMenuContent align="end">
         <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
           <DropdownMenuRadioItem value="light">
-            <RiSunLine aria-hidden /> Light
+            <RiSunLine aria-hidden /> {t("light")}
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem value="dark">
-            <RiMoonLine aria-hidden /> Dark
+            <RiMoonLine aria-hidden /> {t("dark")}
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem value="system">
-            <RiComputerLine aria-hidden /> System
+            <RiComputerLine aria-hidden /> {t("system")}
           </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>
       </DropdownMenuContent>

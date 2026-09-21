@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { RiMenuLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { useSession } from "@/components/providers/session-provider"
 import { GlobalSearch } from "@/components/shell/global-search"
@@ -27,6 +28,7 @@ import { cn } from "@/lib/utils"
 export function SiteHeader() {
   const pathname = usePathname()
   const { user, role } = useSession()
+  const t = useTranslations("Nav")
 
   const nav = PUBLIC_NAV.filter((item) => hasAnyRole(role, item.roles))
 
@@ -35,7 +37,7 @@ export function SiteHeader() {
       <div className="page-container flex h-14 items-center gap-4">
         <Logo />
 
-        <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
+        <nav aria-label={t("main")} className="hidden items-center gap-1 md:flex">
           {nav.map((item) => {
             const active = isInSection(pathname, item.href)
             return (
@@ -48,7 +50,7 @@ export function SiteHeader() {
                   active && "text-foreground underline decoration-primary decoration-2 underline-offset-[18px]"
                 )}
               >
-                {item.title}
+                {t(`items.${item.key}`)}
               </Link>
             )
           })}
@@ -67,7 +69,7 @@ export function SiteHeader() {
 
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu">
+              <Button variant="ghost" size="icon" className="md:hidden" aria-label={t("openMenu")}>
                 <RiMenuLine aria-hidden />
               </Button>
             </SheetTrigger>
@@ -81,7 +83,7 @@ export function SiteHeader() {
               </SheetHeader>
               <div className="flex flex-col gap-4 px-4">
                 <GlobalSearch />
-                <nav aria-label="Mobile" className="flex flex-col">
+                <nav aria-label={t("mobile")} className="flex flex-col">
                   {nav.map((item) => (
                     <SheetClose asChild key={item.href}>
                       <Link
@@ -89,7 +91,7 @@ export function SiteHeader() {
                         aria-current={isInSection(pathname, item.href) ? "page" : undefined}
                         className="border-b py-3 text-sm aria-[current=page]:font-semibold aria-[current=page]:text-primary"
                       >
-                        {item.title}
+                        {t(`items.${item.key}`)}
                       </Link>
                     </SheetClose>
                   ))}

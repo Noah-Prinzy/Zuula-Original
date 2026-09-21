@@ -1,1 +1,325 @@
-{ "LanguageSwitcher": { "label": "Language" } }
+{
+  "LanguageSwitcher": {
+    "label": "Language"
+  },
+  "Common": {
+    "appName": "Zuula",
+    "tagline": "Uganda Fact-Guard",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out",
+    "backToHome": "Back to home",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saveChanges": "Save changes",
+    "confirm": "Confirm",
+    "remove": "Remove",
+    "goBack": "Go back",
+    "sampleReportTitle": "Sample report",
+    "sampleReportBody": "This report uses fictional data to preview the design. Real reports arrive with the AI engine.",
+    "screenInProgress": "Screen in progress",
+    "screenInProgressBody": "This screen is part of the Phase 1 build.",
+    "screenInProgressSpec": "This screen is part of the Phase 1 build ({spec}).",
+    "skipToContent": "Skip to content",
+    "loading": "Loading"
+  },
+  "Nav": {
+    "main": "Main",
+    "mobile": "Mobile",
+    "openMenu": "Open menu",
+    "accountMenu": "Account menu",
+    "section": "{section} section",
+    "groups": {
+      "review": "Review",
+      "admin": "Admin",
+      "account": "Account"
+    },
+    "items": {
+      "verify": "Verify",
+      "library": "Library",
+      "about": "About",
+      "review": "Review",
+      "admin": "Admin",
+      "reviewOverview": "Overview",
+      "reviewQueue": "Queue",
+      "reviewHistory": "History",
+      "reviewCases": "Cases",
+      "adminOverview": "Overview",
+      "adminUsers": "Users",
+      "adminModeration": "Moderation",
+      "adminSources": "Sources",
+      "adminBroadcasts": "Broadcasts",
+      "adminReports": "Reports",
+      "adminAuditLog": "Audit Log",
+      "adminSettings": "Settings",
+      "profile": "Profile",
+      "activity": "Activity",
+      "notifications": "Notifications",
+      "alerts": "Alerts",
+      "accreditation": "Accreditation",
+      "apiKeys": "API Keys"
+    }
+  },
+  "Footer": {
+    "blurb": "AI-powered misinformation detection for Uganda. Developed by the Centre for Intelligent Technologies, Victoria University Kampala.",
+    "product": "Product",
+    "organisation": "Organisation",
+    "legal": "Legal",
+    "verify": "Verify",
+    "library": "Library",
+    "whatsappBot": "WhatsApp bot",
+    "api": "API",
+    "about": "About",
+    "methodology": "Methodology",
+    "independence": "Editorial independence",
+    "contact": "Contact",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "dataProtection": "Data protection (DPPA 2019)",
+    "copyright": "© {year} Zuula · Victoria University CIT"
+  },
+  "Roles": {
+    "public": "Public User",
+    "journalist": "Verified Journalist",
+    "expert": "Expert Reviewer",
+    "admin": "Administrator"
+  },
+  "Demo": {
+    "viewAs": "Demo: view as",
+    "signedOut": "Signed out"
+  },
+  "Theme": {
+    "change": "Change theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "Search": {
+    "button": "Search fact-checks…",
+    "label": "Search fact-checks",
+    "dialogTitle": "Search fact-checks",
+    "dialogDescription": "Search previously verified claims and articles",
+    "placeholder": "Search claims, topics, sources…",
+    "empty": "No matches. Press Enter to search all fact-checks.",
+    "trending": "Trending misinformation",
+    "byCategory": "Browse by category",
+    "shortcut": "Ctrl K",
+    "topics": {
+      "ebola": "Ebola treatment claims",
+      "elections": "2026 election results",
+      "fuel": "Fuel price increase",
+      "school": "School calendar changes",
+      "mobileMoney": "Mobile money tax"
+    }
+  },
+  "Categories": {
+    "Health": "Health",
+    "Politics": "Politics",
+    "Elections": "Elections",
+    "Economy": "Economy",
+    "Education": "Education",
+    "Technology": "Technology",
+    "Weather": "Weather",
+    "Security": "Security"
+  },
+  "Notifications": {
+    "title": "Notifications",
+    "label": "Notifications",
+    "labelUnread": "Notifications, {count} unread",
+    "markAllRead": "Mark all read",
+    "unread": "Unread",
+    "viewAll": "View all notifications"
+  },
+  "RoleGate": {
+    "title": "Access restricted",
+    "body": "This area requires {roles} access.",
+    "or": "or"
+  },
+  "Pwa": {
+    "name": "Zuula — Uganda Fact-Guard",
+    "shortName": "Zuula",
+    "description": "Check messages, links, photos and videos for misinformation before you share them.",
+    "shortcutVerify": "Check a claim",
+    "shortcutLibrary": "Fact-check library",
+    "shortcutSaved": "Saved reports"
+  },
+  "Offline": {
+    "metaTitle": "Saved reports",
+    "eyebrow": "Offline",
+    "title": "Saved for offline",
+    "description": "Reports you've opened recently are kept on this device, so you can read them without a connection.",
+    "stillOffline": "You're offline. Checking new claims needs a connection, but your saved reports below still open.",
+    "backOnline": "You're online. Reports you open are saved here automatically.",
+    "retry": "Try again",
+    "savedTitle": "Recently viewed reports",
+    "savedDescription": "Up to 30 of the reports you opened most recently.",
+    "savedAt": "Saved {when}",
+    "emptyTitle": "No saved reports yet",
+    "emptyDescription": "Open a fact-check while you're online and it will be saved here for later.",
+    "browseLibrary": "Browse the Library"
+  },
+  "Errors": {
+    "eyebrow": "Something went wrong",
+    "title": "We couldn't load this page",
+    "description": "This is a problem on our side, not yours. Try again in a moment.",
+    "offlineTitle": "You're offline",
+    "offlineDescription": "This page needs a connection. Reports you opened recently are still available.",
+    "retry": "Try again",
+    "home": "Go to the home page",
+    "back": "Back to your account",
+    "savedReports": "See saved reports",
+    "reference": "Reference: {digest}",
+    "notFoundMetaTitle": "Page not found",
+    "notFoundTitle": "We couldn't find that page",
+    "notFoundDescription": "The link may be broken, or the page may have moved. Search the fact-check library, or start from the home page.",
+    "browseLibrary": "Search the Library",
+    "globalTitle": "Zuula ran into a problem",
+    "globalDescription": "Something went wrong while loading the app. Try again, and if it keeps happening, come back in a few minutes."
+  },
+  "Developers": {
+    "metaTitle": "API",
+    "metaDescription": "Submit content for verification and read Zuula fact-checks from your own newsroom tools.",
+    "scopeBadge": "Scope: {scope}",
+    "banner": {
+      "eyebrow": "Developers",
+      "title": "Zuula API",
+      "description": "Submit content for verification and read fact-checks from your own newsroom tools."
+    },
+    "toc": {
+      "label": "On this page",
+      "overview": "Overview",
+      "authentication": "Authentication",
+      "rateLimits": "Rate limits",
+      "submit": "Submit a check",
+      "status": "Get a result",
+      "search": "Search fact-checks",
+      "factCheck": "Fact-check object",
+      "errors": "Errors"
+    },
+    "preview": {
+      "title": "Preview, subject to change until v1",
+      "body": "This is an early look at the API for journalists and partners. Endpoints, fields and limits may change before version 1 is released."
+    },
+    "overview": {
+      "title": "Overview",
+      "body": "The Zuula API gives accredited journalists and partner organisations the same verification that powers zuula.ug. Checks run asynchronously:",
+      "step1": "Send content to <code>POST /v1/checks</code>. You get a tracking ID straight away.",
+      "step2": "Poll <code>GET /v1/checks/[trackingId]</code> until the status is completed.",
+      "step3": "Read the verdict, confidence score, explanation and citations from the result.",
+      "baseUrl": "Base URL",
+      "formatLabel": "Format",
+      "format": "JSON over HTTPS (UTF-8). Timestamps are ISO 8601 in UTC."
+    },
+    "auth": {
+      "title": "Authentication",
+      "body": "Every request needs an API key in the <code>Authorization</code> header. Verified journalists and administrators can create and revoke keys in <link>Account → API access</link>. Keys start with <code>zl_live_</code> and are shown only once.",
+      "headerLabel": "Request header",
+      "scopes": {
+        "submit": "Send text, links, articles and media for checking.",
+        "read": "Read check results and search published fact-checks."
+      },
+      "serverOnlyTitle": "Keep keys on your server",
+      "serverOnly": "Never put an API key in a web page, mobile app or public repository. Call the API from your own server and revoke any key that may have leaked."
+    },
+    "rate": {
+      "title": "Rate limits",
+      "body": "Each key can make {limit} requests per hour. Every response reports your remaining allowance. When you go over it, the API answers <code>429 Too Many Requests</code>: wait for the number of seconds in <code>Retry-After</code> before trying again.",
+      "headers": {
+        "limit": "Requests allowed per hour for this key.",
+        "remaining": "Requests left in the current hour.",
+        "reset": "When the allowance resets, as a Unix timestamp in seconds.",
+        "retryAfter": "Sent with 429 responses: seconds to wait before retrying."
+      }
+    },
+    "table": {
+      "field": "Name",
+      "type": "Type",
+      "description": "Description",
+      "required": "Required"
+    },
+    "common": {
+      "requestBody": "Request body",
+      "queryParameters": "Query parameters",
+      "example": "Example"
+    },
+    "code": {
+      "copy": "Copy",
+      "copied": "Copied",
+      "response": "Response · {status}",
+      "responseHeaders": "Response headers"
+    },
+    "submit": {
+      "title": "Submit a check",
+      "body": "Send one item for verification. Use JSON for text, links and articles, and <code>multipart/form-data</code> for media files. The response arrives immediately with a tracking ID; the check itself takes about 10 seconds for text and up to a minute for media.",
+      "fields": {
+        "type": "What you are sending: <code>text</code>, <code>url</code>, <code>article</code> or <code>media</code>.",
+        "content": "The text to check. Up to {textMax} characters for text, {articleMax} for an article. Required for text and article.",
+        "url": "A full http or https link to a news article or web page. Required for url.",
+        "file": "The photo, voice note or video, up to {size}. JPEG, PNG, WebP, GIF, MP3, M4A, WAV, OGG, AAC, MP4, MOV, WebM or 3GP. Required for media.",
+        "headline": "Optional article headline, up to {max} characters.",
+        "language": "Language of the content: <code>en</code>, <code>lg</code>, <code>ach</code>, <code>nyn</code>, <code>teo</code>, or <code>auto</code> to detect it (the default)."
+      }
+    },
+    "status": {
+      "title": "Get a result",
+      "body": "Returns the state of a check. When the status is <code>completed</code>, the <code>result</code> field holds the full fact-check object. Tracking IDs look like <code>ZL-7K3P-Q9</code>.",
+      "statesCaption": "Check states",
+      "states": {
+        "queued": "Received and waiting to be analysed.",
+        "processing": "Claims are being cross-checked against trusted sources and AI-detection models.",
+        "completed": "Finished. The result is included.",
+        "failed": "The check could not be completed. The error field explains why."
+      }
+    },
+    "search": {
+      "title": "Search fact-checks",
+      "body": "Search the public library of completed fact-checks. Results are ranked by Community Confidence Score and recency, and verdicts suspended for review are left out.",
+      "params": {
+        "q": "Words to look for in titles, summaries and checked text.",
+        "verdict": "Filter by verdict: <code>authentic</code>, <code>likely-false</code>, <code>false</code>, <code>ai-generated</code> or <code>unverifiable</code>.",
+        "category": "Filter by topic, such as Health or Elections.",
+        "language": "Filter by the language of the checked content.",
+        "dates": "Only checks made on or after, and on or before, these dates (YYYY-MM-DD).",
+        "page": "Page number, starting at 1.",
+        "perPage": "Results per page, from 1 to 50. Default 20."
+      }
+    },
+    "factCheck": {
+      "title": "Fact-check object",
+      "body": "Completed checks and search results share this shape. Arrays may be empty; fields may be added before v1 but not removed.",
+      "fields": {
+        "id": "Permanent ID of the published fact-check.",
+        "trackingId": "The tracking ID returned when the content was submitted.",
+        "verdict": "One of <code>authentic</code>, <code>likely-false</code>, <code>false</code>, <code>ai-generated</code> or <code>unverifiable</code>.",
+        "confidence": "How confident Zuula is in the verdict, from 0 to 100.",
+        "summary": "A plain-language explanation of the verdict.",
+        "findings": "Short statements of what is false and what is actually true.",
+        "claims": "Claims found in the text, with character offsets, an assessment, the reason and the citations that back it.",
+        "citations": "Sources used, with name, title, link, publication date and stance: <code>supports</code>, <code>contradicts</code> or <code>context</code>.",
+        "aiSignals": "Checks for AI-generated or manipulated content, each with a score, the threshold and the method.",
+        "community": "Accurate and inaccurate rating counts from the public, journalists and experts.",
+        "humanReview": "Present when an expert confirmed or overrode the verdict, with their justification.",
+        "checkedAt": "When the check finished."
+      }
+    },
+    "errors": {
+      "title": "Errors",
+      "body": "Errors use standard HTTP status codes and a JSON body with a machine-readable <code>code</code> and a human-readable <code>message</code>.",
+      "codes": {
+        "bad_request": "The request is malformed or a required field is missing.",
+        "unauthorized": "The API key is missing, invalid or revoked.",
+        "forbidden": "The key does not have the scope this endpoint needs.",
+        "not_found": "No check or fact-check has that ID.",
+        "file_too_large": "The media file is larger than 50 MB.",
+        "unsupported_media": "The file type is not accepted.",
+        "invalid_content": "The content is too short, too long or not a valid link.",
+        "rate_limited": "The key has used its hourly allowance. Wait for Retry-After seconds.",
+        "server_error": "Something went wrong on our side. Try again later."
+      }
+    }
+  },
+  "Related": {
+    "title": "Related checks",
+    "description": "Other fact-checks on the same topic or claim."
+  }
+}

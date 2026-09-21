@@ -1,4 +1,5 @@
 import { RiHammerLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { PageHeader } from "@/components/shell/page-header"
 import {
@@ -22,6 +23,7 @@ export function Placeholder({
   /** Set when the page already renders its own title (e.g. a PhotoBanner). */
   hideHeader?: boolean
 }) {
+  const t = useTranslations("Common")
   return (
     <div className="flex flex-col gap-6">
       {!hideHeader && <PageHeader title={title} description={description} />}
@@ -30,9 +32,9 @@ export function Placeholder({
           <EmptyMedia variant="icon">
             <RiHammerLine aria-hidden />
           </EmptyMedia>
-          <EmptyTitle>Screen in progress</EmptyTitle>
+          <EmptyTitle>{t("screenInProgress")}</EmptyTitle>
           <EmptyDescription>
-            This screen is part of the Phase 1 build{spec ? ` (${spec})` : ""}.
+            {spec ? t("screenInProgressSpec", { spec }) : t("screenInProgressBody")}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>

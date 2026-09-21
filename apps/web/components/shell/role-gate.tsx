@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { RiLockLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { useSession } from "@/components/providers/session-provider"
 import { Button } from "@/components/ui/button"
@@ -15,7 +16,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
-import { hasAnyRole, ROLE_LABELS, type Role } from "@/lib/roles"
+import { hasAnyRole, type Role } from "@/lib/roles"
 
 // Client-side gate for UX only. Real enforcement happens in the API (Phase 2/3).
 export function RoleGate({
@@ -27,11 +28,14 @@ export function RoleGate({
 }) {
   const { role, ready } = useSession()
   const pathname = usePathname()
+  const t = useTranslations("RoleGate")
+  const tc = useTranslations("Common")
+  const tr = useTranslations("Roles")
 
   if (!ready) return <Skeleton className="h-64 w-full" />
   if (hasAnyRole(role, allow)) return <>{children}</>
 
-  const needed = allow.map((r) => ROLE_LABELS[r]).join(" or ")
+  const needed = allow.map((r) => tr(r)).join(` ${t("or")} `)
 
   return (
     <Empty className="border">
@@ -39,17 +43,17 @@ export function RoleGate({
         <EmptyMedia variant="icon">
           <RiLockLine aria-hidden />
         </EmptyMedia>
-        <EmptyTitle>Access restricted</EmptyTitle>
-        <EmptyDescription>This area requires {needed} access.</EmptyDescription>
+        <EmptyTitle>{t("title")}</EmptyTitle>
+        <EmptyDescription>{t("body", { roles: needed })}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
         {role ? (
           <Button variant="outline" asChild>
-            <Link href="/">Back to home</Link>
+            <Link href="/">{tc("backToHome")}</Link>
           </Button>
         ) : (
           <Button asChild>
-            <Link href={`/sign-in?next=${encodeURIComponent(pathname)}`}>Sign In</Link>
+            <Link href={`/sign-in?next=${encodeURIComponent(pathname)}`}>{tc("signIn")}</Link>
           </Button>
         )}
       </EmptyContent>

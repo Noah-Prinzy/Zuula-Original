@@ -32,7 +32,7 @@ function Reports() {
 
   if (items.length === 0) return <Done title="No open reports" />
   return (
-    <ul className="flex flex-col divide-y border bg-card">
+    <ul data-reveal="stagger" className="flex flex-col divide-y border bg-card">
       {items.map((r) => (
         <li key={r.id} className="flex flex-col gap-3 p-4 lg:flex-row lg:items-start">
           <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -78,7 +78,7 @@ function Manipulation() {
 
   if (items.length === 0) return <Done title="No suspicious rating activity" />
   return (
-    <ul className="flex flex-col divide-y border bg-card">
+    <ul data-reveal="stagger" className="flex flex-col divide-y border bg-card">
       {items.map((m) => {
         const Vote = m.direction === "accurate" ? RiThumbUpLine : RiThumbDownLine
         return (

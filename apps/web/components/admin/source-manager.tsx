@@ -228,7 +228,7 @@ export function SourceManager() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-3 md:grid-cols-3">
+      <div data-reveal="stagger" className="grid gap-3 md:grid-cols-3">
         <div className="flex flex-col gap-2 border bg-card p-4 md:col-span-2">
           <div className="flex items-baseline justify-between text-sm">
             <span>Active sources</span>

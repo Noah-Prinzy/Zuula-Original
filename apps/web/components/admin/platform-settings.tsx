@@ -124,7 +124,7 @@ export function PlatformSettingsForm() {
   )
 
   return (
-    <div className="grid items-start gap-6 xl:grid-cols-2">
+    <div data-reveal="stagger" className="grid items-start gap-6 xl:grid-cols-2">
       <SettingsSection
         id="thresholds"
         title="Escalation thresholds"

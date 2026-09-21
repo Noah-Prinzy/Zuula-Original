@@ -41,7 +41,7 @@ function dayLabel(iso: string) {
 function ChecksChart() {
   const total = DAILY_CHECKS.reduce((s, d) => s + d.checks, 0)
   return (
-    <section aria-labelledby="checks-title" className="flex flex-col gap-3 border bg-card p-4">
+    <section data-reveal aria-labelledby="checks-title" className="flex flex-col gap-3 border bg-card p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="checks-title" className="font-heading text-base font-bold">
           Checks per day
@@ -84,7 +84,7 @@ function ChecksChart() {
 function VerdictMix() {
   const total = VERDICT_MIX.reduce((s, v) => s + v.count, 0)
   return (
-    <section aria-labelledby="mix-title" className="flex flex-col gap-3 border bg-card p-4">
+    <section data-reveal aria-labelledby="mix-title" className="flex flex-col gap-3 border bg-card p-4 [--d:1]">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="mix-title" className="font-heading text-base font-bold">
           Verdicts this month
@@ -103,7 +103,7 @@ function VerdictMix() {
                 </span>
               </div>
               <div className="h-1.5 bg-muted" aria-hidden>
-                <div className={cn("h-full", VERDICT_META[v.verdict].solid)} style={{ width: `${pct}%` }} />
+                <div className={cn("bar-grow h-full", VERDICT_META[v.verdict].solid)} style={{ width: `${pct}%` }} />
               </div>
             </li>
           )
@@ -115,7 +115,7 @@ function VerdictMix() {
 
 function SystemHealth() {
   return (
-    <section aria-labelledby="health-title" className="flex flex-col gap-3 border bg-card p-4">
+    <section data-reveal aria-labelledby="health-title" className="flex flex-col gap-3 border bg-card p-4">
       <h2 id="health-title" className="font-heading text-base font-bold">
         System health
       </h2>

@@ -191,7 +191,7 @@ export function Broadcasts() {
   return (
     <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_28rem]">
       <Composer onSent={(b) => setSent((s) => [b, ...s])} />
-      <section aria-labelledby="sent-title" className="flex flex-col gap-3">
+      <section data-reveal aria-labelledby="sent-title" className="flex flex-col gap-3 [--d:1]">
         <h2 id="sent-title" className="flex items-center gap-2 font-heading text-lg font-bold">
           <RiMegaphoneLine className="size-5 text-primary" aria-hidden /> Sent broadcasts
         </h2>

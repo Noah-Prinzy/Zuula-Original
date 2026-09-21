@@ -40,7 +40,7 @@ export function TrendReports() {
 
   return (
     <div className="flex flex-col gap-6">
-      <section aria-labelledby="trend-title" className="flex flex-col gap-3 border bg-card p-4">
+      <section data-reveal aria-labelledby="trend-title" className="flex flex-col gap-3 border bg-card p-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 id="trend-title" className="font-heading text-base font-bold">
             Checks per month
@@ -71,7 +71,7 @@ export function TrendReports() {
         </p>
       </section>
 
-      <section aria-labelledby="months-title" className="flex flex-col gap-3">
+      <section data-reveal aria-labelledby="months-title" className="flex flex-col gap-3 [--d:1]">
         <h2 id="months-title" className="font-heading text-lg font-bold">
           Monthly reports
         </h2>

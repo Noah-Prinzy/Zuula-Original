@@ -329,6 +329,22 @@ html:has(.snap-page) {
   background-size: 100% 1px;
 }
 
+/* Meter bars grow in from the left, once their panel is revealed (or on paint outside one). */
+@keyframes zuula-bar {
+  from {
+    transform: scaleX(0);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bar-grow {
+    transform-origin: left;
+    animation: zuula-bar 900ms var(--ease-out-soft) 250ms backwards;
+  }
+  html[data-motion] [data-reveal]:not([data-revealed]) .bar-grow {
+    animation-play-state: paused;
+  }
+}
+
 /* Text emphasis ----------------------------------------------------------------------------
    Text-level effects from components/motion/text/*: hover-reactive headlines (KineticText),
    marker and scribble emphasis (Emphasis), word carousels (WordRotator) and decoding labels

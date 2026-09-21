@@ -96,7 +96,7 @@ export function ReviewOverview() {
                     <span className="font-mono tabular-nums">{b.count}</span>
                   </div>
                   <div className="h-1.5 bg-muted" aria-hidden>
-                    <div className="h-full bg-primary" style={{ width: `${(b.count / max) * 100}%` }} />
+                    <div className="bar-grow h-full bg-primary" style={{ width: `${(b.count / max) * 100}%` }} />
                   </div>
                 </li>
               ))}

@@ -45,7 +45,7 @@ export function ReviewHistory() {
           </EmptyHeader>
         </Empty>
       ) : (
-        <ul className="flex flex-col divide-y border bg-card">
+        <ul data-reveal="stagger" className="flex flex-col divide-y border bg-card">
           {shown.map((d) => {
             const late = d.turnaroundHours > REVIEW_SLA_HOURS
             return (

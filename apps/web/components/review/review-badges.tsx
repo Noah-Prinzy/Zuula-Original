@@ -69,7 +69,7 @@ export function StatCard({
   tone?: "default" | "danger" | "warning" | "good"
 }) {
   return (
-    <div className="flex flex-col gap-1 border bg-card p-4">
+    <div className="hover-lift flex flex-col gap-1 border bg-card p-4">
       <span className="text-xs text-muted-foreground">{label}</span>
       <span
         className={cn(

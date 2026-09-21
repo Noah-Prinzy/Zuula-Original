@@ -44,7 +44,7 @@ const MIN_JUSTIFICATION = 30
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
-    <section aria-labelledby={id} className="flex flex-col gap-3">
+    <section data-reveal aria-labelledby={id} className="flex flex-col gap-3">
       <h2 id={id} className="font-heading text-lg font-bold">
         {title}
       </h2>
@@ -273,8 +273,8 @@ export function CaseReview({ reviewCase, report }: { reviewCase: ReviewCase; rep
 
       <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="flex min-w-0 flex-col gap-8">
-          <VerdictSummary report={report} />
-          <CommunityStatusBanner status={score.status} />
+          <VerdictSummary report={report} className="enter [--d:1]" />
+          <CommunityStatusBanner status={score.status} className="enter [--d:2]" />
           <Section id="checked" title="What was checked">
             <div className="border bg-card p-4">
               <ClaimHighlighter text={report.submittedText} claims={report.claims} citations={report.citations} />

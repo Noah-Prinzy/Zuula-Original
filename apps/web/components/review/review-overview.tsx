@@ -37,7 +37,7 @@ export function ReviewOverview() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div data-reveal="stagger" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="In the queue" value={SAMPLE_CASES.length} hint={`${SAMPLE_CASES.filter((c) => !c.assignee).length} unassigned`} />
         <StatCard label="Overdue" value={overdue} tone={overdue ? "danger" : "good"} hint={`Past the ${REVIEW_SLA_HOURS}-hour SLA`} />
         <StatCard label="Due in 12 hours" value={dueSoon} tone={dueSoon ? "warning" : "default"} />
@@ -50,7 +50,7 @@ export function ReviewOverview() {
       </div>
 
       <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_24rem]">
-        <section aria-labelledby="attention" className="flex flex-col gap-3">
+        <section data-reveal aria-labelledby="attention" className="flex flex-col gap-3 [--d:2]">
           <div className="flex items-end justify-between gap-2">
             <h2 id="attention" className="font-heading text-lg font-bold">
               Needs attention
@@ -84,7 +84,7 @@ export function ReviewOverview() {
         </section>
 
         <div className="flex flex-col gap-8">
-          <section aria-labelledby="by-reason" className="flex flex-col gap-3">
+          <section data-reveal aria-labelledby="by-reason" className="flex flex-col gap-3 [--d:3]">
             <h2 id="by-reason" className="font-heading text-lg font-bold">
               Why cases are flagged
             </h2>
@@ -103,7 +103,7 @@ export function ReviewOverview() {
             </ul>
           </section>
 
-          <section aria-labelledby="recent" className="flex flex-col gap-3">
+          <section data-reveal aria-labelledby="recent" className="flex flex-col gap-3 [--d:4]">
             <h2 id="recent" className="font-heading text-lg font-bold">
               Your recent decisions
             </h2>

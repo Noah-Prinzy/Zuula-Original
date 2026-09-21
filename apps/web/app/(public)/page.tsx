@@ -4,14 +4,9 @@ import {
   RiShieldCheckLine,
 } from "@remixicon/react"
 
+import { SubmissionComposer } from "@/components/submission/submission-composer"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@/components/ui/empty"
 
 const FEATURES = [
   {
@@ -45,15 +40,7 @@ export default function HomePage() {
             or AI-generated — and shows you the sources.
           </p>
 
-          {/* SubmissionComposer lands here in Week 2. */}
-          <Empty className="mt-4 w-full max-w-5xl border border-dashed bg-background">
-            <EmptyHeader>
-              <EmptyTitle>Submission composer</EmptyTitle>
-              <EmptyDescription>
-                Text, link, media and article input with language selection (FR-SUBMIT).
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
+          <SubmissionComposer variant="compact" className="mt-4 w-full max-w-5xl" />
         </div>
       </section>
 

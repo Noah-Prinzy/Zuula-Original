@@ -1,7 +1,13 @@
-import { Placeholder } from "@/components/shell/placeholder"
+import { PageHeader } from "@/components/shell/page-header"
+import { ReviewHistory } from "@/components/review/review-history"
 
-export const metadata = { title: "History" }
+export const metadata = { title: "Review history" }
 
 export default function Page() {
-  return <Placeholder title="History" description="Verdicts you have confirmed or overridden." spec="FR-REVIEW-03" />
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader title="Review history" description="Every decision you've made, as recorded in the audit log." />
+      <ReviewHistory />
+    </div>
+  )
 }

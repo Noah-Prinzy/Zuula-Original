@@ -1,7 +1,13 @@
-import { Placeholder } from "@/components/shell/placeholder"
+import { PageHeader } from "@/components/shell/page-header"
+import { ReviewOverview } from "@/components/review/review-overview"
 
-export const metadata = { title: "Overview" }
+export const metadata = { title: "Review overview" }
 
 export default function Page() {
-  return <Placeholder title="Overview" description="Flagged content, SLA status and your review activity." spec="FR-REVIEW" />
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader title="Review overview" description="Flagged verdicts, review deadlines and your recent decisions." />
+      <ReviewOverview />
+    </div>
+  )
 }

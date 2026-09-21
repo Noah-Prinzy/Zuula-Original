@@ -1,7 +1,9 @@
 # Zuula — UI Component Inventory
 
 Source library: [shadcn/ui](https://ui.shadcn.com) (Radix UI primitives, Tailwind CSS).
-Status: **Draft v0.1** — 21 Sep 2026. Fonts and theme tokens are decided in the next step.
+Status: **v0.2** — 21 Sep 2026. Theme: shadcn preset `b20twYRDfO`. Fonts: Raleway (headings), Geist (body), Lora (serif), Geist Mono. Icons: Remix Icon.
+
+Built so far: all atoms and molecules listed below are installed in `apps/web/components/ui`, and all Zuula components for verdicts, community rating, submission and discovery are built. Review components are in progress; admin components (`UserManagementTable`, `SourceManager`, `ThresholdEditor`, `BroadcastComposer`, `AuditLogTable`, `MetricCard`, `TrendChart`) are not started.
 
 Tiers:
 - **Atoms** — single-purpose shadcn primitives, used everywhere.

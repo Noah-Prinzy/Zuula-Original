@@ -68,3 +68,16 @@ Status: **v0.2 (approved)** — 21 Sep 2026.
 2. **Discover:** Home feed or Library → Report.
 3. **Review:** Notification or Queue → Case → confirm/override → Report shows "Human Verified".
 4. **Sign up:** Sign Up → Verify Account → (Two-Factor for Expert/Admin) → return to previous page.
+
+## 4. Build status
+Updated 21 Sep 2026. All pages run on mock data (`apps/web/lib/mock`); there is no backend yet.
+
+| Area | Built | In progress | Placeholder |
+|---|---|---|---|
+| Public | Home, Verify, Status, Library, Report | — | About, API, Privacy, Terms, Offline |
+| Authentication | All 6 | — | — |
+| Account | All 6 | — | — |
+| Review | Case | Overview, Queue, History | — |
+| Admin | — | — | All 8 |
+
+Not yet done across all pages: translations for the 5 languages (the switcher only stores the chosen locale), PWA manifest and service worker, accessibility and Lighthouse pass.

@@ -3,7 +3,7 @@
 Source library: [shadcn/ui](https://ui.shadcn.com) (Radix UI primitives, Tailwind CSS).
 Status: **v0.2** — 21 Sep 2026. Theme: shadcn preset `b20twYRDfO`. Fonts: Raleway (headings), Geist (body), Lora (serif), Geist Mono. Icons: Remix Icon.
 
-Built so far: all atoms and molecules listed below are installed in `apps/web/components/ui`, and all Zuula components for verdicts, community rating, submission and discovery are built. Review components are built; admin components (`UserManagementTable`, `SourceManager`, `ThresholdEditor`, `BroadcastComposer`, `AuditLogTable`, `MetricCard`, `TrendChart`) are in progress.
+Built so far: all atoms and molecules listed below are installed in `apps/web/components/ui`, and all Zuula components for verdicts, community rating, submission and discovery are built. Review and admin components are built (`UserManagement`, `SourceManager`, `PlatformSettings`, `Broadcasts`, `AuditLog`, `Moderation`, `AdminOverview`, `TrendReports`, shared `DataTable`).
 
 Tiers:
 - **Atoms** — single-purpose shadcn primitives, used everywhere.

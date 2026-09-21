@@ -33,6 +33,14 @@ export function WordRotator({
     previous: null,
   })
   const [width, setWidth] = useState<number>()
+
+  // New words (e.g. after a language switch): start again from the first one.
+  const wordsKey = words.join("|")
+  const [seenKey, setSeenKey] = useState(wordsKey)
+  if (seenKey !== wordsKey) {
+    setSeenKey(wordsKey)
+    setSlot({ index: 0, previous: null })
+  }
   const [paused, setPaused] = useState(false)
   const items = useRef<(HTMLSpanElement | null)[]>([])
 
@@ -43,7 +51,7 @@ export function WordRotator({
       setSlot(({ index: i }) => ({ index: (i + 1) % words.length, previous: i }))
     }, interval)
     return () => window.clearInterval(id)
-  }, [words.length, interval, paused])
+  }, [words.length, interval, paused, wordsKey])
 
   // Track the active word's width, including when the heading's font size changes.
   useIsoLayoutEffect(() => {
@@ -54,7 +62,7 @@ export function WordRotator({
     const ro = new ResizeObserver(measure)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [index])
+  }, [index, wordsKey])
 
   return (
     <span
@@ -66,7 +74,7 @@ export function WordRotator({
       <span className="sr-only">{words[0]}</span>
       {words.map((word, k) => (
         <span
-          key={word}
+          key={`${wordsKey}:${k}`}
           aria-hidden
           ref={(el) => {
             items.current[k] = el

@@ -13,6 +13,12 @@ const FRAME_MS = 32
 // its real width, so the label never jitters. Off under prefers-reduced-motion.
 export function ScrambleText({ text, className }: { text: string; className?: string }) {
   const [shown, setShown] = useState(text)
+  // New text (e.g. after a language switch) shows at once; the effect below re-decodes it.
+  const [seen, setSeen] = useState(text)
+  if (seen !== text) {
+    setSeen(text)
+    setShown(text)
+  }
   const root = useRef<HTMLSpanElement>(null)
   const frame = useRef<number | null>(null)
 

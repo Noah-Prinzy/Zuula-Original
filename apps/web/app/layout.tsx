@@ -1,10 +1,12 @@
 import { Suspense } from "react"
 import type { Metadata } from "next"
+import { getLocale, getMessages } from "next-intl/server"
 import { Geist, Geist_Mono, Lora, Raleway } from "next/font/google"
 
 import "./globals.css"
 import { MOTION_INIT_SCRIPT } from "@/components/motion/motion-init"
 import { RevealObserver } from "@/components/motion/reveal-observer"
+import { IntlProvider } from "@/components/providers/intl-provider"
 import { SessionProvider } from "@/components/providers/session-provider"
 import { RouteProgress } from "@/components/shell/route-progress"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -39,14 +41,19 @@ export const metadata: Metadata = {
     "AI-powered fake news and misinformation detection for Uganda. Developed by Victoria University CIT.",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // The UI language comes from the NEXT_LOCALE cookie (i18n/request.ts); switching it
+  // refreshes the page, so <html lang> and every message update together.
+  const locale = await getLocale()
+  const messages = await getMessages()
+
   return (
     <html
-      lang="en"
+      lang={locale}
       suppressHydrationWarning
       className={cn(
         "antialiased",
@@ -71,14 +78,16 @@ export default function RootLayout({
           <RouteProgress />
         </Suspense>
         <RevealObserver />
-        <ThemeProvider>
-          <SessionProvider>
-            <TooltipProvider>
-              {children}
-              <Toaster />
-            </TooltipProvider>
-          </SessionProvider>
-        </ThemeProvider>
+        <IntlProvider locale={locale} messages={messages}>
+          <ThemeProvider>
+            <SessionProvider>
+              <TooltipProvider>
+                {children}
+                <Toaster />
+              </TooltipProvider>
+            </SessionProvider>
+          </ThemeProvider>
+        </IntlProvider>
       </body>
     </html>
   )

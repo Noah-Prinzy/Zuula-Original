@@ -27,7 +27,8 @@ export function KineticText({
   return (
     <span className={cn("kinetic", className)}>
       <span className="sr-only">{text}</span>
-      <span aria-hidden>
+      {/* Keyed by text: a new string (e.g. after a language switch) remounts and re-enters. */}
+      <span key={text} aria-hidden>
         {words.map((word, i) => (
           <span key={i}>
             {i > 0 && " "}

@@ -3,6 +3,8 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono, Lora, Raleway } from "next/font/google"
 
 import "./globals.css"
+import { MOTION_INIT_SCRIPT } from "@/components/motion/motion-init"
+import { RevealObserver } from "@/components/motion/reveal-observer"
 import { SessionProvider } from "@/components/providers/session-provider"
 import { RouteProgress } from "@/components/shell/route-progress"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -55,6 +57,9 @@ export default function RootLayout({
         ralewayHeading.variable
       )}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: MOTION_INIT_SCRIPT }} />
+      </head>
       <body>
         <a
           href="#main"
@@ -65,6 +70,7 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <RouteProgress />
         </Suspense>
+        <RevealObserver />
         <ThemeProvider>
           <SessionProvider>
             <TooltipProvider>

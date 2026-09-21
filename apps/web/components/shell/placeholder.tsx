@@ -25,7 +25,7 @@ export function Placeholder({
   return (
     <div className="flex flex-col gap-6">
       {!hideHeader && <PageHeader title={title} description={description} />}
-      <Empty className="border border-dashed">
+      <Empty data-reveal="scale" className="border border-dashed">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <RiHammerLine aria-hidden />

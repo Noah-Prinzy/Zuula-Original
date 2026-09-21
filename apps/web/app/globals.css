@@ -149,3 +149,182 @@
     @apply font-serif;
     }
 }
+/* Motion + sections ------------------------------------------------------------------------
+   Viewport sections, reveal-on-scroll and text animation. Every animation is gated behind
+   prefers-reduced-motion: no-preference, and hidden-until-revealed states also require
+   html[data-motion], which an inline script sets before paint, so content never stays hidden
+   without JavaScript. Easing matches the brand loader (components/brand/zuula-mark.module.css). */
+
+:root {
+  --header-h: calc(3.5rem + 1px);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --reveal-duration: 700ms;
+  --reveal-distance: 1.25rem;
+}
+
+/* A band that fills the viewport under the sticky header, so the next section never peeks in
+   from below. Content is centred vertically; taller content simply grows the band. */
+@utility section-screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: calc(100svh - var(--header-h));
+  scroll-snap-align: start;
+}
+
+/* Pages that opt in (a .snap-page wrapper) get gentle proximity snapping between sections. */
+html:has(.snap-page) {
+  scroll-padding-top: var(--header-h);
+}
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.snap-page) {
+    scroll-snap-type: y proximity;
+  }
+}
+
+@keyframes zuula-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--reveal-distance), 0);
+  }
+}
+@keyframes zuula-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes zuula-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+@keyframes zuula-word {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0.45em, 0);
+    filter: blur(6px);
+  }
+}
+@keyframes zuula-underline {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Plays on first paint: for content that is on screen when the page loads. */
+  .enter {
+    animation: zuula-rise var(--reveal-duration) var(--ease-out-soft) backwards;
+    animation-delay: calc(var(--d, 0) * 90ms);
+  }
+
+  /* Page transition: each route segment eases in when a template remounts it. */
+  .page-enter {
+    animation: zuula-fade 450ms ease-out backwards;
+  }
+
+  /* Scroll reveal: RevealObserver sets data-revealed as the element enters the viewport.
+     Revealed elements play a one-shot animation with backwards fill, so nothing lingers
+     afterwards to fight hover transforms or transitions. */
+  html[data-motion] [data-reveal]:not([data-reveal="stagger"]):not([data-revealed]),
+  html[data-motion] [data-reveal="stagger"]:not([data-revealed]) > * {
+    opacity: 0;
+  }
+  [data-reveal][data-revealed]:not([data-reveal="stagger"]),
+  [data-reveal="stagger"][data-revealed] > * {
+    animation: zuula-rise var(--reveal-duration) var(--ease-out-soft) backwards;
+    animation-delay: calc(var(--d, 0) * 90ms);
+  }
+  [data-reveal="fade"][data-revealed] {
+    animation-name: zuula-fade;
+  }
+  [data-reveal="scale"][data-revealed] {
+    animation-name: zuula-scale;
+  }
+
+  /* Staggered children: each direct child reveals slightly after the one before. */
+  [data-reveal="stagger"] > :nth-child(2) { --d: 0.8; }
+  [data-reveal="stagger"] > :nth-child(3) { --d: 1.6; }
+  [data-reveal="stagger"] > :nth-child(4) { --d: 2.4; }
+  [data-reveal="stagger"] > :nth-child(5) { --d: 3.2; }
+  [data-reveal="stagger"] > :nth-child(6) { --d: 4; }
+  [data-reveal="stagger"] > :nth-child(7) { --d: 4.8; }
+  [data-reveal="stagger"] > :nth-child(n + 8) { --d: 5.6; }
+
+  /* Word-by-word headline (SplitText). Plays on paint, or on reveal inside [data-reveal]. */
+  .split-word {
+    display: inline-block;
+    animation: zuula-word 800ms var(--ease-out-soft) backwards;
+    animation-delay: calc(var(--base, 0ms) + var(--i, 0) * 55ms);
+  }
+  html[data-motion] [data-reveal]:not([data-revealed]) .split-word {
+    animation-play-state: paused;
+  }
+
+  /* Accent rule under section headings, drawn in on reveal. */
+  .rule-draw::after {
+    animation: zuula-underline 900ms var(--ease-out-soft) backwards;
+    animation-delay: 200ms;
+  }
+  html[data-motion] [data-reveal]:not([data-revealed]) .rule-draw::after,
+  html[data-motion] .rule-draw[data-reveal]:not([data-revealed])::after {
+    animation-play-state: paused;
+  }
+
+  /* Cards and tiles lift slightly on hover. */
+  .hover-lift {
+    transition:
+      transform 300ms var(--ease-out-soft),
+      box-shadow 300ms var(--ease-out-soft),
+      border-color 200ms ease-out;
+  }
+  .hover-lift:hover {
+    transform: translate3d(0, -3px, 0);
+    box-shadow: 0 12px 28px -12px oklch(0 0 0 / 0.25);
+  }
+
+  /* Scroll cue at the bottom of a hero. */
+  .scroll-cue {
+    animation: zuula-cue 2.4s ease-in-out infinite;
+  }
+  @keyframes zuula-cue {
+    0%, 100% { transform: translateY(0); opacity: 0.6; }
+    50% { transform: translateY(6px); opacity: 1; }
+  }
+}
+
+.split-word {
+  white-space: pre;
+}
+
+.rule-draw {
+  position: relative;
+  padding-bottom: 0.625rem;
+}
+.rule-draw::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 2.5rem;
+  height: 3px;
+  background: var(--primary);
+  transform-origin: left;
+}
+.text-center .rule-draw::after,
+.rule-draw.text-center::after {
+  left: calc(50% - 1.25rem);
+  transform-origin: center;
+}
+
+/* Links with an underline that grows from the left on hover. */
+.link-grow {
+  background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 0 1px;
+  transition: background-size 300ms var(--ease-out-soft);
+}
+.link-grow:hover,
+.link-grow:focus-visible {
+  background-size: 100% 1px;
+}

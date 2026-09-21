@@ -42,9 +42,9 @@ export default function VerifyPage() {
       />
 
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_26rem]">
-        <SubmissionComposer />
+        <SubmissionComposer className="enter [--d:2]" />
 
-        <aside className="flex flex-col gap-6">
+        <aside data-reveal="stagger" className="flex flex-col gap-6">
           <figure className="relative isolate hidden aspect-[4/3] overflow-hidden border bg-muted lg:block">
             <Image
               src={PHOTOS.marketCall.src}
@@ -59,7 +59,7 @@ export default function VerifyPage() {
               <PhotoCredit photo={PHOTOS.marketCall} />
             </figcaption>
           </figure>
-          <section aria-labelledby="how-it-works" className="border bg-card p-4">
+          <section aria-labelledby="how-it-works" className="hover-lift border bg-card p-4">
             <h2 id="how-it-works" className="mb-3 font-heading text-sm font-bold">
               How it works
             </h2>
@@ -78,7 +78,7 @@ export default function VerifyPage() {
             </ol>
           </section>
 
-          <section aria-labelledby="what-to-submit" className="border bg-card p-4">
+          <section aria-labelledby="what-to-submit" className="hover-lift border bg-card p-4">
             <h2 id="what-to-submit" className="mb-3 font-heading text-sm font-bold">
               What you can submit
             </h2>
@@ -95,7 +95,7 @@ export default function VerifyPage() {
             </ul>
           </section>
 
-          <section aria-labelledby="track-title" className="border bg-card p-4">
+          <section aria-labelledby="track-title" className="hover-lift border bg-card p-4">
             <h2 id="track-title" className="mb-3 font-heading text-sm font-bold">
               Already submitted?
             </h2>

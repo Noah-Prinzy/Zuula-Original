@@ -45,7 +45,7 @@ function Section({
   children: React.ReactNode
 }) {
   return (
-    <section aria-labelledby={id} className="flex flex-col gap-3">
+    <section data-reveal aria-labelledby={id} className="flex flex-col gap-3">
       <div>
         <h2 id={id} className="font-heading text-lg font-bold">
           {title}
@@ -72,7 +72,7 @@ export default async function ReportPage({ params }: Props) {
         </Button>
       </div>
 
-      <Alert>
+      <Alert className="enter">
         <RiFlaskLine aria-hidden />
         <AlertTitle>Sample report</AlertTitle>
         <AlertDescription>
@@ -81,8 +81,8 @@ export default async function ReportPage({ params }: Props) {
         </AlertDescription>
       </Alert>
 
-      <VerdictSummary report={report} />
-      <CommunityStatusBanner status={community.status} />
+      <VerdictSummary report={report} className="enter [--d:1]" />
+      <CommunityStatusBanner status={community.status} className="enter [--d:2]" />
 
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_26rem]">
         {/* Two columns of sections on very wide screens so lines stay readable. */}

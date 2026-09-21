@@ -1,5 +1,6 @@
 import Link from "next/link"
 import {
+  RiArrowDownLine,
   RiArrowRightLine,
   RiFireLine,
   RiGlobalLine,
@@ -12,6 +13,8 @@ import Image from "next/image"
 
 import { PHOTO_QUALITY, PhotoCredit, PhotoHero } from "@/components/decor/photo-hero"
 import { PHOTOS } from "@/components/decor/photos"
+import { ScreenSection, SectionTitle, SnapPage } from "@/components/motion/section"
+import { SplitText } from "@/components/motion/split-text"
 import { SubmissionComposer } from "@/components/submission/submission-composer"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -43,115 +46,137 @@ const FEATURES = [
 const NOW = new Date(SAMPLE_REPORTS[0]?.checkedAt ?? Date.now())
 const FEED_SIZE = 6
 
-function SectionHeading({ id, icon: Icon, title, description }: {
-  id: string
-  icon: typeof RiFireLine
-  title: string
-  description?: string
-}) {
-  return (
-    <div className="flex flex-col gap-0.5">
-      <h2 id={id} className="flex items-center gap-2 font-heading text-lg font-bold">
-        <Icon className="size-5 text-primary" aria-hidden />
-        {title}
-      </h2>
-      {description && <p className="text-sm text-muted-foreground">{description}</p>}
-    </div>
-  )
-}
+// Stagger index for the `enter` / `data-reveal` animations (globals.css, "Motion + sections").
+const delay = (d: number) => ({ "--d": d }) as React.CSSProperties
 
+// Each band fills the viewport (ScreenSection), so the next one never peeks in from below.
 export default function HomePage() {
   const feed = { latest: latest(SAMPLE_REPORTS, FEED_SIZE), debated: mostDebated(SAMPLE_REPORTS, FEED_SIZE) }
   const topics = trendingTopics(SAMPLE_REPORTS, 8, NOW)
   const leaders = leaderboard(SAMPLE_REPORTS, 5)
 
   return (
-    <>
-      <PhotoHero photo={PHOTOS.kampalaSkyline} priority position="center 40%" className="border-b">
-        <div className="page-container flex flex-col items-center gap-5 py-16 text-center md:py-24 xl:py-28">
-          <Badge variant="outline" className="border-white/40 bg-black/20 text-white backdrop-blur-sm">
+    <SnapPage>
+      <PhotoHero
+        photo={PHOTOS.kampalaSkyline}
+        priority
+        position="center 40%"
+        className="section-screen border-b"
+      >
+        <div className="page-container flex flex-col items-center gap-5 py-16 text-center md:py-20">
+          <Badge
+            variant="outline"
+            className="enter border-white/40 bg-black/20 text-white backdrop-blur-sm"
+          >
             Uganda Fact-Guard · Victoria University CIT
           </Badge>
           <h1 className="max-w-4xl font-heading text-4xl font-bold tracking-tight text-balance drop-shadow-sm md:text-5xl xl:text-6xl">
-            Check a claim before you share it
+            <SplitText text="Check a claim before you share it" delay={120} />
           </h1>
-          <p className="max-w-3xl text-base text-white/85 text-balance md:text-lg xl:text-xl">
+          <p
+            className="enter max-w-3xl text-base text-balance text-white/85 md:text-lg xl:text-xl"
+            style={delay(4)}
+          >
             Paste a message, a link or upload media. Zuula tells you whether it is authentic, false
             or AI-generated — and shows you the sources.
           </p>
 
-          <SubmissionComposer variant="compact" className="mt-4 w-full max-w-5xl text-foreground shadow-2xl" />
+          <div className="enter mt-4 w-full max-w-5xl" style={delay(6)}>
+            <SubmissionComposer variant="compact" className="w-full text-foreground shadow-2xl" />
+          </div>
         </div>
+        <a
+          href="#feed"
+          aria-label="Scroll to recent fact-checks"
+          className="scroll-cue absolute bottom-8 left-1/2 hidden -translate-x-1/2 text-white/70 hover:text-white md:block"
+        >
+          <RiArrowDownLine className="size-6" aria-hidden />
+        </a>
       </PhotoHero>
 
-      <div className="page-container grid items-start gap-10 py-12 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_26rem]">
-        {/* FR-SEARCH-05: real-time feed of recent and most debated checks. */}
-        <section aria-labelledby="feed-title" className="flex flex-col gap-4">
-          <Tabs defaultValue="latest" className="gap-4">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <SectionHeading
-                id="feed-title"
-                icon={RiShieldCheckLine}
-                title="Recent fact-checks"
-                description="What people in Uganda are checking right now."
-              />
-              <TabsList>
-                <TabsTrigger value="latest">Latest</TabsTrigger>
-                <TabsTrigger value="debated">Most debated</TabsTrigger>
-              </TabsList>
-            </div>
-            {(["latest", "debated"] as const).map((key) => (
-              <TabsContent key={key} value={key}>
-                <ul className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
-                  {feed[key].map((r) => (
-                    <li key={r.id}>
-                      <FactCheckCard report={r} />
-                    </li>
-                  ))}
-                </ul>
-              </TabsContent>
-            ))}
-          </Tabs>
+      {/* FR-SEARCH-05: real-time feed of recent and most debated checks. */}
+      <ScreenSection id="feed" aria-labelledby="feed-title" className="page-container gap-8 py-16">
+        <Tabs defaultValue="latest" className="gap-8">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <SectionTitle
+              id="feed-title"
+              eyebrow="Live feed"
+              title="Recent fact-checks"
+              description="What people in Uganda are checking right now."
+            />
+            <TabsList data-reveal style={delay(2)}>
+              <TabsTrigger value="latest">Latest</TabsTrigger>
+              <TabsTrigger value="debated">Most debated</TabsTrigger>
+            </TabsList>
+          </div>
+          {(["latest", "debated"] as const).map((key) => (
+            <TabsContent key={key} value={key}>
+              <ul data-reveal="stagger" className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                {feed[key].map((r) => (
+                  <li key={r.id} className="hover-lift">
+                    <FactCheckCard report={r} />
+                  </li>
+                ))}
+              </ul>
+            </TabsContent>
+          ))}
+        </Tabs>
+        <div data-reveal>
           <Button variant="outline" asChild className="w-fit">
             <Link href="/fact-checks">
               Browse the Library <RiArrowRightLine aria-hidden />
             </Link>
           </Button>
-        </section>
+        </div>
+      </ScreenSection>
 
-        <aside className="flex flex-col gap-8">
-          <section aria-labelledby="trending-title" className="flex flex-col gap-3">
-            <SectionHeading id="trending-title" icon={RiFireLine} title="Trending topics" description="Most checked this week." />
-            <ul className="flex flex-wrap gap-2">
+      <ScreenSection aria-label="Community" className="border-t bg-muted/40">
+        <div className="page-container grid items-start gap-12 py-16 lg:grid-cols-2 xl:gap-20">
+          <div className="flex flex-col gap-8">
+            <SectionTitle
+              id="trending-title"
+              eyebrow="Trending"
+              title="What Uganda is checking"
+              description="The most checked topics this week."
+            />
+            <ul data-reveal="stagger" aria-labelledby="trending-title" className="flex flex-wrap gap-2">
               {topics.map((t) => (
                 <li key={t.category}>
                   <Link
                     href={`/fact-checks?${toSearchParams({ category: t.category })}`}
-                    className="inline-flex items-center gap-1.5 border bg-card px-2.5 py-1 text-sm transition-colors hover:border-primary hover:text-primary"
+                    className="inline-flex items-center gap-2 border bg-card px-3.5 py-2 transition-colors hover:border-primary hover:text-primary"
                   >
+                    <RiFireLine className="size-4 text-primary" aria-hidden />
                     {t.category}
                     <span className="font-mono text-xs text-muted-foreground">{t.count}</span>
                   </Link>
                 </li>
               ))}
             </ul>
-          </section>
+          </div>
 
           {/* FR-RATE-10: most accurately rated stories. */}
-          <section aria-labelledby="leaders-title" className="flex flex-col gap-3">
-            <SectionHeading
+          <div className="flex flex-col gap-8">
+            <SectionTitle
               id="leaders-title"
-              icon={RiTrophyLine}
-              title="Community-confirmed"
-              description="Verdicts the community agrees with most."
+              eyebrow="Community-confirmed"
+              title="Verdicts people agree with"
+              description="Ranked by how strongly the community backs the verdict."
             />
-            <ol className="flex flex-col divide-y border bg-card">
+            <ol
+              data-reveal="stagger"
+              aria-labelledby="leaders-title"
+              className="flex flex-col divide-y border bg-card"
+            >
               {leaders.map(({ report, score }, i) => (
-                <li key={report.id} className="relative flex items-start gap-3 p-3 hover:bg-muted/50">
-                  <span className="w-5 shrink-0 font-heading text-lg leading-6 font-bold text-muted-foreground tabular-nums">
+                <li
+                  key={report.id}
+                  className="relative flex items-start gap-3 p-4 transition-colors hover:bg-muted/50"
+                >
+                  <span className="w-6 shrink-0 font-heading text-xl leading-6 font-bold text-primary tabular-nums">
                     {i + 1}
                   </span>
-                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                     <Link
                       href={`/fact-checks/${report.id}`}
                       className="line-clamp-2 text-sm font-medium after:absolute after:inset-0 hover:text-primary"
@@ -165,14 +190,15 @@ export default function HomePage() {
                       </span>
                     </div>
                   </div>
+                  <RiTrophyLine className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                 </li>
               ))}
             </ol>
-          </section>
-        </aside>
-      </div>
+          </div>
+        </div>
+      </ScreenSection>
 
-      <section aria-label="Why Zuula" className="relative isolate overflow-hidden border-t bg-primary">
+      <ScreenSection aria-labelledby="why-title" className="isolate overflow-hidden border-t bg-primary">
         <Image
           src={PHOTOS.crimsonTexture.src}
           alt=""
@@ -181,17 +207,48 @@ export default function HomePage() {
           sizes="100vw"
           className="-z-10 object-cover opacity-90"
         />
-        <div className="page-container grid gap-4 py-14 md:grid-cols-3 md:py-16">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="flex flex-col gap-2 border bg-card/95 p-5 shadow-lg backdrop-blur-sm">
-              <f.icon className="size-6 text-primary" aria-hidden />
-              <h3 className="font-heading font-bold">{f.title}</h3>
-              <p className="text-sm text-muted-foreground">{f.body}</p>
-            </div>
-          ))}
+        <div className="page-container flex flex-col gap-12 py-16 text-primary-foreground">
+          <div data-reveal className="flex max-w-3xl flex-col gap-3">
+            <p className="font-heading text-xs font-semibold tracking-widest uppercase opacity-80">
+              Why Zuula
+            </p>
+            <h2
+              id="why-title"
+              className="font-heading text-3xl font-bold tracking-tight text-balance md:text-5xl"
+            >
+              <SplitText text="Built for the way news travels in Uganda." />
+            </h2>
+          </div>
+          <div data-reveal="stagger" className="grid gap-4 md:grid-cols-3">
+            {FEATURES.map((f) => (
+              <div
+                key={f.title}
+                className="hover-lift flex flex-col gap-3 border bg-card/95 p-6 text-card-foreground shadow-lg backdrop-blur-sm"
+              >
+                <f.icon className="size-7 text-primary" aria-hidden />
+                <h3 className="font-heading text-lg font-bold">{f.title}</h3>
+                <p className="text-sm text-muted-foreground">{f.body}</p>
+              </div>
+            ))}
+          </div>
+          <div data-reveal className="flex flex-wrap gap-3">
+            <Button size="lg" variant="secondary" asChild>
+              <Link href="/verify">
+                Check a claim <RiArrowRightLine aria-hidden />
+              </Link>
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              asChild
+              className="border-white/40 bg-transparent text-primary-foreground hover:bg-white/10 hover:text-primary-foreground"
+            >
+              <Link href="/about">How Zuula works</Link>
+            </Button>
+          </div>
         </div>
         <PhotoCredit photo={PHOTOS.crimsonTexture} className="absolute right-3 bottom-2" />
-      </section>
-    </>
+      </ScreenSection>
+    </SnapPage>
   )
 }

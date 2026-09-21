@@ -1,5 +1,6 @@
 import Image from "next/image"
 
+import { SplitText } from "@/components/motion/split-text"
 import { cn } from "@/lib/utils"
 
 import type { Photo } from "./photos"
@@ -99,15 +100,15 @@ export function PhotoBanner({
     <PhotoHero photo={photo} priority position={position} className="border-b">
       <div className="flex min-h-56 page-container flex-col justify-end gap-2 py-10 md:min-h-72 md:py-14">
         {eyebrow && (
-          <p className="font-heading text-xs font-semibold tracking-widest text-white/75 uppercase">
+          <p className="enter font-heading text-xs font-semibold tracking-widest text-white/75 uppercase">
             {eyebrow}
           </p>
         )}
         <h1 className="font-heading text-3xl font-bold tracking-tight text-balance drop-shadow-sm md:text-4xl xl:text-5xl">
-          {title}
+          <SplitText text={title} delay={eyebrow ? 90 : 0} />
         </h1>
         {description && (
-          <p className="max-w-2xl text-base text-balance text-white/85 md:text-lg">
+          <p className="enter max-w-2xl text-base text-balance text-white/85 [--d:3] md:text-lg">
             {description}
           </p>
         )}

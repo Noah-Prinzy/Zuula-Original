@@ -23,7 +23,7 @@ export default function LibraryPage() {
         title="Library"
         description="Search claims and articles that have already been checked."
       />
-      <div className="flex page-container flex-col gap-6 py-10">
+      <div data-reveal className="flex page-container flex-col gap-6 py-10">
         {/* useSearchParams needs a Suspense boundary for static rendering. */}
         <Suspense fallback={<Skeleton className="h-96 w-full" />}>
           <LibraryBrowser

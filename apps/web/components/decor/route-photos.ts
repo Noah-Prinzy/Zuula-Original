@@ -10,7 +10,7 @@ const ROUTES: [prefix: string, entry: RoutePhoto][] = [
   // Public
   ["/about", { photo: PHOTOS.ugandaHills, position: "center 60%" }],
   ["/fact-checks/", { photo: PHOTOS.kampalaSunset }],
-  ["/fact-checks", { photo: PHOTOS.newspapers }],
+  ["/fact-checks", { photo: PHOTOS.journalists }],
   ["/verify", { photo: PHOTOS.marketCall, position: "center 30%" }],
   ["/developers", { photo: PHOTOS.crimsonWaves }],
   ["/offline", { photo: PHOTOS.hillRoad }],
@@ -30,7 +30,6 @@ const ROUTES: [prefix: string, entry: RoutePhoto][] = [
   // Signed-in app
   ["/account/activity", { photo: PHOTOS.murchisonFalls }],
   ["/account", { photo: PHOTOS.boatsSunset }],
-  ["/review", { photo: PHOTOS.journalists }],
   ["/admin/sources", { photo: PHOTOS.classroom }],
   ["/admin", { photo: PHOTOS.workshop }],
 ]

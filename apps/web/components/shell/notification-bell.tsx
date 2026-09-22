@@ -32,14 +32,12 @@ export function NotificationBell() {
           aria-label={unread ? t("labelUnread", { count: unread }) : t("label")}
         >
           <RiNotification3Line aria-hidden />
-          {/* Small count pinned to the bell's top-right corner; the ring keeps it apart from the icon. */}
+          {/* Unread dot on the bell's top-right; the count is in the button's aria-label. */}
           {unread > 0 && (
             <span
               aria-hidden
-              className="pointer-events-none absolute top-1 right-0 flex h-3.5 min-w-3.5 items-center justify-center bg-primary px-0.5 font-mono text-[9px] leading-none font-semibold text-primary-foreground tabular-nums ring-2 ring-background"
-            >
-              {unread > 9 ? "9+" : unread}
-            </span>
+              className="pointer-events-none absolute top-1.5 right-1.5 size-2 rounded-full bg-primary ring-2 ring-background dark:bg-destructive"
+            />
           )}
         </Button>
       </PopoverTrigger>

@@ -9,8 +9,8 @@ import kampalaStreet from "@/public/images/kampala-street.jpg"
 import kampalaSunset from "@/public/images/kampala-sunset.jpg"
 import lakeVictoria from "@/public/images/lake-victoria.jpg"
 import murchisonFalls from "@/public/images/murchison-falls.jpg"
-import newspaperArchive from "@/public/images/newspaper-archive.webp"
 import newspaperBundle from "@/public/images/newspaper-bundle.webp"
+import newspaperWall from "@/public/images/newspaper-wall.webp"
 import newspapers from "@/public/images/newspapers.jpg"
 import nightRoad from "@/public/images/night-road.jpg"
 import nileBoat from "@/public/images/nile-boat.jpg"
@@ -60,14 +60,14 @@ export const PHOTOS = {
       url: "https://unsplash.com/photos/WYd_PkCa1BY",
     },
   },
-  newspaperArchive: {
-    src: newspaperArchive,
-    alt: "Stacks of old newspaper archives",
-    credit: null,
-  },
   newspaperBundle: {
     src: newspaperBundle,
     alt: "A bundle of newspapers tied with string",
+    credit: null,
+  },
+  newspaperWall: {
+    src: newspaperWall,
+    alt: "A person reading, seated in front of a wall covered in newspaper clippings",
     credit: null,
   },
   worldWire: {

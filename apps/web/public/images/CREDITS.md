@@ -9,10 +9,10 @@ full-page background photo, mapped by URL in `components/decor/route-photos.ts`;
 | --- | --- | --- | --- |
 | kampala-skyline.jpg | Keith Kasaija | https://unsplash.com/photos/lii0uaz8Ieo | Fallback background |
 | uganda-hills.jpg | Random Institute | https://unsplash.com/photos/KQ5djKAN35s | About |
-| newspapers.jpg | AbsolutVision | https://unsplash.com/photos/WYd_PkCa1BY | Home hero |
+| newspapers.jpg | AbsolutVision | https://unsplash.com/photos/WYd_PkCa1BY | Verify |
 | kampala-sunset.jpg | Robin Kutesa | https://unsplash.com/photos/Q3ymlvOJGFs | Fact-check report |
 | newspaper-bundle.webp | supplied by Noah, source/licence not confirmed | — | Library |
-| newspaper-archive.webp | supplied by Noah, source/licence not confirmed | — | Verify |
+| newspaper-wall.webp | supplied by Noah, source/licence not confirmed | — | Home hero |
 | world-wire.webp | supplied by Noah, source/licence not confirmed | — | Developers (API) |
 | crimson-waves.jpg | Pawel Czerwinski | https://unsplash.com/photos/DQ2lqx_6RD0 | Sign in: two-factor |
 | tea-road.jpg | Michael Starkie | https://unsplash.com/photos/hDPqTAC-QJg | Sign in |
@@ -28,16 +28,19 @@ full-page background photo, mapped by URL in `components/decor/route-photos.ts`;
 ## No background photo
 
 These routes render on the plain page background instead of a full-page photo (`PageHeader`
-instead of the white-text `PageHero`): Offline, Privacy, Terms, Submission status, Account,
-Account activity, Admin, Admin sources.
+instead of the white-text `PageHero`): Offline, Privacy, Terms, Submission status, and every page
+under Account, Admin and Review (the whole signed-in app shell — see `(app)/layout.tsx`, which
+doesn't render `RouteBackdrop` at all).
 
 ## The three `supplied by Noah` files
 
-`newspaper-bundle.webp`, `newspaper-archive.webp` and `world-wire.webp` were pasted directly into
+`newspaper-bundle.webp`, `newspaper-wall.webp` and `world-wire.webp` were pasted directly into
 the conversation, not sourced from Unsplash. Their original source and licence aren't known —
 please confirm you have the right to use them commercially before this goes to production, or
-swap them for licensed equivalents. A fourth supplied image (a magnifying-glass/5-Ws graphic) was
-**not** used: it carried a visible "123RF" stock-photo watermark and can't ship as-is.
+swap them for licensed equivalents. Two other supplied images were **not** used: a
+magnifying-glass/5-Ws graphic carried a visible "123RF" stock-photo watermark, and an original
+newspaper-archive stack photo was dropped from Verify in favour of newspapers.jpg once
+newspaper-wall.webp took over the Home hero.
 
 ## Faces
 

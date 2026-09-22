@@ -11,7 +11,7 @@ const ROUTES: [prefix: string, entry: RoutePhoto][] = [
   ["/about", { photo: PHOTOS.ugandaHills, position: "center 60%" }],
   ["/fact-checks/", { photo: PHOTOS.kampalaSunset }],
   ["/fact-checks", { photo: PHOTOS.newspaperBundle }],
-  ["/verify", { photo: PHOTOS.newspaperArchive, position: "center 30%" }],
+  ["/verify", { photo: PHOTOS.newspapers, position: "75% 45%" }],
   ["/developers", { photo: PHOTOS.worldWire }],
   // Auth
   ["/sign-in/two-factor", { photo: PHOTOS.crimsonWaves }],
@@ -37,7 +37,7 @@ const NO_PHOTO_PATHS = [
 const FALLBACK: RoutePhoto = { photo: PHOTOS.kampalaSkyline }
 
 // Home: "/" in the address bar, or "/<locale>" after proxy.ts rewrites it on the server.
-const HOME: RoutePhoto = { photo: PHOTOS.newspapers, position: "75% 45%" }
+const HOME: RoutePhoto = { photo: PHOTOS.newspaperWall, position: "center 60%" }
 const HOME_PATHS = new Set(["/", ...LOCALES.map((l) => `/${l.code}`)])
 
 function matches(pathname: string, prefix: string) {

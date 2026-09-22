@@ -45,8 +45,11 @@ export function PageHero({
   )
 }
 
-// Solid surface for a page's body, floating over the background photo. Text on it keeps the
-// theme's normal contrast; the photo shows above it and in the side margins.
+// Full-width surface for a page's body. Rather than a floating card cut off from the photo
+// above it, its top edge fades from the photo into the theme background over ~10rem; past
+// that the background is fully solid, so text keeps the theme's normal WCAG contrast for the
+// rest of a (often long) page. No shadow, no inset margins: it reads as a continuation of the
+// hero, not a box sitting on top of it.
 export function PageSheet({
   className,
   children,
@@ -57,7 +60,7 @@ export function PageSheet({
   return (
     <div
       className={cn(
-        "relative flex flex-col bg-background shadow-2xl md:mx-[clamp(0.75rem,2.5vw,2.5rem)]",
+        "relative flex flex-col bg-[linear-gradient(to_bottom,transparent_0%,var(--background)_10rem,var(--background)_100%)]",
         className
       )}
     >

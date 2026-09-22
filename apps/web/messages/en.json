@@ -705,5 +705,320 @@
   "Related": {
     "title": "Related checks",
     "description": "Other fact-checks on the same topic or claim."
+  },
+  "Home": {
+    "badge": "Uganda Fact-Guard · Victoria University CIT",
+    "headline": {
+      "line1Before": "Check a",
+      "line1After": "",
+      "line1Words": [
+        "claim",
+        "rumour",
+        "photo",
+        "video",
+        "voice note"
+      ],
+      "line2Before": "before you",
+      "line2After": "it",
+      "line2Words": [
+        "share",
+        "believe"
+      ]
+    },
+    "subtitle": "Paste a message, a link or upload media. Zuula tells you whether it is authentic, false or AI-generated — and <scribble>shows you the sources</scribble>.",
+    "carousel": {
+      "previous": "Previous",
+      "next": "Next",
+      "slide": "{current} of {total}"
+    },
+    "feed": {
+      "eyebrow": "Live status",
+      "title": "Recent fact-checks",
+      "link": "Library",
+      "tagNew": "New",
+      "tagDebated": "Debated",
+      "ccsTitle": "Community Confidence Score"
+    },
+    "community": {
+      "eyebrow": "Community",
+      "title": "What Uganda is checking",
+      "link": "Explore",
+      "trending": "Trending this week",
+      "rank": "#{rank} agreed verdict",
+      "agree": "{ccs}% agree · {total} ratings"
+    }
+  },
+  "About": {
+    "metaTitle": "About",
+    "metaDescription": "Zuula's mission, methodology, editorial independence and FAQ.",
+    "banner": {
+      "eyebrow": "About Zuula",
+      "title": "About",
+      "description": "Our mission, methodology and editorial independence."
+    },
+    "why": {
+      "eyebrow": "Why Zuula",
+      "title": "Built for the way news travels in Uganda.",
+      "highlight": "Uganda",
+      "cta": "Check a claim",
+      "features": {
+        "sources": {
+          "title": "Trusted sources",
+          "body": "Claims are cross-referenced against Ugandan and international outlets and fact-checkers."
+        },
+        "ai": {
+          "title": "AI content detection",
+          "body": "Flags AI-generated text, deepfake images, synthetic audio and manipulated video."
+        },
+        "languages": {
+          "title": "Ugandan languages",
+          "body": "English, Luganda, Acholi, Runyankole and Ateso."
+        }
+      }
+    },
+    "mission": {
+      "badge": "Victoria University CIT",
+      "title": "Uganda sees a flood of forwarded claims every day. Zuula checks them before you share.",
+      "body": "Zuula (branded from Uganda Fact-Guard) is an AI-assisted fact-checking platform built for how news actually travels here — on WhatsApp, in group chats and on social media, often faster than any newsroom can verify it. Submit a claim and get a verdict backed by evidence, not just an opinion."
+    },
+    "methodology": {
+      "eyebrow": "Methodology",
+      "title": "How we reach a verdict",
+      "description": "Every check follows the same four steps, whether it's automated or escalated to a human reviewer.",
+      "steps": {
+        "submit": {
+          "title": "You submit a claim",
+          "body": "Paste text, share a link or upload media (up to 50 MB). You get a tracking ID and can follow the analysis live."
+        },
+        "check": {
+          "title": "We check it",
+          "body": "The claim is cross-referenced against trusted Ugandan and international sources, and screened for AI-generated text, deepfakes and manipulated audio or video."
+        },
+        "publish": {
+          "title": "A verdict is published",
+          "body": "You see the verdict, the evidence behind it and which sources agree or disagree — never just a label."
+        },
+        "review": {
+          "title": "The community and our reviewers weigh in",
+          "body": "Readers rate the verdict. If enough people disagree, an accredited Expert reviews the case and can confirm or override it — the report is then marked “Human Verified.”"
+        }
+      }
+    },
+    "independence": {
+      "eyebrow": "Editorial independence",
+      "title": "Rules we hold ourselves to",
+      "description": "Zuula's verdicts aren't for sale, and they aren't final without a way to challenge them.",
+      "principles": {
+        "label": {
+          "title": "We label, we don't delete",
+          "body": "Zuula never removes anyone's post. We publish an independent verdict and evidence alongside it."
+        },
+        "rules": {
+          "title": "Every rating carries the same rules",
+          "body": "Public, Journalist and Expert ratings feed the same Community Confidence Score, just weighted by track record — nobody's vote is discounted without a reason."
+        },
+        "accountable": {
+          "title": "Reviewers are accountable",
+          "body": "Expert overrides require a written justification and are recorded in an append-only audit log that Admins can inspect."
+        },
+        "sources": {
+          "title": "Sources are shown, not hidden",
+          "body": "Every report links the evidence it was checked against, so you can verify our reasoning yourself."
+        }
+      }
+    },
+    "whatsapp": {
+      "eyebrow": "Coming soon",
+      "title": "Check a claim from WhatsApp",
+      "description": "No app, no data bundle for a browser — forward the message and get a verdict back in the chat.",
+      "body": "A WhatsApp and Telegram bot is planned for the platform's API phase, so you'll be able to forward a message straight to Zuula the way you already forward it to friends. It isn't live yet — for now, use <link>Verify</link> on the web.",
+      "badge": "Planned"
+    },
+    "faq": {
+      "eyebrow": "FAQ",
+      "title": "Frequently asked questions",
+      "items": {
+        "free": {
+          "q": "Is Zuula free to use?",
+          "a": "Checking a claim and reading the Library is free for everyone. Journalist and Expert accounts need accreditation, since they carry more weight in the community score and can review flagged cases."
+        },
+        "submit": {
+          "q": "What can I submit?",
+          "a": "Text (like a WhatsApp forward), a link, a full article, or media — photos, voice notes and video up to 50 MB."
+        },
+        "time": {
+          "q": "How long does a check take?",
+          "a": "Text usually takes about 10 seconds. Media can take up to a minute. Cases escalated to an Expert reviewer follow a review deadline instead."
+        },
+        "verdicts": {
+          "q": "What do the verdicts mean?",
+          "a": ""
+        },
+        "disagree": {
+          "q": "What if I disagree with a verdict?",
+          "a": "Rate it. Ratings from the Public, Journalists and Experts are combined into a Community Confidence Score. If a verdict's score drops low enough with enough ratings, it's flagged for an Expert to review and confirm or override."
+        },
+        "languages": {
+          "q": "Which languages does Zuula support?",
+          "a": "Claims can be checked in English, Luganda, Acholi, Runyankole and Ateso. Translating the interface itself into those languages is still in progress — today the language switcher only remembers your preference."
+        },
+        "data": {
+          "q": "How is my data protected?",
+          "a": "Under Uganda's Data Protection and Privacy Act, 2019. See our <link>Privacy Policy</link>."
+        },
+        "who": {
+          "q": "Who builds and funds Zuula?",
+          "a": "Zuula (“Uganda Fact-Guard”) is developed by the Centre for Intelligent Technologies at Victoria University Kampala as an academic and public-interest project. Verdicts are reached independently of any funder or advertiser."
+        }
+      }
+    },
+    "contact": {
+      "eyebrow": "Contact",
+      "title": "Get in touch",
+      "description": "Questions about a verdict, the platform or a partnership.",
+      "general": {
+        "title": "General enquiries",
+        "body": "Media, partnerships and platform questions."
+      },
+      "cit": {
+        "title": "Centre for Intelligent Technologies",
+        "body": "Victoria University, Kampala.",
+        "cta": "API & developer access"
+      }
+    }
+  },
+  "Legal": {
+    "lastUpdated": "Last updated {date}",
+    "privacy": {
+      "metaTitle": "Privacy",
+      "metaDescription": "How Zuula collects, uses and protects your data.",
+      "title": "Privacy",
+      "description": "How we collect, use and protect your data.",
+      "sections": {
+        "overview": {
+          "title": "Overview",
+          "body": "This policy explains what Zuula collects when you check a claim, browse the Library or create an account, and how that information is used and protected under the <strong>Data Protection and Privacy Act, 2019</strong> of Uganda. It applies to the Zuula website and, once launched, the WhatsApp and Telegram bots and partner API."
+        },
+        "collect": {
+          "title": "Information we collect",
+          "items": {
+            "account": "<strong>Account details</strong> — name, email or phone number, and role (Public, Journalist, Expert or Admin).",
+            "submissions": "<strong>Submissions</strong> — the text, link or media you ask Zuula to check, and the tracking ID it's given.",
+            "ratings": "<strong>Ratings and reports</strong> — the verdicts you rate, comments you leave, and content you flag for moderation.",
+            "accreditation": "<strong>Accreditation documents</strong> — for Journalist and Expert applications, the credentials you provide for review.",
+            "device": "<strong>Device and usage information</strong> — pages visited, browser type and rough location, to keep the service secure and working."
+          }
+        },
+        "use": {
+          "title": "How we use it",
+          "items": {
+            "pipeline": "To run the claim through our detection pipeline and show you its status and verdict.",
+            "ccs": "To weight and combine community ratings into a Community Confidence Score.",
+            "accreditation": "To review Journalist and Expert accreditation, and to record reviewer decisions in an audit log.",
+            "abuse": "To detect coordinated or manipulated rating activity and protect the platform from abuse.",
+            "accuracy": "To measure and improve verdict accuracy over time."
+          }
+        },
+        "aiSharing": {
+          "title": "AI analysis and third parties",
+          "body": "Checking a claim can involve sending its text, or a transcription of its audio or video, to automated detection models and, for evidence retrieval, to a hosted AI provider. Media you upload is scanned for malware before it's processed.",
+          "review": "Because some of these providers may process data outside Uganda, we are reviewing this data flow against the Data Protection and Privacy Act, 2019 before it is enabled outside the current mock-data build. This section will be updated once that review is complete."
+        },
+        "dppa": {
+          "title": "Your rights under the Data Protection and Privacy Act, 2019",
+          "intro": "As a data subject under Ugandan law, you have the right to:",
+          "items": {
+            "access": "Access the personal data we hold about you.",
+            "correct": "Correct inaccurate or incomplete data.",
+            "delete": "Request deletion of your account data, subject to our retention obligations below.",
+            "object": "Object to, or ask us to restrict, certain processing.",
+            "complain": "Lodge a complaint with Uganda's Personal Data Protection Office (National Information Technology Authority-Uganda) if you believe we've mishandled your data."
+          },
+          "outro": "To exercise any of these rights, contact us using the details in <contact>Contact & data requests</contact> below."
+        },
+        "retention": {
+          "title": "How long we keep it",
+          "body": "Published verdicts and their evidence form part of the public fact-check record and are kept indefinitely, in the same way a news archive is. Account details are kept while your account is active and for a limited period afterwards, to support audit and accreditation records required for the review process. Malware-scanned upload copies are retained only as long as needed to produce a verdict."
+        },
+        "cookies": {
+          "title": "Cookies and local storage",
+          "body": "We use a session cookie to keep you signed in, and local storage to remember your theme and language preference on this device. We don't use third-party advertising trackers."
+        },
+        "children": {
+          "title": "Children's privacy",
+          "body": "Zuula is intended for users aged 18 and over. We don't knowingly collect personal data from children, and will delete any we become aware of."
+        },
+        "changes": {
+          "title": "Changes to this policy",
+          "body": "We'll update the date at the top of this page whenever this policy changes, and post material changes on the <home>homepage</home> before they take effect."
+        },
+        "contact": {
+          "title": "Contact & data requests",
+          "body": "Email <email>privacy@zuula.ug</email> for any question about this policy or to exercise your rights under the Data Protection and Privacy Act, 2019. See also our <terms>Terms of use</terms>."
+        }
+      }
+    },
+    "terms": {
+      "metaTitle": "Terms",
+      "metaDescription": "The terms that govern using Zuula.",
+      "title": "Terms",
+      "description": "The terms that govern using Zuula.",
+      "sections": {
+        "acceptance": {
+          "title": "Acceptance of these terms",
+          "body": "By using Zuula — the website, and in future the WhatsApp/Telegram bots and partner API — you agree to these terms. If you don't agree, please don't use the service."
+        },
+        "service": {
+          "title": "What Zuula is (and isn't)",
+          "body": "Zuula checks claims, links and media using automated detection and, where a case is escalated, human review by accredited reviewers. A verdict reflects our best assessment of the evidence available when it was published, and can change if better evidence emerges. Zuula is a fact-checking tool, not legal, medical or financial advice, and a verdict is not a substitute for your own judgement."
+        },
+        "accounts": {
+          "title": "Accounts and roles",
+          "items": {
+            "roles": "Anyone can sign up as a Public user. Journalist and Expert roles require accreditation.",
+            "accurate": "Give accurate information when you sign up or apply for accreditation.",
+            "one": "Keep one account per person, and keep your credentials confidential — you're responsible for activity under your account.",
+            "twoFactor": "Two-factor authentication is required for Expert and Admin accounts."
+          }
+        },
+        "submissions": {
+          "title": "Your submissions",
+          "body": "You must have the right to share whatever you submit for checking. Don't submit content that's illegal, that violates someone else's privacy, or that you don't have permission to share.",
+          "publish": "Uploaded files are scanned for malware before analysis. A submission and the verdict Zuula reaches on it may be published as part of the public fact-check record, in the same way a newsroom publishes what it fact-checks."
+        },
+        "ratings": {
+          "title": "Community ratings and conduct",
+          "body": "Rate verdicts honestly, based on the evidence shown. Coordinated or manipulated rating activity (for example, groups of accounts rating together to push a verdict's score) can have its ratings discounted and the accounts involved suspended. You can report content or ratings that look manipulated from the report page."
+        },
+        "api": {
+          "title": "API and developer access",
+          "body": "Journalist and Admin accounts can request API keys from <keys>Account → API Keys</keys>. Partner API access is rate limited (currently {limit} requests/hour) and keys are tied to your account — don't share them. See the <dev>developer page</dev> for details."
+        },
+        "ip": {
+          "title": "Intellectual property",
+          "body": "The Zuula name, mark and interface belong to the Centre for Intelligent Technologies, Victoria University Kampala. You're welcome to share, screenshot and cite Zuula's published verdicts with attribution and a link back to the report."
+        },
+        "disclaimer": {
+          "title": "Accuracy and limitation of liability",
+          "body": "We check every claim in good faith and publish the evidence behind each verdict, but we don't guarantee any verdict is error-free. To the extent permitted by the laws of Uganda, Zuula and Victoria University CIT aren't liable for decisions made in reliance on a verdict."
+        },
+        "termination": {
+          "title": "Suspension and termination",
+          "body": "We may suspend or close an account for abuse, manipulated ratings, or breaking these terms. You can close your own account at any time from Account settings."
+        },
+        "law": {
+          "title": "Governing law",
+          "body": "These terms are governed by the laws of the Republic of Uganda."
+        },
+        "changes": {
+          "title": "Changes to these terms",
+          "body": "We may update these terms as the platform develops. We'll update the date above when we do; continuing to use Zuula after a change means you accept the updated terms."
+        },
+        "contact": {
+          "title": "Contact",
+          "body": "Questions about these terms? Email <email>hello@zuula.ug</email>. See also our <privacy>Privacy Policy</privacy>."
+        }
+      }
+    }
   }
 }

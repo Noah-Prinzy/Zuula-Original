@@ -2,12 +2,15 @@
 
 import Link from "next/link"
 import { RiArrowRightLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { useSession } from "@/components/providers/session-provider"
 import { ReasonBadge, SlaBadge, StatCard } from "@/components/review/review-badges"
 import { Button } from "@/components/ui/button"
 import { VerdictBadge } from "@/components/verdict/verdict-badge"
 import { getSampleReport } from "@/lib/mock/fact-checks"
+import { useRelativeTime } from "@/hooks/use-relative-time"
+import { useFormat } from "@/lib/format"
 import {
   REASON_META,
   REVIEW_SLA_HOURS,
@@ -16,10 +19,14 @@ import {
   slaFor,
   type ReviewReason,
 } from "@/lib/mock/review"
-import { relativeTime } from "@/lib/mock/account"
 
 export function ReviewOverview() {
   const { user } = useSession()
+  const t = useTranslations("Review.overview")
+  const tr = useTranslations("Review.reasons")
+  const to = useTranslations("Review.outcomes")
+  const f = useFormat()
+  const relativeTime = useRelativeTime()
   const withSla = SAMPLE_CASES.map((c) => ({ ...c, sla: slaFor(c.flaggedAt) })).sort(
     (a, b) => a.sla.hoursLeft - b.sla.hoursLeft
   )
@@ -38,14 +45,22 @@ export function ReviewOverview() {
   return (
     <div className="flex flex-col gap-8">
       <div data-reveal="stagger" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="In the queue" value={SAMPLE_CASES.length} hint={`${SAMPLE_CASES.filter((c) => !c.assignee).length} unassigned`} />
-        <StatCard label="Overdue" value={overdue} tone={overdue ? "danger" : "good"} hint={`Past the ${REVIEW_SLA_HOURS}-hour SLA`} />
-        <StatCard label="Due in 12 hours" value={dueSoon} tone={dueSoon ? "warning" : "default"} />
         <StatCard
-          label="Your average turnaround"
-          value={avgTurnaround === null ? "—" : `${avgTurnaround.toFixed(1)} h`}
+          label={t("inQueue")}
+          value={SAMPLE_CASES.length}
+          hint={t("unassignedCount", { count: SAMPLE_CASES.filter((c) => !c.assignee).length })}
+        />
+        <StatCard label={t("overdue")} value={overdue} tone={overdue ? "danger" : "good"} hint={t("overdueHint", { hours: REVIEW_SLA_HOURS })} />
+        <StatCard label={t("dueSoon")} value={dueSoon} tone={dueSoon ? "warning" : "default"} />
+        <StatCard
+          label={t("avgTurnaround")}
+          value={
+            avgTurnaround === null
+              ? "—"
+              : t("hours", { value: f.number(avgTurnaround, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) })
+          }
           tone={avgTurnaround !== null && avgTurnaround <= REVIEW_SLA_HOURS ? "good" : "default"}
-          hint={`${mine.length} decisions so far`}
+          hint={t("decisionsSoFar", { count: mine.length })}
         />
       </div>
 
@@ -53,11 +68,11 @@ export function ReviewOverview() {
         <section data-reveal aria-labelledby="attention" className="flex flex-col gap-3 [--d:2]">
           <div className="flex items-end justify-between gap-2">
             <h2 id="attention" className="font-heading text-lg font-bold">
-              Needs attention
+              {t("needsAttention")}
             </h2>
             <Button variant="outline" size="sm" asChild>
               <Link href="/review/queue">
-                Full queue <RiArrowRightLine aria-hidden />
+                {t("fullQueue")} <RiArrowRightLine aria-hidden />
               </Link>
             </Button>
           </div>
@@ -73,7 +88,11 @@ export function ReviewOverview() {
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                       <VerdictBadge verdict={report.verdict} size="sm" />
                       <ReasonBadge reason={c.reason} reports={c.reports} />
-                      <span className="text-xs text-muted-foreground">{c.assignee ? `Assigned to ${c.assignee === user?.name ? "you" : c.assignee}` : "Unassigned"}</span>
+                      <span className="text-xs text-muted-foreground">{c.assignee
+                          ? c.assignee === user?.name
+                            ? t("assignedToYou")
+                            : t("assignedTo", { name: c.assignee })
+                          : t("unassigned")}</span>
                     </div>
                   </div>
                   <SlaBadge flaggedAt={c.flaggedAt} />
@@ -86,13 +105,13 @@ export function ReviewOverview() {
         <div className="flex flex-col gap-8">
           <section data-reveal aria-labelledby="by-reason" className="flex flex-col gap-3 [--d:3]">
             <h2 id="by-reason" className="font-heading text-lg font-bold">
-              Why cases are flagged
+              {t("byReason")}
             </h2>
             <ul className="flex flex-col gap-3 border bg-card p-4">
               {byReason.map((b) => (
                 <li key={b.reason} className="flex flex-col gap-1">
                   <div className="flex justify-between text-sm">
-                    <span>{REASON_META[b.reason].label}</span>
+                    <span>{tr(`${b.reason}.label`)}</span>
                     <span className="font-mono tabular-nums">{b.count}</span>
                   </div>
                   <div className="h-1.5 bg-muted" aria-hidden>
@@ -105,24 +124,24 @@ export function ReviewOverview() {
 
           <section data-reveal aria-labelledby="recent" className="flex flex-col gap-3 [--d:4]">
             <h2 id="recent" className="font-heading text-lg font-bold">
-              Your recent decisions
+              {t("recent")}
             </h2>
             {mine.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Decisions you make appear here.</p>
+              <p className="text-sm text-muted-foreground">{t("recentEmpty")}</p>
             ) : (
               <ul className="flex flex-col divide-y border bg-card">
                 {mine.slice(0, 3).map((d) => (
                   <li key={d.id} className="flex flex-col gap-1 p-3 text-sm">
                     <span className="line-clamp-1 font-medium">{d.title}</span>
                     <span className="text-xs text-muted-foreground">
-                      {d.outcome === "confirmed" ? "Confirmed" : "Overridden"} · {relativeTime(d.decidedAt)}
+                      {to(d.outcome)} · {relativeTime(d.decidedAt)}
                     </span>
                   </li>
                 ))}
               </ul>
             )}
             <Button variant="link" className="h-auto w-fit p-0" asChild>
-              <Link href="/review/history">All decisions</Link>
+              <Link href="/review/history">{t("allDecisions")}</Link>
             </Button>
           </section>
         </div>

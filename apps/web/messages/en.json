@@ -762,6 +762,137 @@
       "deletedBody": "Your personal data has been removed."
     }
   },
+  "Review": {
+    "reasons": {
+      "community-escalation": {
+        "label": "Community escalation",
+        "description": "Fewer than 40% of over 100 ratings agree with the verdict (§9.2)."
+      },
+      "suspended": {
+        "label": "Suspended",
+        "description": "Fewer than 20% of over 200 ratings agree. The verdict is hidden until reviewed."
+      },
+      "user-reports": {
+        "label": "User reports",
+        "description": "Readers reported a problem with this verdict."
+      },
+      "low-confidence": {
+        "label": "Low AI confidence",
+        "description": "The AI was less than 60% confident."
+      }
+    },
+    "sla": {
+      "overdue": "Overdue",
+      "due-soon": "Due soon",
+      "on-track": "On track",
+      "tooltip": "{status} · due {time}",
+      "minutes": "{minutes} min",
+      "hoursMinutes": "{hours} h {minutes} min",
+      "left": "{time} left",
+      "late": "{time} overdue"
+    },
+    "outcomes": {
+      "confirmed": "Confirmed",
+      "overridden": "Overridden"
+    },
+    "highPriority": "High priority",
+    "overview": {
+      "inQueue": "In the queue",
+      "unassignedCount": "{count} unassigned",
+      "overdue": "Overdue",
+      "overdueHint": "Past the {hours}-hour SLA",
+      "dueSoon": "Due in 12 hours",
+      "avgTurnaround": "Your average turnaround",
+      "hours": "{value} h",
+      "decisionsSoFar": "{count, plural, one {# decision so far} other {# decisions so far}}",
+      "needsAttention": "Needs attention",
+      "fullQueue": "Full queue",
+      "assignedToYou": "Assigned to you",
+      "assignedTo": "Assigned to {name}",
+      "unassigned": "Unassigned",
+      "byReason": "Why cases are flagged",
+      "recent": "Your recent decisions",
+      "recentEmpty": "Decisions you make appear here.",
+      "allDecisions": "All decisions"
+    },
+    "history": {
+      "filterLabel": "Filter decisions",
+      "filters": {
+        "all": "All ({count})",
+        "confirmed": "Confirmed ({count})",
+        "overridden": "Overridden ({count})"
+      },
+      "emptyTitle": "No decisions",
+      "emptyBody": "Nothing matches this filter.",
+      "changedTo": "changed to",
+      "turnaround": "Turnaround {hours} h",
+      "overSla": "(over SLA)"
+    },
+    "queue": {
+      "assigned": "Assigned to you",
+      "columns": {
+        "content": "Content",
+        "verdict": "AI verdict",
+        "ccs": "CCS",
+        "sla": "SLA",
+        "assignee": "Assignee",
+        "action": "Action"
+      },
+      "ratings": "{count, plural, one {# rating} other {# ratings}}",
+      "you": "You",
+      "assignToMe": "Assign to me",
+      "review": "Review",
+      "searchPlaceholder": "Search by title, case ID or category…",
+      "searchLabel": "Search the queue",
+      "reason": "Reason",
+      "allReasons": "All reasons",
+      "scopeLabel": "Assignment",
+      "scopes": {
+        "all": "All",
+        "mine": "Mine",
+        "unassigned": "Unassigned"
+      },
+      "summary": "{count, plural, one {# case} other {# cases}} · sorted by {sort, select, ccs {community score} other {time left}}",
+      "emptyTitle": "Nothing to review",
+      "emptyBody": "No cases match these filters."
+    },
+    "case": {
+      "communitySignals": "Community signals",
+      "rater": "Rater",
+      "accurate": "Accurate",
+      "inaccurate": "Inaccurate",
+      "yourDecision": "Your decision",
+      "confirmOption": "Confirm the AI verdict",
+      "overrideOption": "Override the verdict",
+      "chooseCorrect": "Choose the correct one",
+      "correctVerdict": "Correct verdict",
+      "errors": {
+        "verdict": "Choose the correct verdict.",
+        "overrideShort": "Explain the override in at least {min} characters.",
+        "confirmShort": "Add a short reason (at least {min} characters)."
+      },
+      "confirmedToast": "Verdict confirmed",
+      "overriddenToast": "Verdict overridden",
+      "loggedAs": "{caseId} · logged under {name}. The report now shows “Human Verified”.",
+      "yourName": "your name",
+      "justification": "Justification",
+      "required": "(required)",
+      "justificationPlaceholder": "What evidence did you check? Who did you contact?",
+      "justificationHint": "Internal. Stored in the audit log with your name and the time.",
+      "publicNote": "Note for readers (optional)",
+      "publicNotePlaceholder": "Adds context to the report as an expert note.",
+      "showOnReport": "Show on the public report",
+      "submitDecision": "Submit decision",
+      "backToQueue": "Back to queue",
+      "confirmTitle": "Confirm this verdict?",
+      "overrideTitle": "Override this verdict?",
+      "confirmBody": "The report gets a Human Verified badge. Your decision counts 5× in the Community Confidence Score and is logged in the audit trail.",
+      "submit": "Submit",
+      "publicReport": "Public report",
+      "aiFindings": "AI findings",
+      "auditNote": "Every decision is recorded with reviewer, time and justification (FR-REVIEW-03)."
+    }
+  },
   "Community": {
     "status": {
       "verified": {

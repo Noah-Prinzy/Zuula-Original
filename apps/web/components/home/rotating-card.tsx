@@ -2,10 +2,19 @@
 
 import { Children, useEffect, useState } from "react"
 import Link from "next/link"
-import { RiArrowLeftSLine, RiArrowRightLine, RiArrowRightSLine } from "@remixicon/react"
+import {
+  RiArrowLeftSLine,
+  RiArrowRightLine,
+  RiArrowRightSLine,
+} from "@remixicon/react"
 
 import { ScrambleText } from "@/components/motion/text/scramble-text"
-import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel"
 import { cn } from "@/lib/utils"
 
 // A short, wide card whose slides rotate on their own (Home status cards). Rotation pauses while
@@ -18,6 +27,11 @@ export function RotatingCard({
   href,
   linkLabel,
   interval = 5000,
+  labels = {
+    previous: "Previous",
+    next: "Next",
+    slide: "{current} of {total}",
+  },
   className,
   style,
   children,
@@ -29,6 +43,8 @@ export function RotatingCard({
   href: string
   linkLabel: string
   interval?: number
+  /** Translated button labels; `slide` takes {current} and {total}. */
+  labels?: { previous: string; next: string; slide: string }
   className?: string
   style?: React.CSSProperties
   children: React.ReactNode
@@ -91,12 +107,13 @@ export function RotatingCard({
           <button
             type="button"
             onClick={() => api?.scrollPrev()}
-            aria-label="Previous"
+            aria-label={labels.previous}
             className="grid size-6 place-items-center text-muted-foreground hover:text-foreground"
           >
             <RiArrowLeftSLine className="size-4" aria-hidden />
           </button>
-          <span className="w-8 text-center text-xs text-muted-foreground tabular-nums"
+          <span
+            className="w-8 text-center text-xs text-muted-foreground tabular-nums"
             // Announce only user-driven changes, not every automatic rotation.
             aria-live={paused ? "polite" : "off"}
           >
@@ -105,7 +122,7 @@ export function RotatingCard({
           <button
             type="button"
             onClick={() => api?.scrollNext()}
-            aria-label="Next"
+            aria-label={labels.next}
             className="grid size-6 place-items-center text-muted-foreground hover:text-foreground"
           >
             <RiArrowRightSLine className="size-4" aria-hidden />
@@ -119,12 +136,18 @@ export function RotatingCard({
         </div>
       </div>
 
-      <Carousel setApi={setApi} opts={{ loop: true }} className="overflow-hidden">
+      <Carousel
+        setApi={setApi}
+        opts={{ loop: true }}
+        className="overflow-hidden"
+      >
         <CarouselContent className="ml-0">
           {slides.map((slide, i) => (
             <CarouselItem
               key={i}
-              aria-label={`${i + 1} of ${slides.length}`}
+              aria-label={labels.slide
+                .replace("{current}", String(i + 1))
+                .replace("{total}", String(slides.length))}
               className="pl-0"
             >
               {slide}

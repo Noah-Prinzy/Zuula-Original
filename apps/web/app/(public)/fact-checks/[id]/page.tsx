@@ -19,7 +19,6 @@ import { WhatIsTrueCard } from "@/components/verdict/what-is-true-card"
 import { communityScore } from "@/lib/community"
 import { relatedReports } from "@/lib/library"
 import { getSampleReport, SAMPLE_REPORTS } from "@/lib/mock/fact-checks"
-import { VERDICT_META } from "@/lib/verdicts"
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -29,9 +28,11 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const report = getSampleReport((await params).id)
-  if (!report) return { title: "Report" }
+  const t = await getTranslations("Report")
+  if (!report) return { title: t("metaFallback") }
+  const tv = await getTranslations("Verdicts.labels")
   return {
-    title: `${VERDICT_META[report.verdict].label}: ${report.title}`,
+    title: t("metaTitle", { verdict: tv(report.verdict), title: report.title }),
     description: report.summary,
   }
 }
@@ -66,23 +67,24 @@ export default async function ReportPage({ params }: Props) {
   const community = communityScore(report.community)
   const related = relatedReports(SAMPLE_REPORTS, report, 3)
   const t = await getTranslations("Related")
+  const tr = await getTranslations("Report")
+  const tc = await getTranslations("Common")
 
   return (
     <div className="page-container flex flex-col gap-6 py-8">
       <div className="flex items-center justify-between gap-4">
         <Button variant="ghost" size="sm" asChild className="-ml-2">
           <Link href="/fact-checks">
-            <RiArrowLeftLine aria-hidden /> Library
+            <RiArrowLeftLine aria-hidden /> {tr("backToLibrary")}
           </Link>
         </Button>
       </div>
 
       <Alert className="enter">
         <RiFlaskLine aria-hidden />
-        <AlertTitle>Sample report</AlertTitle>
+        <AlertTitle>{tc("sampleReportTitle")}</AlertTitle>
         <AlertDescription>
-          This report uses fictional data to preview the design. Real reports arrive with the AI
-          engine.
+          {tc("sampleReportBody")}
         </AlertDescription>
       </Alert>
 
@@ -94,10 +96,10 @@ export default async function ReportPage({ params }: Props) {
         <div className="grid items-start gap-8 2xl:grid-cols-2">
           <Section
             id="submitted"
-            title="What was checked"
+            title={tr("checked")}
             description={
               report.claims.length > 0
-                ? "Highlighted claims were assessed individually. Select one to see why."
+                ? tr("checkedHint")
                 : undefined
             }
           >
@@ -110,15 +112,15 @@ export default async function ReportPage({ params }: Props) {
             </div>
           </Section>
 
-          <Section id="findings" title="Findings">
+          <Section id="findings" title={tr("findings")}>
             <WhatIsTrueCard whatIsFalse={report.whatIsFalse} whatIsTrue={report.whatIsTrue} />
           </Section>
 
           {report.aiSignals.length > 0 && (
             <Section
               id="ai-signals"
-              title="AI detection signals"
-              description="The checks we ran for AI-generated or manipulated content."
+              title={tr("signals")}
+              description={tr("signalsHint")}
             >
               <AISignalsList signals={report.aiSignals} />
             </Section>
@@ -126,14 +128,14 @@ export default async function ReportPage({ params }: Props) {
 
           <Section
             id="comments"
-            title="Community comments"
-            description="Reasons people gave with their ratings."
+            title={tr("comments")}
+            description={tr("commentsHint")}
           >
             <RatingComments comments={report.community.comments} />
           </Section>
 
           {report.annotations.length > 0 && (
-            <Section id="expert-notes" title="Expert notes">
+            <Section id="expert-notes" title={tr("expertNotes")}>
               <div className="flex flex-col gap-3">
                 {report.annotations.map((a) => (
                   <ExpertAnnotation key={a.id} annotation={a} />
@@ -144,14 +146,14 @@ export default async function ReportPage({ params }: Props) {
         </div>
 
         <aside className="flex flex-col gap-8">
-          <Section id="rating" title="Community rating">
+          <Section id="rating" title={tr("rating")}>
             <RatingPanel initial={report.community} />
           </Section>
 
           <Section
             id="sources"
-            title="Sources"
-            description={`${report.citations.length} sources cross-referenced`}
+            title={tr("sources")}
+            description={tr("sourcesHint", { count: report.citations.length })}
           >
             <div className="flex flex-col gap-2">
               {report.citations.map((c, i) => (

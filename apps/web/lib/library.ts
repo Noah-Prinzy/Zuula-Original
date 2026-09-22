@@ -5,11 +5,8 @@ import { VERDICTS } from "@/lib/types/fact-check"
 // Search, filter and ranking for the Library and Home feed (FR-SEARCH-01, 04, 05).
 // Runs on sample data now; the same parameters become API query params in Phase 2.
 
-export const SORTS = [
-  { value: "relevance", label: "Best match" },
-  { value: "newest", label: "Newest" },
-  { value: "most-rated", label: "Most rated" },
-] as const
+// Labels live in Library.sorts.<value>.
+export const SORTS = [{ value: "relevance" }, { value: "newest" }, { value: "most-rated" }] as const
 export type SortValue = (typeof SORTS)[number]["value"]
 
 export const PAGE_SIZE = 12

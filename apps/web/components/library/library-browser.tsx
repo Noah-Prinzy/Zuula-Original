@@ -4,6 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { RiCloseLine, RiEqualizerLine, RiSearchLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { LibraryFilters } from "@/components/library/library-filters"
 import { Button } from "@/components/ui/button"
@@ -45,9 +46,8 @@ import {
   type SortValue,
 } from "@/lib/library"
 import { VERDICTS, type FactCheckReport, type Verdict } from "@/lib/types/fact-check"
-import { formatDate, VERDICT_META } from "@/lib/verdicts"
-
-const CONTENT_LABEL = { text: "Text", url: "Link", image: "Image", audio: "Audio", video: "Video" }
+import { useContentLabels } from "@/hooks/use-content-labels"
+import { useFormat } from "@/lib/format"
 
 export function LibraryBrowser({
   reports,
@@ -104,19 +104,23 @@ export function LibraryBrowser({
   )
 
   const filterCount = activeFilterCount(query)
+  const t = useTranslations("Library")
+  const tv = useTranslations("Verdicts.labels")
+  const labels = useContentLabels()
+  const f = useFormat()
 
   const chips: { label: string; clear: () => void }[] = [
     ...query.verdicts.map((v) => ({
-      label: VERDICT_META[v].label,
+      label: tv(v),
       clear: () => update({ verdicts: query.verdicts.filter((x) => x !== v) }),
     })),
-    ...(query.category ? [{ label: query.category, clear: () => update({ category: null }) }] : []),
-    ...(query.language ? [{ label: query.language, clear: () => update({ language: null }) }] : []),
-    ...(query.type ? [{ label: CONTENT_LABEL[query.type], clear: () => update({ type: null }) }] : []),
+    ...(query.category ? [{ label: labels.category(query.category), clear: () => update({ category: null }) }] : []),
+    ...(query.language ? [{ label: labels.language(query.language), clear: () => update({ language: null }) }] : []),
+    ...(query.type ? [{ label: t(`contentTypeShort.${query.type}`), clear: () => update({ type: null }) }] : []),
     ...(query.from || query.to
       ? [
           {
-            label: `${query.from ? formatDate(query.from) : "…"} – ${query.to ? formatDate(query.to) : "…"}`,
+            label: `${query.from ? f.date(query.from) : "…"} – ${query.to ? f.date(query.to) : "…"}`,
             clear: () => update({ from: null, to: null }),
           },
         ]
@@ -151,12 +155,12 @@ export function LibraryBrowser({
 
   return (
     <div className="grid items-start gap-8 lg:grid-cols-[16rem_minmax(0,1fr)] xl:grid-cols-[18rem_minmax(0,1fr)]">
-      <aside aria-label="Filters" className="hidden border bg-card p-4 lg:sticky lg:top-20 lg:block">
+      <aside aria-label={t("filters")} className="hidden border bg-card p-4 lg:sticky lg:top-20 lg:block">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-heading text-sm font-bold">Filters</h2>
+          <h2 className="font-heading text-sm font-bold">{t("filters")}</h2>
           {filterCount > 0 && (
             <Button variant="link" size="xs" className="px-0" onClick={clearAll}>
-              Clear all
+              {t("clearAll")}
             </Button>
           )}
         </div>
@@ -174,8 +178,8 @@ export function LibraryBrowser({
               type="search"
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="Search claims, topics or sources…"
-              aria-label="Search fact-checks"
+              placeholder={t("searchPlaceholder")}
+              aria-label={t("searchLabel")}
               className="h-10 pl-9 text-base"
             />
           </div>
@@ -185,25 +189,25 @@ export function LibraryBrowser({
               <SheetTrigger asChild>
                 <Button variant="outline" className="h-10 lg:hidden">
                   <RiEqualizerLine aria-hidden />
-                  Filters{filterCount > 0 && ` (${filterCount})`}
+                  {filterCount > 0 ? t("filtersCount", { count: filterCount }) : t("filters")}
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-80 overflow-y-auto">
                 <SheetHeader>
-                  <SheetTitle>Filters</SheetTitle>
-                  <SheetDescription>{result.total} results</SheetDescription>
+                  <SheetTitle>{t("filters")}</SheetTitle>
+                  <SheetDescription>{t("results", { count: result.total })}</SheetDescription>
                 </SheetHeader>
                 <div className="px-4">{filters}</div>
                 <SheetFooter>
                   <Button variant="outline" onClick={clearAll} disabled={filterCount === 0}>
-                    Clear all
+                    {t("clearAll")}
                   </Button>
                 </SheetFooter>
               </SheetContent>
             </Sheet>
 
             <label htmlFor="library-sort" className="sr-only">
-              Sort by
+              {t("sortBy")}
             </label>
             <NativeSelect
               id="library-sort"
@@ -213,7 +217,7 @@ export function LibraryBrowser({
             >
               {SORTS.map((s) => (
                 <NativeSelectOption key={s.value} value={s.value}>
-                  {s.label}
+                  {t(`sorts.${s.value}`)}
                 </NativeSelectOption>
               ))}
             </NativeSelect>
@@ -222,14 +226,12 @@ export function LibraryBrowser({
 
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <p aria-live="polite" className="text-muted-foreground">
-            <span className="font-medium text-foreground">{result.total}</span>{" "}
-            {result.total === 1 ? "fact-check" : "fact-checks"}
-            {query.q && (
-              <>
-                {" "}
-                for “<span className="text-foreground">{query.q}</span>”
-              </>
-            )}
+            {t.rich(query.q ? "countFor" : "count", {
+              count: result.total,
+              query: query.q,
+              strong: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+              q: (chunks) => <span className="text-foreground">{chunks}</span>,
+            })}
           </p>
           {chips.map((c) => (
             <button
@@ -237,7 +239,7 @@ export function LibraryBrowser({
               type="button"
               onClick={c.clear}
               className="inline-flex items-center gap-1 border bg-muted px-2 py-0.5 text-xs hover:border-foreground/30"
-              aria-label={`Remove filter ${c.label}`}
+              aria-label={t("removeFilter", { label: c.label })}
             >
               {c.label}
               <RiCloseLine className="size-3" aria-hidden />
@@ -251,18 +253,15 @@ export function LibraryBrowser({
               <EmptyMedia variant="icon">
                 <RiSearchLine aria-hidden />
               </EmptyMedia>
-              <EmptyTitle>No fact-checks found</EmptyTitle>
-              <EmptyDescription>
-                Try different words or remove some filters. If nobody has checked this claim yet,
-                you can submit it.
-              </EmptyDescription>
+              <EmptyTitle>{t("emptyTitle")}</EmptyTitle>
+              <EmptyDescription>{t("emptyBody")}</EmptyDescription>
             </EmptyHeader>
             <EmptyContent className="flex-row justify-center">
               <Button variant="outline" onClick={clearAll}>
-                Clear search
+                {t("clearSearch")}
               </Button>
               <Button asChild>
-                <Link href="/verify">Verify a claim</Link>
+                <Link href="/verify">{t("verifyClaim")}</Link>
               </Button>
             </EmptyContent>
           </Empty>

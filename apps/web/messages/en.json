@@ -232,6 +232,67 @@
       "ccs": "Community Confidence Score"
     }
   },
+  "Library": {
+    "metaTitle": "Library",
+    "metaDescription": "Search claims and articles that Zuula has already checked.",
+    "eyebrow": "Fact-check library",
+    "title": "Library",
+    "description": "Search claims and articles that have already been checked.",
+    "filters": "Filters",
+    "filtersCount": "Filters ({count})",
+    "clearAll": "Clear all",
+    "results": "{count, plural, one {# result} other {# results}}",
+    "searchPlaceholder": "Search claims, topics or sources…",
+    "searchLabel": "Search fact-checks",
+    "sortBy": "Sort by",
+    "sorts": {
+      "relevance": "Best match",
+      "newest": "Newest",
+      "most-rated": "Most rated"
+    },
+    "count": "<strong>{count}</strong> {count, plural, one {fact-check} other {fact-checks}}",
+    "countFor": "<strong>{count}</strong> {count, plural, one {fact-check} other {fact-checks}} for “<q>{query}</q>”",
+    "removeFilter": "Remove filter {label}",
+    "emptyTitle": "No fact-checks found",
+    "emptyBody": "Try different words or remove some filters. If nobody has checked this claim yet, you can submit it.",
+    "clearSearch": "Clear search",
+    "verifyClaim": "Verify a claim",
+    "contentTypeShort": {
+      "text": "Text",
+      "url": "Link",
+      "image": "Image",
+      "audio": "Audio",
+      "video": "Video"
+    },
+    "filter": {
+      "verdict": "Verdict",
+      "category": "Category",
+      "allCategories": "All categories",
+      "language": "Language",
+      "allLanguages": "All languages",
+      "contentType": "Content type",
+      "allTypes": "All types",
+      "dateChecked": "Date checked",
+      "from": "From",
+      "to": "To"
+    }
+  },
+  "Report": {
+    "metaFallback": "Report",
+    "metaTitle": "{verdict}: {title}",
+    "backToLibrary": "Library",
+    "checked": "What was checked",
+    "checkedHint": "Highlighted claims were assessed individually. Select one to see why.",
+    "findings": "Findings",
+    "signals": "AI detection signals",
+    "signalsHint": "The checks we ran for AI-generated or manipulated content.",
+    "comments": "Community comments",
+    "commentsHint": "Reasons people gave with their ratings.",
+    "expertNotes": "Expert notes",
+    "rating": "Community rating",
+    "sources": "Sources",
+    "sourcesHint": "{count, plural, one {# source cross-referenced} other {# sources cross-referenced}}"
+  },
   "Community": {
     "status": {
       "verified": {

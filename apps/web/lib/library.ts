@@ -193,6 +193,8 @@ function keywords(r: FactCheckReport) {
 
 // FR-SEARCH-03: checks related to a report, by shared topic, overlapping wording, source
 // and language. Suspended verdicts are excluded like everywhere else in search.
+// Phase 1 stand-in: the spec asks for semantic similarity, which needs embeddings
+// (pgvector, Phase 3) once real reports come from the API.
 export function relatedReports(all: FactCheckReport[], report: FactCheckReport, n = 3) {
   const words = keywords(report)
   const domain = report.sourceUrl ? safeHost(report.sourceUrl) : null

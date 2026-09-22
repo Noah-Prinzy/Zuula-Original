@@ -638,7 +638,7 @@
     },
     "access": {
       "title": "Get access",
-      "body": "Verified journalists and administrators can create a key today in <keys>Account → API access</keys>; it works against sample data until the backend ships. For a newsroom integration or a higher rate limit, email <email>hello@zuula.ug</email>. Using the API means accepting the <terms>API terms</terms>."
+      "body": "Verified journalists and administrators can create a key today in <keys>Account → API access</keys>; it will start working when the API goes live in Phase 2. For a newsroom integration or a higher rate limit, email <email>hello@zuula.ug</email>. Using the API means accepting the <terms>API terms</terms>."
     }
   },
   "Related": {

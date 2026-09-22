@@ -1,0 +1,61 @@
+name: API CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - "packages/shared/**"
+      - ".github/workflows/api-ci.yml"
+  pull_request:
+    paths:
+      - "apps/api/**"
+      - "packages/shared/**"
+      - ".github/workflows/api-ci.yml"
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Contract tests
+        run: pytest tests/contract/ -q
+
+  openapi-spec:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install openapi-spec-validator
+        run: pip install openapi-spec-validator pyyaml
+
+      - name: Validate openapi.yaml structurally
+        run: |
+          python -c "
+          from openapi_spec_validator import validate
+          import yaml
+          with open('openapi.yaml') as f:
+              validate(yaml.safe_load(f))
+          print('openapi.yaml: structurally valid')
+          "

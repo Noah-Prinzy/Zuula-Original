@@ -1,4 +1,5 @@
 import { RiCheckLine, RiCloseLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { cn } from "@/lib/utils"
 
@@ -12,18 +13,19 @@ export function WhatIsTrueCard({
   whatIsTrue: string[]
   className?: string
 }) {
+  const t = useTranslations("Verdicts.findings")
   if (whatIsFalse.length === 0 && whatIsTrue.length === 0) return null
 
   const columns = [
     {
-      title: "What is false",
+      title: t("false"),
       items: whatIsFalse,
       icon: RiCloseLine,
       tone: "text-verdict-false",
       bar: "bg-verdict-false",
     },
     {
-      title: "What is true",
+      title: t("true"),
       items: whatIsTrue,
       icon: RiCheckLine,
       tone: "text-verdict-authentic",

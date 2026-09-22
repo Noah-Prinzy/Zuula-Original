@@ -7,20 +7,23 @@ import {
   RiTranslate2,
   RiVideoLine,
 } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { ConfidenceMeter } from "@/components/verdict/confidence-meter"
 import { HumanVerifiedBadge } from "@/components/verdict/human-verified-badge"
 import { VerdictBadge } from "@/components/verdict/verdict-badge"
+import { useContentLabels } from "@/hooks/use-content-labels"
+import { useFormat } from "@/lib/format"
 import type { ContentType, FactCheckReport } from "@/lib/types/fact-check"
 import { cn } from "@/lib/utils"
-import { formatDate, VERDICT_META } from "@/lib/verdicts"
+import { VERDICT_META } from "@/lib/verdicts"
 
-const CONTENT_TYPE = {
-  text: { label: "Text", icon: RiFileTextLine },
-  url: { label: "Article link", icon: RiLink },
-  image: { label: "Image", icon: RiImageLine },
-  audio: { label: "Audio", icon: RiMicLine },
-  video: { label: "Video", icon: RiVideoLine },
+const CONTENT_TYPE_ICON = {
+  text: RiFileTextLine,
+  url: RiLink,
+  image: RiImageLine,
+  audio: RiMicLine,
+  video: RiVideoLine,
 } satisfies Record<ContentType, unknown>
 
 // Top of the Report page: verdict, confidence, headline and metadata.
@@ -32,7 +35,11 @@ export function VerdictSummary({
   className?: string
 }) {
   const meta = VERDICT_META[report.verdict]
-  const type = CONTENT_TYPE[report.contentType]
+  const TypeIcon = CONTENT_TYPE_ICON[report.contentType]
+  const t = useTranslations("Verdicts.summary")
+  const tt = useTranslations("ContentTypes")
+  const labels = useContentLabels()
+  const f = useFormat()
 
   return (
     <section
@@ -51,29 +58,32 @@ export function VerdictSummary({
         <p className="text-base text-muted-foreground">{report.summary}</p>
         <dl className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
-            <dt className="sr-only">Content type</dt>
-            <type.icon className="size-3.5" aria-hidden />
-            <dd>{type.label}</dd>
+            <dt className="sr-only">{t("contentType")}</dt>
+            <TypeIcon className="size-3.5" aria-hidden />
+            <dd>{tt(report.contentType)}</dd>
           </div>
           <div className="flex items-center gap-1">
-            <dt className="sr-only">Language</dt>
+            <dt className="sr-only">{t("language")}</dt>
             <RiTranslate2 className="size-3.5" aria-hidden />
-            <dd>{report.language}</dd>
+            <dd>{labels.language(report.language)}</dd>
           </div>
           <div className="flex items-center gap-1">
-            <dt className="sr-only">Checked</dt>
+            <dt className="sr-only">{t("checked")}</dt>
             <RiTimeLine className="size-3.5" aria-hidden />
             <dd>
-              Checked <time dateTime={report.checkedAt}>{formatDate(report.checkedAt)}</time> in{" "}
-              {report.processingSeconds.toFixed(1)}s
+              {t.rich("checkedIn", {
+                date: f.date(report.checkedAt),
+                seconds: report.processingSeconds.toFixed(1),
+                time: (chunks) => <time dateTime={report.checkedAt}>{chunks}</time>,
+              })}
             </dd>
           </div>
           <div>
-            <dt className="sr-only">Category</dt>
-            <dd>{report.category}</dd>
+            <dt className="sr-only">{t("category")}</dt>
+            <dd>{labels.category(report.category)}</dd>
           </div>
           <div>
-            <dt className="inline">Tracking ID </dt>
+            <dt className="inline">{t("trackingId")} </dt>
             <dd className="inline font-mono">{report.trackingId}</dd>
           </div>
         </dl>

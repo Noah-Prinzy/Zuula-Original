@@ -1,9 +1,10 @@
 import { RiVerifiedBadgeFill } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import type { HumanReview } from "@/lib/types/fact-check"
+import { useFormat } from "@/lib/format"
 import { cn } from "@/lib/utils"
-import { formatDate, VERDICT_META } from "@/lib/verdicts"
 
 // FR-REVIEW-04: shown when an Expert Reviewer confirmed or overrode the AI verdict.
 export function HumanVerifiedBadge({
@@ -13,10 +14,12 @@ export function HumanVerifiedBadge({
   review: HumanReview
   className?: string
 }) {
+  const t = useTranslations("Verdicts")
+  const f = useFormat()
   const detail =
     review.outcome === "overridden" && review.previousVerdict
-      ? `Overridden from ${VERDICT_META[review.previousVerdict].label} by ${review.reviewer}`
-      : `Confirmed by ${review.reviewer}`
+      ? t("human.overridden", { verdict: t(`labels.${review.previousVerdict}`), reviewer: review.reviewer })
+      : t("human.confirmed", { reviewer: review.reviewer })
 
   return (
     <Tooltip>
@@ -29,11 +32,11 @@ export function HumanVerifiedBadge({
           )}
         >
           <RiVerifiedBadgeFill className="size-3.5" aria-hidden />
-          Human Verified
+          {t("human.badge")}
         </span>
       </TooltipTrigger>
       <TooltipContent>
-        {detail} · {formatDate(review.reviewedAt)}
+        {detail} · {f.date(review.reviewedAt)}
       </TooltipContent>
     </Tooltip>
   )

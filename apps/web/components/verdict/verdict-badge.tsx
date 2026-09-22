@@ -1,4 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority"
+import { useTranslations } from "next-intl"
 
 import type { Verdict } from "@/lib/types/fact-check"
 import { cn } from "@/lib/utils"
@@ -25,6 +26,7 @@ export function VerdictBadge({
   className,
 }: { verdict: Verdict; className?: string } & VariantProps<typeof verdictBadgeVariants>) {
   const meta = VERDICT_META[verdict]
+  const t = useTranslations("Verdicts.labels")
   const Icon = meta.icon
 
   return (
@@ -33,7 +35,7 @@ export function VerdictBadge({
       className={cn(verdictBadgeVariants({ size }), meta.text, meta.bg, meta.border, className)}
     >
       <Icon aria-hidden />
-      {meta.label}
+      {t(verdict)}
     </span>
   )
 }

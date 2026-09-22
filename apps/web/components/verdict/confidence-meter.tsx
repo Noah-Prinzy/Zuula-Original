@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl"
+
 import type { Verdict } from "@/lib/types/fact-check"
 import { cn } from "@/lib/utils"
 import { VERDICT_META } from "@/lib/verdicts"
@@ -8,10 +10,10 @@ const SIZES = {
   lg: { box: 112, stroke: 8, text: "text-2xl" },
 } as const
 
-export function confidenceLabel(value: number) {
-  if (value >= 85) return "High confidence"
-  if (value >= 60) return "Moderate confidence"
-  return "Low confidence"
+export function confidenceLevel(value: number) {
+  if (value >= 85) return "high"
+  if (value >= 60) return "moderate"
+  return "low"
 }
 
 // FR-DETECT-02: AI confidence score, 0–100%.
@@ -28,6 +30,7 @@ export function ConfidenceMeter({
   showLabel?: boolean
   className?: string
 }) {
+  const t = useTranslations("Verdicts.confidence")
   const clamped = Math.max(0, Math.min(100, Math.round(value)))
   const { box, stroke, text } = SIZES[size]
   const r = (box - stroke) / 2
@@ -41,7 +44,7 @@ export function ConfidenceMeter({
         aria-valuenow={clamped}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label={`AI confidence ${clamped}%`}
+        aria-label={t("aria", { value: clamped })}
         className="relative shrink-0"
         style={{ width: box, height: box }}
       >
@@ -77,8 +80,8 @@ export function ConfidenceMeter({
       </div>
       {showLabel && (
         <div className="flex flex-col">
-          <span className="text-sm font-medium">{confidenceLabel(clamped)}</span>
-          <span className="text-xs text-muted-foreground">AI confidence score</span>
+          <span className="text-sm font-medium">{t(confidenceLevel(clamped))}</span>
+          <span className="text-xs text-muted-foreground">{t("label")}</span>
         </div>
       )}
     </div>

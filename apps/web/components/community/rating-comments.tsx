@@ -2,14 +2,14 @@
 
 import * as React from "react"
 import { RiThumbDownFill, RiThumbUpFill } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { RATING_WEIGHTS } from "@/lib/community"
-import { ROLE_LABELS } from "@/lib/roles"
+import { useFormat } from "@/lib/format"
 import type { RatingComment } from "@/lib/types/fact-check"
 import { cn, initials } from "@/lib/utils"
-import { formatDate } from "@/lib/verdicts"
 
 type Filter = "all" | "accurate" | "inaccurate"
 
@@ -21,12 +21,15 @@ export function RatingComments({
   comments: RatingComment[]
   className?: string
 }) {
+  const t = useTranslations("Community.comments")
+  const tr = useTranslations("Roles")
+  const f = useFormat()
   const [filter, setFilter] = React.useState<Filter>("all")
   const shown = filter === "all" ? comments : comments.filter((c) => c.vote === filter)
   const count = (v: Filter) => (v === "all" ? comments.length : comments.filter((c) => c.vote === v).length)
 
   if (comments.length === 0) {
-    return <p className="text-sm text-muted-foreground">No one has explained their rating yet.</p>
+    return <p className="text-sm text-muted-foreground">{t("empty")}</p>
   }
 
   return (
@@ -37,12 +40,12 @@ export function RatingComments({
         size="sm"
         value={filter}
         onValueChange={(v) => v && setFilter(v as Filter)}
-        aria-label="Filter comments"
+        aria-label={t("filter")}
         className="w-fit"
       >
-        {(["all", "accurate", "inaccurate"] as const).map((f) => (
-          <ToggleGroupItem key={f} value={f} className="capitalize">
-            {f} ({count(f)})
+        {(["all", "accurate", "inaccurate"] as const).map((key) => (
+          <ToggleGroupItem key={key} value={key}>
+            {t(key, { count: count(key) })}
           </ToggleGroupItem>
         ))}
       </ToggleGroup>
@@ -61,7 +64,7 @@ export function RatingComments({
                   <span className="font-semibold">{c.author}</span>
                   {c.role !== "public" && (
                     <span className="border px-1 text-muted-foreground">
-                      {ROLE_LABELS[c.role]} · {RATING_WEIGHTS[c.role]}×
+                      {tr(c.role)} · {RATING_WEIGHTS[c.role]}×
                     </span>
                   )}
                   <span
@@ -71,10 +74,10 @@ export function RatingComments({
                     )}
                   >
                     <Icon className="size-3" aria-hidden />
-                    {accurate ? "Accurate" : "Inaccurate"}
+                    {accurate ? t("voteAccurate") : t("voteInaccurate")}
                   </span>
                   <time dateTime={c.createdAt} className="ml-auto text-muted-foreground">
-                    {formatDate(c.createdAt)}
+                    {f.date(c.createdAt)}
                   </time>
                 </div>
                 <p className="text-sm">{c.body}</p>

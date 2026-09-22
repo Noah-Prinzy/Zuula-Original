@@ -10,6 +10,7 @@ import {
   RiThumbUpFill,
   RiThumbUpLine,
 } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { CCSMeter } from "@/components/community/ccs-meter"
@@ -28,7 +29,6 @@ import {
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
 import { applyVote, communityScore, RATING_WEIGHTS, raterRole } from "@/lib/community"
-import { ROLE_LABELS } from "@/lib/roles"
 import type { CommunityRating } from "@/lib/types/fact-check"
 import { cn } from "@/lib/utils"
 
@@ -47,6 +47,9 @@ export function RatingPanel({
 }) {
   const { user, role } = useSession()
   const pathname = usePathname()
+  const t = useTranslations("Community.panel")
+  const tc = useTranslations("Common")
+  const tr = useTranslations("Roles")
   const [counts, setCounts] = React.useState(initial)
   const [vote, setVote] = React.useState<Vote | null>(null)
   const [comment, setComment] = React.useState("")
@@ -61,9 +64,9 @@ export function RatingPanel({
     setCounts((c) => applyVote(c, raterRole(role), vote, next))
     const changed = vote !== null
     setVote(next)
-    toast.success(changed ? "Rating changed" : "Thanks for rating", {
-      description: `You rated this verdict ${next}.`,
-      action: { label: "Add reason", onClick: () => openDialog() },
+    toast.success(changed ? t("changed") : t("thanks"), {
+      description: t("ratedAs", { vote: next }),
+      action: { label: t("addReasonAction"), onClick: () => openDialog() },
     })
   }
 
@@ -75,17 +78,17 @@ export function RatingPanel({
   function saveComment() {
     setComment(draft.trim())
     setDialogOpen(false)
-    toast.success(draft.trim() ? "Reason saved" : "Reason removed")
+    toast.success(draft.trim() ? t("reasonSaved") : t("reasonRemoved"))
   }
 
   return (
     <div className={cn("flex flex-col gap-4 border bg-card p-4", className)}>
       <div className="flex items-center justify-between gap-2">
-        <h3 className="font-heading text-sm font-bold">Is this verdict accurate?</h3>
+        <h3 className="font-heading text-sm font-bold">{t("question")}</h3>
         <CommunityBadge status={score.status} />
       </div>
 
-      <div className="grid grid-cols-2 gap-2" role="group" aria-label="Rate this verdict">
+      <div className="grid grid-cols-2 gap-2" role="group" aria-label={t("group")}>
         <Button
           variant="outline"
           size="lg"
@@ -98,7 +101,7 @@ export function RatingPanel({
           )}
         >
           {vote === "accurate" ? <RiThumbUpFill aria-hidden /> : <RiThumbUpLine aria-hidden />}
-          Accurate
+          {t("accurate")}
         </Button>
         <Button
           variant="outline"
@@ -112,7 +115,7 @@ export function RatingPanel({
           )}
         >
           {vote === "inaccurate" ? <RiThumbDownFill aria-hidden /> : <RiThumbDownLine aria-hidden />}
-          Inaccurate
+          {t("inaccurate")}
         </Button>
       </div>
 
@@ -122,25 +125,27 @@ export function RatingPanel({
             href={`/sign-in?next=${encodeURIComponent(pathname)}`}
             className="font-medium text-primary underline-offset-4 hover:underline"
           >
-            Sign in
+            {t("signIn")}
           </Link>{" "}
-          to rate this verdict. Ratings help retrain Zuula.
+          {t("signInRest")}
         </p>
       ) : vote ? (
         <div className="flex flex-col gap-2 text-xs text-muted-foreground">
           <p>
-            You rated this <span className="font-medium text-foreground">{vote}</span>. You can
-            change it at any time.
+            {t.rich("youRated", {
+              vote,
+              strong: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+            })}
           </p>
           {comment && <p className="border-l-2 pl-2 italic">“{comment}”</p>}
           <Button variant="ghost" size="sm" className="w-fit" onClick={openDialog}>
             <RiChat3Line aria-hidden />
-            {comment ? "Edit reason" : "Add a reason"}
+            {comment ? t("editReason") : t("addReason")}
           </Button>
         </div>
       ) : (
         <p className="text-xs text-muted-foreground">
-          Your rating counts {weight}× as {role ? ROLE_LABELS[role] : "a user"}.
+          {role ? t("weight", { weight, role: tr(role) }) : t("weightNoRole", { weight })}
         </p>
       )}
 
@@ -151,19 +156,19 @@ export function RatingPanel({
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Why did you rate it {vote}?</DialogTitle>
+            <DialogTitle>{t("dialogTitle", { vote: vote ?? "accurate" })}</DialogTitle>
             <DialogDescription>
-              Your reason is shown publicly with your name and helps expert reviewers.
+              {t("dialogBody")}
             </DialogDescription>
           </DialogHeader>
           <Field>
-            <FieldLabel htmlFor="rating-reason">Reason (optional)</FieldLabel>
+            <FieldLabel htmlFor="rating-reason">{t("reasonLabel")}</FieldLabel>
             <Textarea
               id="rating-reason"
               value={draft}
               maxLength={MAX_COMMENT}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="E.g. I checked the official statement and…"
+              placeholder={t("reasonPlaceholder")}
               rows={4}
             />
             <FieldDescription className="text-right tabular-nums">
@@ -172,9 +177,9 @@ export function RatingPanel({
           </Field>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline">{tc("cancel")}</Button>
             </DialogClose>
-            <Button onClick={saveComment}>Save reason</Button>
+            <Button onClick={saveComment}>{t("saveReason")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

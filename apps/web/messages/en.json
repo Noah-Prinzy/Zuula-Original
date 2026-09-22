@@ -148,6 +148,156 @@
     "codeAllDigits": "Enter all 6 digits.",
     "codeInvalid": "That code is incorrect or has expired."
   },
+  "Languages": {
+    "English": "English",
+    "Luganda": "Luganda",
+    "Acholi": "Acholi",
+    "Runyankole": "Runyankole",
+    "Ateso": "Ateso"
+  },
+  "ContentTypes": {
+    "text": "Text",
+    "url": "Article link",
+    "image": "Image",
+    "audio": "Audio",
+    "video": "Video"
+  },
+  "Verdicts": {
+    "labels": {
+      "authentic": "Authentic",
+      "likely-false": "Likely False",
+      "false": "False",
+      "ai-generated": "AI-Generated",
+      "unverifiable": "Unverifiable"
+    },
+    "descriptions": {
+      "authentic": "Supported by trusted sources.",
+      "likely-false": "Key claims are contradicted or lack support.",
+      "false": "Contradicted by trusted sources.",
+      "ai-generated": "Shows strong signs of being created or altered by AI.",
+      "unverifiable": "Not enough reliable evidence either way."
+    },
+    "claims": {
+      "false": "False",
+      "misleading": "Misleading",
+      "unsupported": "Unsupported",
+      "out-of-context": "Out of context",
+      "supported": "Supported"
+    },
+    "stance": {
+      "supports": "Supports",
+      "contradicts": "Contradicts",
+      "context": "Context"
+    },
+    "confidence": {
+      "high": "High confidence",
+      "moderate": "Moderate confidence",
+      "low": "Low confidence",
+      "label": "AI confidence score",
+      "aria": "AI confidence {value}%"
+    },
+    "human": {
+      "badge": "Human Verified",
+      "confirmed": "Confirmed by {reviewer}",
+      "overridden": "Overridden from {verdict} by {reviewer}"
+    },
+    "citation": {
+      "trusted": "Trusted source",
+      "newTab": "(opens in a new tab)"
+    },
+    "findings": {
+      "false": "What is false",
+      "true": "What is true"
+    },
+    "claim": {
+      "srLabel": " (claim {index}: {assessment}, show why)",
+      "heading": "Claim {index} · {assessment}"
+    },
+    "signals": {
+      "summary": "{triggered} of {total} detection signals were triggered.",
+      "triggered": "Triggered",
+      "notTriggered": "Not triggered",
+      "bar": "Score {score}%, threshold {threshold}%",
+      "method": "Method: {method} · Threshold {threshold}%"
+    },
+    "summary": {
+      "contentType": "Content type",
+      "language": "Language",
+      "checked": "Checked",
+      "checkedIn": "Checked <time>{date}</time> in {seconds}s",
+      "category": "Category",
+      "trackingId": "Tracking ID"
+    },
+    "card": {
+      "ccs": "Community Confidence Score"
+    }
+  },
+  "Community": {
+    "status": {
+      "verified": {
+        "label": "Community Verified",
+        "title": "Community Verified",
+        "description": "At least 90% of weighted community ratings agree with this verdict."
+      },
+      "questioned": {
+        "label": "Questioned",
+        "title": "The community questions this verdict",
+        "description": "Between 40% and 69% of ratings agree. Read the sources and comments before sharing."
+      },
+      "escalated": {
+        "label": "Under Expert Review",
+        "title": "Sent for expert review",
+        "description": "Fewer than 40% of over 100 ratings agree with this verdict. An Expert Reviewer will check it within 48 hours."
+      },
+      "suspended": {
+        "label": "Suspended",
+        "title": "Verdict suspended pending review",
+        "description": "Fewer than 20% of over 200 ratings agree. The verdict is hidden from search until an expert reviews it."
+      }
+    },
+    "ccs": {
+      "title": "Community Confidence Score",
+      "ratings": "{count, plural, one {# rating} other {# ratings}}",
+      "weighted": "weighted by role",
+      "none": "No ratings yet",
+      "aria": "{accurate}% of weighted ratings say accurate, {inaccurate}% say inaccurate",
+      "accurate": "{count} accurate",
+      "inaccurate": "{count} inaccurate"
+    },
+    "panel": {
+      "question": "Is this verdict accurate?",
+      "group": "Rate this verdict",
+      "accurate": "Accurate",
+      "inaccurate": "Inaccurate",
+      "signIn": "Sign in",
+      "signInRest": "to rate this verdict. Ratings help retrain Zuula.",
+      "youRated": "You rated this <strong>{vote, select, accurate {accurate} other {inaccurate}}</strong>. You can change it at any time.",
+      "editReason": "Edit reason",
+      "addReason": "Add a reason",
+      "weight": "Your rating counts {weight}× as {role}.",
+      "weightNoRole": "Your rating counts {weight}× as a user.",
+      "thanks": "Thanks for rating",
+      "changed": "Rating changed",
+      "ratedAs": "You rated this verdict {vote, select, accurate {accurate} other {inaccurate}}.",
+      "addReasonAction": "Add reason",
+      "reasonSaved": "Reason saved",
+      "reasonRemoved": "Reason removed",
+      "dialogTitle": "Why did you rate it {vote, select, accurate {accurate} other {inaccurate}}?",
+      "dialogBody": "Your reason is shown publicly with your name and helps expert reviewers.",
+      "reasonLabel": "Reason (optional)",
+      "reasonPlaceholder": "E.g. I checked the official statement and…",
+      "saveReason": "Save reason"
+    },
+    "comments": {
+      "empty": "No one has explained their rating yet.",
+      "filter": "Filter comments",
+      "all": "All ({count})",
+      "accurate": "Accurate ({count})",
+      "inaccurate": "Inaccurate ({count})",
+      "voteAccurate": "Accurate",
+      "voteInaccurate": "Inaccurate"
+    }
+  },
   "Auth": {
     "layout": {
       "headline": "Stop misinformation before it spreads.",

@@ -1,8 +1,10 @@
 import { RiExternalLinkLine, RiShieldCheckFill } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import type { Citation } from "@/lib/types/fact-check"
+import { useFormat } from "@/lib/format"
 import { cn } from "@/lib/utils"
-import { formatDate, STANCE_META, VERDICT_META } from "@/lib/verdicts"
+import { STANCE_META, VERDICT_META } from "@/lib/verdicts"
 
 function hostname(url: string) {
   try {
@@ -22,6 +24,8 @@ export function CitationCard({
   index?: number
   className?: string
 }) {
+  const t = useTranslations("Verdicts")
+  const f = useFormat()
   const stance = STANCE_META[citation.stance]
   const tone = VERDICT_META[stance.verdict]
 
@@ -39,14 +43,14 @@ export function CitationCard({
           {citation.trusted && (
             <span className="inline-flex items-center gap-0.5 text-muted-foreground">
               <RiShieldCheckFill className="size-3 text-primary" aria-hidden />
-              Trusted source
+              {t("citation.trusted")}
             </span>
           )}
           <span className="text-muted-foreground">
-            <time dateTime={citation.publishedAt}>{formatDate(citation.publishedAt)}</time>
+            <time dateTime={citation.publishedAt}>{f.date(citation.publishedAt)}</time>
           </span>
           <span className={cn("ml-auto border px-1.5 font-medium", tone.text, tone.bg, tone.border)}>
-            {stance.label}
+            {t(`stance.${citation.stance}`)}
           </span>
         </div>
         <a
@@ -57,7 +61,7 @@ export function CitationCard({
         >
           <span className="line-clamp-2">{citation.title}</span>
           <RiExternalLinkLine className="mt-0.5 size-3.5 shrink-0 opacity-60 group-hover:opacity-100" aria-hidden />
-          <span className="sr-only">(opens in a new tab)</span>
+          <span className="sr-only">{t("citation.newTab")}</span>
         </a>
         {citation.excerpt && (
           <p className="line-clamp-2 text-xs text-muted-foreground">“{citation.excerpt}”</p>

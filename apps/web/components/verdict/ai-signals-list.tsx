@@ -1,6 +1,7 @@
 "use client"
 
 import { RiArrowDownSLine, RiRobot2Line } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import type { AISignal } from "@/lib/types/fact-check"
@@ -14,6 +15,7 @@ export function AISignalsList({
   signals: AISignal[]
   className?: string
 }) {
+  const t = useTranslations("Verdicts.signals")
   if (signals.length === 0) return null
 
   const triggered = signals.filter((s) => s.score >= s.threshold).length
@@ -22,7 +24,7 @@ export function AISignalsList({
     <div className={cn("flex flex-col gap-3", className)}>
       <p className="flex items-center gap-2 text-sm text-muted-foreground">
         <RiRobot2Line className="size-4 text-verdict-ai-generated" aria-hidden />
-        {triggered} of {signals.length} detection signals were triggered.
+        {t("summary", { triggered, total: signals.length })}
       </p>
       <ul className="flex flex-col divide-y border">
         {signals.map((signal) => {
@@ -44,7 +46,7 @@ export function AISignalsList({
                           : "text-muted-foreground"
                       )}
                     >
-                      {hit ? "Triggered" : "Not triggered"}
+                      {hit ? t("triggered") : t("notTriggered")}
                     </span>
                     <span className="ml-auto font-mono text-sm tabular-nums">{pct}%</span>
                     <RiArrowDownSLine
@@ -56,7 +58,7 @@ export function AISignalsList({
                   <div
                     className="relative h-1.5 w-full bg-muted"
                     role="img"
-                    aria-label={`Score ${pct}%, threshold ${threshold}%`}
+                    aria-label={t("bar", { score: pct, threshold })}
                   >
                     <div
                       className={cn(
@@ -75,7 +77,7 @@ export function AISignalsList({
                 <CollapsibleContent className="px-3 pb-3 text-sm text-muted-foreground">
                   <p>{signal.description}</p>
                   <p className="mt-1 text-xs">
-                    Method: {signal.method} · Threshold {threshold}%
+                    {t("method", { method: signal.method, threshold })}
                   </p>
                 </CollapsibleContent>
               </Collapsible>

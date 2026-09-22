@@ -7,14 +7,17 @@ import {
   RiThumbUpLine,
   RiVideoLine,
 } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { CommunityBadge } from "@/components/community/community-status"
 import { ConfidenceMeter } from "@/components/verdict/confidence-meter"
 import { VerdictBadge } from "@/components/verdict/verdict-badge"
+import { useContentLabels } from "@/hooks/use-content-labels"
 import { communityScore } from "@/lib/community"
+import { useFormat } from "@/lib/format"
 import type { ContentType, FactCheckReport } from "@/lib/types/fact-check"
 import { cn } from "@/lib/utils"
-import { formatDate, VERDICT_META } from "@/lib/verdicts"
+import { VERDICT_META } from "@/lib/verdicts"
 
 const TYPE_ICON: Record<ContentType, typeof RiFileTextLine> = {
   text: RiFileTextLine,
@@ -34,6 +37,9 @@ export function FactCheckCard({
 }) {
   const score = communityScore(report.community)
   const TypeIcon = TYPE_ICON[report.contentType]
+  const t = useTranslations("Verdicts.card")
+  const labels = useContentLabels()
+  const f = useFormat()
 
   return (
     <article
@@ -70,14 +76,14 @@ export function FactCheckCard({
       <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1">
           <TypeIcon className="size-3.5" aria-hidden />
-          {report.category}
+          {labels.category(report.category)}
         </span>
-        <span>{report.language}</span>
-        <time dateTime={report.checkedAt}>{formatDate(report.checkedAt)}</time>
+        <span>{labels.language(report.language)}</span>
+        <time dateTime={report.checkedAt}>{f.date(report.checkedAt)}</time>
         {score.ccs !== null && (
-          <span className="ml-auto inline-flex items-center gap-1" title="Community Confidence Score">
+          <span className="ml-auto inline-flex items-center gap-1" title={t("ccs")}>
             <RiThumbUpLine className="size-3.5" aria-hidden />
-            {score.ccs}% · {score.total.toLocaleString()}
+            {score.ccs}% · {f.number(score.total)}
           </span>
         )}
       </div>

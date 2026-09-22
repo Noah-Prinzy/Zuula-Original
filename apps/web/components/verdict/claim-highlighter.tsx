@@ -1,6 +1,7 @@
 "use client"
 
 import { RiExternalLinkLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import type { Citation, FlaggedClaim } from "@/lib/types/fact-check"
@@ -39,6 +40,7 @@ export function ClaimHighlighter({
   citations: Citation[]
   className?: string
 }) {
+  const t = useTranslations("Verdicts")
   const byId = new Map(citations.map((c) => [c.id, c]))
 
   return (
@@ -49,6 +51,7 @@ export function ClaimHighlighter({
         const claim = seg.claim
         const meta = CLAIM_META[claim.assessment]
         const tone = VERDICT_META[meta.verdict]
+        const assessment = t(`claims.${claim.assessment}`)
         const sources = claim.citationIds.map((id) => byId.get(id)).filter(Boolean) as Citation[]
 
         return (
@@ -75,14 +78,14 @@ export function ClaimHighlighter({
                   {seg.index}
                 </sup>
                 <span className="sr-only">
-                  {` (claim ${seg.index}: ${meta.label}, show why)`}
+                  {t("claim.srLabel", { index: seg.index ?? 0, assessment })}
                 </span>
               </span>
             </PopoverTrigger>
             <PopoverContent className="w-80" align="start">
               <div className="flex flex-col gap-2">
                 <span className={cn("text-xs font-semibold tracking-wide uppercase", tone.text)}>
-                  Claim {seg.index} · {meta.label}
+                  {t("claim.heading", { index: seg.index ?? 0, assessment })}
                 </span>
                 <p className="text-sm">{claim.reason}</p>
                 {sources.length > 0 && (

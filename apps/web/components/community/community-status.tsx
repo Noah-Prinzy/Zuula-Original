@@ -5,14 +5,13 @@ import {
   RiShieldStarLine,
   type RemixiconComponentType,
 } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import type { CommunityStatus } from "@/lib/community"
 import { cn } from "@/lib/utils"
 
+// Text lives in Community.status.<status>.{label,title,description}.
 type StatusMeta = {
-  label: string
-  title: string
-  description: string
   icon: RemixiconComponentType
   className: string
 }
@@ -20,33 +19,18 @@ type StatusMeta = {
 // §9.2 escalation states. "standard" (CCS 70–89 or too few ratings) shows nothing.
 export const COMMUNITY_STATUS_META: Record<Exclude<CommunityStatus, "standard">, StatusMeta> = {
   verified: {
-    label: "Community Verified",
-    title: "Community Verified",
-    description: "At least 90% of weighted community ratings agree with this verdict.",
     icon: RiShieldStarLine,
     className: "border-verdict-authentic/40 bg-verdict-authentic/10 text-verdict-authentic",
   },
   questioned: {
-    label: "Questioned",
-    title: "The community questions this verdict",
-    description:
-      "Between 40% and 69% of ratings agree. Read the sources and comments before sharing.",
     icon: RiGroupLine,
     className: "border-verdict-likely-false/40 bg-verdict-likely-false/10 text-verdict-likely-false",
   },
   escalated: {
-    label: "Under Expert Review",
-    title: "Sent for expert review",
-    description:
-      "Fewer than 40% of over 100 ratings agree with this verdict. An Expert Reviewer will check it within 48 hours.",
     icon: RiAlertLine,
     className: "border-verdict-false/40 bg-verdict-false/10 text-verdict-false",
   },
   suspended: {
-    label: "Suspended",
-    title: "Verdict suspended pending review",
-    description:
-      "Fewer than 20% of over 200 ratings agree. The verdict is hidden from search until an expert reviews it.",
     icon: RiPauseCircleLine,
     className: "border-verdict-false/60 bg-verdict-false/15 text-verdict-false",
   },
@@ -60,6 +44,7 @@ export function CommunityBadge({
   status: CommunityStatus
   className?: string
 }) {
+  const t = useTranslations("Community.status")
   if (status === "standard") return null
   const meta = COMMUNITY_STATUS_META[status]
   return (
@@ -71,7 +56,7 @@ export function CommunityBadge({
       )}
     >
       <meta.icon className="size-3" aria-hidden />
-      {meta.label}
+      {t(`${status}.label`)}
     </span>
   )
 }
@@ -84,6 +69,7 @@ export function CommunityStatusBanner({
   status: CommunityStatus
   className?: string
 }) {
+  const t = useTranslations("Community.status")
   if (status === "standard") return null
   const meta = COMMUNITY_STATUS_META[status]
   return (
@@ -93,8 +79,8 @@ export function CommunityStatusBanner({
     >
       <meta.icon className="mt-0.5 size-5 shrink-0" aria-hidden />
       <div className="flex flex-col gap-0.5">
-        <p className="font-heading text-sm font-bold">{meta.title}</p>
-        <p className="text-sm text-foreground/80">{meta.description}</p>
+        <p className="font-heading text-sm font-bold">{t(`${status}.title`)}</p>
+        <p className="text-sm text-foreground/80">{t(`${status}.description`)}</p>
       </div>
     </div>
   )

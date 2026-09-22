@@ -2,8 +2,8 @@ import { RiUserStarLine } from "@remixicon/react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import type { ExpertAnnotation as Annotation } from "@/lib/types/fact-check"
+import { useFormat } from "@/lib/format"
 import { cn, initials } from "@/lib/utils"
-import { formatDate } from "@/lib/verdicts"
 
 // FR-EXPLAIN-08: manual notes added by Expert Reviewers.
 export function ExpertAnnotation({
@@ -13,6 +13,7 @@ export function ExpertAnnotation({
   annotation: Annotation
   className?: string
 }) {
+  const f = useFormat()
   return (
     <figure className={cn("flex gap-3 border-l-2 border-primary bg-muted/40 p-3", className)}>
       <Avatar className="size-8">
@@ -26,7 +27,7 @@ export function ExpertAnnotation({
             {annotation.role}
           </span>
           <time dateTime={annotation.createdAt} className="text-muted-foreground">
-            {formatDate(annotation.createdAt)}
+            {f.date(annotation.createdAt)}
           </time>
         </figcaption>
         <blockquote className="text-sm">{annotation.body}</blockquote>

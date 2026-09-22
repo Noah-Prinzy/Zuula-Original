@@ -8,7 +8,7 @@ const ROUTES: [prefix: string, entry: RoutePhoto][] = [
   // Public
   ["/about", { photo: PHOTOS.ugandaHills, position: "center 60%" }],
   ["/fact-checks/", { photo: PHOTOS.kampalaSunset }],
-  ["/fact-checks", { photo: PHOTOS.newspapers }],
+  ["/fact-checks", { photo: PHOTOS.journalists }],
   ["/verify", { photo: PHOTOS.marketCall, position: "center 30%" }],
   ["/developers", { photo: PHOTOS.crimsonWaves }],
   ["/offline", { photo: PHOTOS.hillRoad }],

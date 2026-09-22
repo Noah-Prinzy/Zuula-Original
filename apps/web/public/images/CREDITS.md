@@ -8,7 +8,7 @@ full-page background photo, mapped by URL in `components/decor/route-photos.ts`.
 | --- | --- | --- | --- |
 | kampala-skyline.jpg | Keith Kasaija | https://unsplash.com/photos/lii0uaz8Ieo | Review; fallback background |
 | uganda-hills.jpg | Random Institute | https://unsplash.com/photos/KQ5djKAN35s | About |
-| newspapers.jpg | AbsolutVision | https://unsplash.com/photos/WYd_PkCa1BY | Library |
+| newspapers.jpg | AbsolutVision | https://unsplash.com/photos/WYd_PkCa1BY | Home hero |
 | kampala-sunset.jpg | Robin Kutesa | https://unsplash.com/photos/Q3ymlvOJGFs | Fact-check report |
 | market-call.jpg | proudlyswazi | https://unsplash.com/photos/Yx6249gywlk | Verify |
 | crimson-waves.jpg | Pawel Czerwinski | https://unsplash.com/photos/DQ2lqx_6RD0 | Developers (API) |
@@ -24,7 +24,7 @@ full-page background photo, mapped by URL in `components/decor/route-photos.ts`.
 | night-road.jpg | Michael Starkie | https://unsplash.com/photos/zsdpVP68E8A | Reset password |
 | boats-sunset.jpg | Lionel Murage | https://unsplash.com/photos/OeEc3Qmtr-4 | Account |
 | murchison-falls.jpg | Jonathan Göhner | https://unsplash.com/photos/EmsDN8-M4dk | Account: activity |
-| journalists.jpg | Luke Thornton | https://unsplash.com/photos/ugY9ZDfZq_c | Home hero |
+| journalists.jpg | Luke Thornton | https://unsplash.com/photos/ugY9ZDfZq_c | Library |
 | workshop.jpg | Zach Wear | https://unsplash.com/photos/jgu6Dkd0fCM | Admin |
 | classroom.jpg | Zach Wear | https://unsplash.com/photos/RzPWYL3G6Pw | Admin: sources |
 | crimson-texture.jpg | Kseniya Lapteva | https://unsplash.com/photos/lpo3y90Yuig | Not currently used |

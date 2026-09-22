@@ -185,6 +185,8 @@ paths:
       operationId: signOut
       tags: [auth]
       summary: Sign out the current session.
+      description: Idempotent — succeeds even if already signed out, so no auth is required.
+      security: []
       responses:
         "204": { description: Signed out. }
 
@@ -295,6 +297,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/UserProfile" }
         "422": { $ref: "#/components/responses/UnprocessableEntity" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
     delete:
       operationId: deleteMe
       tags: [account]
@@ -302,6 +305,7 @@ paths:
       responses:
         "202": { description: Deletion scheduled. }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /api/v1/me/password:
     post:
       operationId: changePassword
@@ -337,6 +341,7 @@ paths:
       responses:
         "200": { description: Updated. }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /api/v1/me/sessions:
     get:
       operationId: listSessions
@@ -351,6 +356,7 @@ paths:
                 type: array
                 items: { $ref: "#/components/schemas/DeviceSession" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /api/v1/me/sessions/{id}:
     delete:
       operationId: revokeSession
@@ -364,6 +370,7 @@ paths:
       responses:
         "204": { description: Signed out. }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /api/v1/me/data-export:
     get:
       operationId: exportMyData
@@ -376,6 +383,7 @@ paths:
             application/json:
               schema: { type: object, description: "Full export; shape is intentionally open." }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /api/v1/me/verification:
     get:
       operationId: getVerification
@@ -387,6 +395,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/AccreditationStatus" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
     post:
       operationId: applyForVerification
       tags: [account]
@@ -407,6 +416,7 @@ paths:
       responses:
         "202": { description: Submitted for review. }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /api/v1/me/submissions:
     get:
       operationId: listMySubmissions
@@ -429,6 +439,7 @@ paths:
                         type: array
                         items: { $ref: "#/components/schemas/ActivitySubmission" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /api/v1/me/ratings:
     get:
       operationId: listMyRatings
@@ -451,6 +462,7 @@ paths:
                         type: array
                         items: { $ref: "#/components/schemas/ActivityRating" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   # ---------------------------------------------------------------------------------------
   # API keys (FR-API-02) — Journalist, Admin
   # ---------------------------------------------------------------------------------------
@@ -467,6 +479,8 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/ApiKey" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
     post:
       operationId: createApiKey
       tags: [api-keys]
@@ -496,6 +510,8 @@ paths:
                     properties:
                       secret: { type: string, description: "Shown only in this response.", example: "zl_live_4f7a9c2e1b8d4a6f9c0e2b7a1d3f5e8c" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/v1/me/api-keys/{id}:
     delete:
       operationId: revokeApiKey
@@ -506,6 +522,8 @@ paths:
       responses:
         "204": { description: Revoked. }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/v1/me/api-usage:
     get:
       operationId: getApiUsage
@@ -522,6 +540,7 @@ paths:
                   usedThisHour: { type: integer }
                   last24h: { type: integer }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   # ---------------------------------------------------------------------------------------
   # Submissions (FR-SUBMIT-01…07) — core API, used by the web Verify page
   # ---------------------------------------------------------------------------------------
@@ -534,6 +553,7 @@ paths:
         Anonymous or signed-in. Requires a Cloudflare Turnstile token when signed out
         (FR-AUTH-07). Accepts an `Idempotency-Key` header so a retried request doesn't create
         a duplicate submission.
+      security: [{}, { sessionAuth: [] }]
       parameters:
         - name: Idempotency-Key
           in: header
@@ -757,6 +777,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/CommunityScore" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /api/v1/fact-checks/{id}/comments:
     get:
       operationId: listComments
@@ -802,6 +823,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/RatingComment" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /api/v1/fact-checks/{id}/report-issue:
     post:
       operationId: reportFactCheckIssue
@@ -822,6 +844,7 @@ paths:
       responses:
         "202": { description: Reported. }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   # ---------------------------------------------------------------------------------------
   # Review (FR-REVIEW-01…06) — Expert, Admin
   # ---------------------------------------------------------------------------------------
@@ -845,6 +868,8 @@ paths:
                     type: array
                     items: { $ref: "#/components/schemas/ReviewDecision" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/v1/review/queue:
     get:
       operationId: getReviewQueue
@@ -873,6 +898,8 @@ paths:
                         type: array
                         items: { $ref: "#/components/schemas/ReviewCase" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/v1/review/cases/{id}:
     get:
       operationId: getReviewCase
@@ -892,6 +919,8 @@ paths:
                   report: { $ref: "#/components/schemas/FactCheckReport" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/v1/review/cases/{id}/assign:
     post:
       operationId: assignReviewCase
@@ -914,6 +943,9 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ReviewCase" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /api/v1/review/cases/{id}/decision:
     post:
       operationId: decideReviewCase
@@ -946,6 +978,9 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ErrorEnvelope" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /api/v1/review/history:
     get:
       operationId: getReviewHistory
@@ -967,6 +1002,8 @@ paths:
                         type: array
                         items: { $ref: "#/components/schemas/ReviewDecision" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   # ---------------------------------------------------------------------------------------
   # Notifications (FR-NOTIFY-01…04)
   # ---------------------------------------------------------------------------------------
@@ -994,6 +1031,7 @@ paths:
                         type: array
                         items: { $ref: "#/components/schemas/AppNotification" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /api/v1/notifications/{id}/read:
     post:
       operationId: markNotificationRead
@@ -1004,6 +1042,7 @@ paths:
       responses:
         "204": { description: OK }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /api/v1/notifications/read-all:
     post:
       operationId: markAllNotificationsRead
@@ -1012,6 +1051,7 @@ paths:
       responses:
         "204": { description: OK }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /api/v1/notifications/stream:
     get:
       operationId: streamNotifications
@@ -1024,6 +1064,7 @@ paths:
             text/event-stream:
               schema: { type: string }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /api/v1/me/alert-settings:
     get:
       operationId: getAlertSettings
@@ -1035,6 +1076,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/AlertSettings" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
     patch:
       operationId: updateAlertSettings
       tags: [notifications]
@@ -1051,6 +1093,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/AlertSettings" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   # ---------------------------------------------------------------------------------------
   # Admin (FR-ADMIN-01…07) — Admin only, except moderation actions which Experts may take
   # ---------------------------------------------------------------------------------------
@@ -1092,6 +1135,8 @@ paths:
                         ok: { type: boolean }
                         note: { type: string }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/v1/admin/users:
     get:
       operationId: listAdminUsers
@@ -1120,6 +1165,8 @@ paths:
                         type: array
                         items: { $ref: "#/components/schemas/AdminUser" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/v1/admin/users/{id}:
     patch:
       operationId: updateAdminUser
@@ -1143,6 +1190,9 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/AdminUser" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /api/v1/admin/moderation/reports:
     get:
       operationId: listContentReports
@@ -1164,6 +1214,8 @@ paths:
                         type: array
                         items: { $ref: "#/components/schemas/ContentReport" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/v1/admin/moderation/reports/{id}/resolve:
     post:
       operationId: resolveContentReport
@@ -1184,6 +1236,8 @@ paths:
       responses:
         "200": { description: Resolved. }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/v1/admin/moderation/signals:
     get:
       operationId: listManipulationSignals
@@ -1198,6 +1252,8 @@ paths:
                 type: array
                 items: { $ref: "#/components/schemas/ManipulationSignal" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/v1/admin/sources:
     get:
       operationId: listSources
@@ -1218,6 +1274,8 @@ paths:
                       data:
                         type: array
                         items: { $ref: "#/components/schemas/TrustedSource" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
     post:
       operationId: addSource
       tags: [admin]
@@ -1234,6 +1292,8 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/TrustedSource" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/v1/admin/sources/{id}:
     patch:
       operationId: updateSource
@@ -1252,6 +1312,9 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/TrustedSource" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
     delete:
       operationId: removeSource
       tags: [admin]
@@ -1261,6 +1324,8 @@ paths:
       responses:
         "204": { description: Removed. }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/v1/admin/broadcasts:
     get:
       operationId: listBroadcasts
@@ -1274,6 +1339,8 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/Broadcast" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
     post:
       operationId: sendBroadcast
       tags: [admin]
@@ -1300,6 +1367,8 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Broadcast" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/v1/admin/reports:
     get:
       operationId: listMonthlyReports
@@ -1314,6 +1383,8 @@ paths:
                 type: array
                 items: { $ref: "#/components/schemas/MonthlyReport" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/v1/admin/audit-log:
     get:
       operationId: listAuditLog
@@ -1341,6 +1412,8 @@ paths:
                         type: array
                         items: { $ref: "#/components/schemas/AuditEntry" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   /api/v1/admin/settings:
     get:
       operationId: getPlatformSettings
@@ -1352,6 +1425,8 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/PlatformSettings" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
     patch:
       operationId: updatePlatformSettings
       tags: [admin]
@@ -1368,6 +1443,8 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/PlatformSettings" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
   # ---------------------------------------------------------------------------------------
   # Partner API (FR-API-01, 03) — documented on /developers, must match that page exactly.
   # Base URL: https://api.zuula.ug/v1 · Authorization: Bearer <key> · 100 req/hour.
@@ -1397,6 +1474,7 @@ paths:
         "422": { $ref: "#/components/responses/UnprocessableEntity" }
         "429": { $ref: "#/components/responses/RateLimited" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /v1/checks/{trackingId}:
     servers: [{ url: https://api.zuula.ug }]
     get:
@@ -1415,6 +1493,7 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/RateLimited" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /v1/fact-checks/{id}:
     servers: [{ url: https://api.zuula.ug }]
     get:
@@ -1433,6 +1512,7 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/RateLimited" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /v1/fact-checks:
     servers: [{ url: https://api.zuula.ug }]
     get:
@@ -1465,6 +1545,7 @@ paths:
                   total: { type: integer }
         "429": { $ref: "#/components/responses/RateLimited" }
 
+        "401": { $ref: "#/components/responses/Unauthorized" }
 components:
   securitySchemes:
     sessionAuth:
@@ -1541,14 +1622,14 @@ components:
     # ---- Shared enums ----
     Verdict:
       type: string
-      enum: [authentic, likely-false, false, ai-generated, unverifiable]
+      enum: [authentic, likely-false, "false", ai-generated, unverifiable]
       description: FR-DETECT-01.
     ContentType:
       type: string
       enum: [text, url, image, audio, video]
     ClaimAssessment:
       type: string
-      enum: [false, misleading, unsupported, out-of-context, supported]
+      enum: ["false", misleading, unsupported, out-of-context, supported]
     CitationStance:
       type: string
       enum: [supports, contradicts, context]
@@ -1719,9 +1800,11 @@ components:
       description: Full report — core API only (includes submittedText, annotations and comments).
       type: object
       required:
-        - id, trackingId, title, contentType, language, submittedText, verdict, confidence
-        - summary, whatIsFalse, whatIsTrue, claims, citations, aiSignals, annotations
-        - community, category, checkedAt, processingSeconds
+        [
+          id, trackingId, title, contentType, language, submittedText, verdict, confidence,
+          summary, whatIsFalse, whatIsTrue, claims, citations, aiSignals, annotations,
+          community, category, checkedAt, processingSeconds,
+        ]
       properties:
         id: { type: string }
         trackingId: { type: string }
@@ -1772,9 +1855,11 @@ components:
         no rating comments — only aggregate community counts.
       type: object
       required:
-        - id, trackingId, url, title, contentType, language, category, verdict, confidence
-        - summary, whatIsFalse, whatIsTrue, claims, citations, aiSignals, community, humanReview
-        - checkedAt, processingSeconds
+        [
+          id, trackingId, url, title, contentType, language, category, verdict, confidence,
+          summary, whatIsFalse, whatIsTrue, claims, citations, aiSignals, community, humanReview,
+          checkedAt, processingSeconds,
+        ]
       properties:
         id: { type: string }
         trackingId: { type: string }
@@ -1927,7 +2012,7 @@ components:
         id: { type: string }
         device: { type: string }
         location: { type: string }
-        lastActive: { type: string, format: date-time }
+        lastActive: { type: string, description: "Relative/human phrase, e.g. \"2 hours ago\"." }
         current: { type: boolean }
 
     AccreditationStatus:

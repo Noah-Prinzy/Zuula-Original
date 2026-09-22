@@ -98,7 +98,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Sign out the current session. */
+        /**
+         * Sign out the current session.
+         * @description Idempotent — succeeds even if already signed out, so no auth is required.
+         */
         post: operations["signOut"];
         delete?: never;
         options?: never;
@@ -1048,11 +1051,11 @@ export interface components {
          * @description FR-DETECT-01.
          * @enum {string}
          */
-        Verdict: "authentic" | "likely-false" | false | "ai-generated" | "unverifiable";
+        Verdict: "authentic" | "likely-false" | "false" | "ai-generated" | "unverifiable";
         /** @enum {string} */
         ContentType: "text" | "url" | "image" | "audio" | "video";
         /** @enum {string} */
-        ClaimAssessment: false | "misleading" | "unsupported" | "out-of-context" | "supported";
+        ClaimAssessment: "false" | "misleading" | "unsupported" | "out-of-context" | "supported";
         /** @enum {string} */
         CitationStance: "supports" | "contradicts" | "context";
         /** @enum {string} */
@@ -1174,30 +1177,30 @@ export interface components {
         };
         /** @description Full report — core API only (includes submittedText, annotations and comments). */
         FactCheckReport: {
-            id?: string;
-            trackingId?: string;
-            title?: string;
-            contentType?: components["schemas"]["ContentType"];
-            language?: string;
-            submittedText?: string;
+            id: string;
+            trackingId: string;
+            title: string;
+            contentType: components["schemas"]["ContentType"];
+            language: string;
+            submittedText: string;
             /** Format: uri */
             sourceUrl?: string;
-            verdict?: components["schemas"]["Verdict"];
+            verdict: components["schemas"]["Verdict"];
             /** @description FR-DETECT-02. */
-            confidence?: number;
-            summary?: string;
-            whatIsFalse?: string[];
-            whatIsTrue?: string[];
-            claims?: components["schemas"]["Claim"][];
-            citations?: components["schemas"]["Citation"][];
-            aiSignals?: components["schemas"]["AISignal"][];
-            annotations?: components["schemas"]["ExpertAnnotation"][];
+            confidence: number;
+            summary: string;
+            whatIsFalse: string[];
+            whatIsTrue: string[];
+            claims: components["schemas"]["Claim"][];
+            citations: components["schemas"]["Citation"][];
+            aiSignals: components["schemas"]["AISignal"][];
+            annotations: components["schemas"]["ExpertAnnotation"][];
             humanReview?: components["schemas"]["HumanReview"] | null;
-            community?: components["schemas"]["CommunityRating"];
-            category?: string;
+            community: components["schemas"]["CommunityRating"];
+            category: string;
             /** Format: date-time */
-            checkedAt?: string;
-            processingSeconds?: number;
+            checkedAt: string;
+            processingSeconds: number;
         };
         /** @description List-item shape for /fact-checks search, the Home feed and related reports (core API). */
         FactCheckSummary: {
@@ -1220,33 +1223,33 @@ export interface components {
          *     no rating comments — only aggregate community counts.
          */
         FactCheckPublic: {
-            id?: string;
-            trackingId?: string;
+            id: string;
+            trackingId: string;
             /**
              * Format: uri
              * @example https://zuula.ug/fact-checks/fc-2026-0142
              */
-            url?: string;
-            title?: string;
-            contentType?: components["schemas"]["ContentType"];
-            language?: string;
-            category?: string;
-            verdict?: components["schemas"]["Verdict"];
-            confidence?: number;
-            summary?: string;
-            whatIsFalse?: string[];
-            whatIsTrue?: string[];
-            claims?: components["schemas"]["Claim"][];
-            citations?: components["schemas"]["Citation"][];
-            aiSignals?: components["schemas"]["AISignal"][];
-            community?: {
+            url: string;
+            title: string;
+            contentType: components["schemas"]["ContentType"];
+            language: string;
+            category: string;
+            verdict: components["schemas"]["Verdict"];
+            confidence: number;
+            summary: string;
+            whatIsFalse: string[];
+            whatIsTrue: string[];
+            claims: components["schemas"]["Claim"][];
+            citations: components["schemas"]["Citation"][];
+            aiSignals: components["schemas"]["AISignal"][];
+            community: {
                 accurate: components["schemas"]["RatingCounts"];
                 inaccurate: components["schemas"]["RatingCounts"];
             };
-            humanReview?: components["schemas"]["HumanReview"] | null;
+            humanReview: components["schemas"]["HumanReview"] | null;
             /** Format: date-time */
-            checkedAt?: string;
-            processingSeconds?: number;
+            checkedAt: string;
+            processingSeconds: number;
         };
         /** @description Partner search result item (GET /v1/fact-checks) — matches SEARCH_RESPONSE in examples.ts. */
         FactCheckSearchItem: {
@@ -1359,7 +1362,7 @@ export interface components {
             id: string;
             device: string;
             location: string;
-            /** Format: date-time */
+            /** @description Relative/human phrase, e.g. "2 hours ago". */
             lastActive: string;
             current: boolean;
         };
@@ -1997,6 +2000,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     updateMe: {
@@ -2027,6 +2031,7 @@ export interface operations {
                     "application/json": components["schemas"]["UserProfile"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
             422: components["responses"]["UnprocessableEntity"];
         };
     };
@@ -2078,6 +2083,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     listSessions: {
@@ -2098,6 +2104,7 @@ export interface operations {
                     "application/json": components["schemas"]["DeviceSession"][];
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     revokeSession: {
@@ -2118,6 +2125,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     exportMyData: {
@@ -2138,6 +2146,7 @@ export interface operations {
                     "application/json": Record<string, never>;
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     getVerification: {
@@ -2158,6 +2167,7 @@ export interface operations {
                     "application/json": components["schemas"]["AccreditationStatus"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     applyForVerification: {
@@ -2184,6 +2194,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     listMySubmissions: {
@@ -2209,6 +2220,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     listMyRatings: {
@@ -2234,6 +2246,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     listApiKeys: {
@@ -2254,6 +2267,8 @@ export interface operations {
                     "application/json": components["schemas"]["ApiKey"][];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     createApiKey: {
@@ -2287,6 +2302,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     revokeApiKey: {
@@ -2307,6 +2324,8 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     getApiUsage: {
@@ -2330,6 +2349,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     createSubmission: {
@@ -2599,6 +2619,7 @@ export interface operations {
                     "application/json": components["schemas"]["CommunityScore"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     listComments: {
@@ -2657,6 +2678,7 @@ export interface operations {
                     "application/json": components["schemas"]["RatingComment"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     reportFactCheckIssue: {
@@ -2686,6 +2708,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     getReviewOverview: {
@@ -2711,6 +2734,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     getReviewQueue: {
@@ -2738,6 +2763,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     getReviewCase: {
@@ -2763,6 +2790,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -2793,6 +2822,9 @@ export interface operations {
                     "application/json": components["schemas"]["ReviewCase"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     decideReviewCase: {
@@ -2825,6 +2857,9 @@ export interface operations {
                     "application/json": components["schemas"]["ReviewDecision"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             /** @description Case already decided. */
             409: {
                 headers: {
@@ -2858,6 +2893,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     listNotifications: {
@@ -2883,6 +2920,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     markNotificationRead: {
@@ -2903,6 +2941,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     markAllNotificationsRead: {
@@ -2921,6 +2960,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     streamNotifications: {
@@ -2941,6 +2981,7 @@ export interface operations {
                     "text/event-stream": string;
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     getAlertSettings: {
@@ -2961,6 +3002,7 @@ export interface operations {
                     "application/json": components["schemas"]["AlertSettings"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     updateAlertSettings: {
@@ -2985,6 +3027,7 @@ export interface operations {
                     "application/json": components["schemas"]["AlertSettings"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
         };
     };
     getAdminOverview: {
@@ -3022,6 +3065,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     listAdminUsers: {
@@ -3049,6 +3094,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     updateAdminUser: {
@@ -3079,6 +3126,9 @@ export interface operations {
                     "application/json": components["schemas"]["AdminUser"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     listContentReports: {
@@ -3103,6 +3153,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     resolveContentReport: {
@@ -3131,6 +3183,8 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     listManipulationSignals: {
@@ -3151,6 +3205,8 @@ export interface operations {
                     "application/json": components["schemas"]["ManipulationSignal"][];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     listSources: {
@@ -3175,6 +3231,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     addSource: {
@@ -3199,6 +3257,8 @@ export interface operations {
                     "application/json": components["schemas"]["TrustedSource"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     removeSource: {
@@ -3219,6 +3279,8 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     updateSource: {
@@ -3245,6 +3307,9 @@ export interface operations {
                     "application/json": components["schemas"]["TrustedSource"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     listBroadcasts: {
@@ -3265,6 +3330,8 @@ export interface operations {
                     "application/json": components["schemas"]["Broadcast"][];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     sendBroadcast: {
@@ -3296,6 +3363,8 @@ export interface operations {
                     "application/json": components["schemas"]["Broadcast"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     listMonthlyReports: {
@@ -3316,6 +3385,8 @@ export interface operations {
                     "application/json": components["schemas"]["MonthlyReport"][];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     listAuditLog: {
@@ -3342,6 +3413,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     getPlatformSettings: {
@@ -3362,6 +3435,8 @@ export interface operations {
                     "application/json": components["schemas"]["PlatformSettings"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     updatePlatformSettings: {
@@ -3386,6 +3461,8 @@ export interface operations {
                     "application/json": components["schemas"]["PlatformSettings"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     partnerSubmitCheck: {
@@ -3411,6 +3488,7 @@ export interface operations {
                     "application/json": components["schemas"]["SubmissionAccepted"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
             413: components["responses"]["PayloadTooLarge"];
             415: components["responses"]["UnsupportedMedia"];
             422: components["responses"]["UnprocessableEntity"];
@@ -3438,6 +3516,7 @@ export interface operations {
                     "application/json": components["schemas"]["PartnerCheckStatus"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
             429: components["responses"]["RateLimited"];
         };
@@ -3463,6 +3542,7 @@ export interface operations {
                     "application/json": components["schemas"]["FactCheckPublic"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
             429: components["responses"]["RateLimited"];
         };
@@ -3499,6 +3579,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
             429: components["responses"]["RateLimited"];
         };
     };

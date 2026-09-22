@@ -1,0 +1,45 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      ZUULA_CORS_ORIGINS: "http://localhost:3000"
+    depends_on:
+      - redis
+      - postgres
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  worker:
+    build: .
+    command: celery -A app.worker.celery_app worker --loglevel=INFO
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  # Placeholder until P3 (real auth, schema, migrations). Nothing reads DATABASE_URL yet.
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: zuula
+      POSTGRES_PASSWORD: zuula
+      POSTGRES_DB: zuula
+    ports:
+      - "5432:5432"
+    volumes:
+      - zuula_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  zuula_postgres_data:

@@ -3,6 +3,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { RiArrowLeftLine, RiFlaskLine } from "@remixicon/react"
 import { getTranslations } from "next-intl/server"
+import { PageSheet } from "@/components/decor/page-sheet"
 
 import { CommunityStatusBanner } from "@/components/community/community-status"
 import { RatingComments } from "@/components/community/rating-comments"
@@ -71,6 +72,7 @@ export default async function ReportPage({ params }: Props) {
   const tc = await getTranslations("Common")
 
   return (
+    <PageSheet className="mt-6 md:mt-10">
     <div className="page-container flex flex-col gap-6 py-8">
       <div className="flex items-center justify-between gap-4">
         <Button variant="ghost" size="sm" asChild className="-ml-2">
@@ -177,5 +179,6 @@ export default async function ReportPage({ params }: Props) {
         </Section>
       )}
     </div>
+    </PageSheet>
   )
 }

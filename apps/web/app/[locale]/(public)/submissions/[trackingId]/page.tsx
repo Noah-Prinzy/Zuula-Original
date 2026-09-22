@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { RiQuestionLine } from "@remixicon/react"
 import { getTranslations } from "next-intl/server"
 
-import { PageHeader } from "@/components/shell/page-header"
+import { PageHero, PageSheet } from "@/components/decor/page-sheet"
 import { SubmissionStatus } from "@/components/submission/submission-status"
 import { TrackingLookup } from "@/components/submission/tracking-lookup"
 import {
@@ -33,11 +33,13 @@ export default async function StatusPage({ params }: Props) {
   const t = await getTranslations("Status")
 
   return (
+    <>
+    <PageHero
+      title={t("title")}
+      description={valid ? t("descriptionValid") : t("descriptionInvalid")}
+    />
+    <PageSheet>
     <div className="page-container flex flex-col gap-8 py-10">
-      <PageHeader
-        title={t("title")}
-        description={valid ? t("descriptionValid") : t("descriptionInvalid")}
-      />
 
       {valid ? (
         <SubmissionStatus trackingId={id} />
@@ -56,5 +58,7 @@ export default async function StatusPage({ params }: Props) {
         </Empty>
       )}
     </div>
+    </PageSheet>
+    </>
   )
 }

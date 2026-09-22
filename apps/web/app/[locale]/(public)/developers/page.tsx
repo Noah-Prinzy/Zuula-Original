@@ -3,8 +3,7 @@ import Link from "next/link"
 import { RiErrorWarningLine, RiKey2Line, RiMailLine, RiTimerLine, RiWebhookLine } from "@remixicon/react"
 import { getTranslations } from "next-intl/server"
 
-import { PhotoBanner } from "@/components/decor/photo-hero"
-import { PHOTOS } from "@/components/decor/photos"
+import { PageHero, PageSheet } from "@/components/decor/page-sheet"
 import { CodeBlock, CodeSamples } from "@/components/developers/code-block"
 import {
   API_RATE_LIMIT,
@@ -212,14 +211,13 @@ export default async function DevelopersPage() {
 
   return (
     <>
-      <PhotoBanner
-        photo={PHOTOS.crimsonWaves}
-        position="center"
+      <PageHero
         eyebrow={t("banner.eyebrow")}
         title={t("banner.title")}
         description={t("banner.description")}
       />
 
+      <PageSheet>
       <div className="page-container grid gap-10 py-10 lg:grid-cols-[13rem_minmax(0,1fr)] xl:gap-14">
         <nav aria-label={t("toc.label")} className="hidden lg:block">
           <div className="sticky top-24 flex flex-col gap-2">
@@ -393,6 +391,7 @@ export default async function DevelopersPage() {
           </DocSection>
         </div>
       </div>
+      </PageSheet>
     </>
   )
 }

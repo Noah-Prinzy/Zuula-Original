@@ -8,12 +8,9 @@ import {
 } from "@remixicon/react"
 
 import type { Metadata } from "next"
-import Image from "next/image"
 import { getTranslations } from "next-intl/server"
 
-import { PHOTO_QUALITY, PhotoCredit } from "@/components/decor/photo-hero"
-import { PHOTOS } from "@/components/decor/photos"
-import { PageHeader } from "@/components/shell/page-header"
+import { PageHero, PageSheet } from "@/components/decor/page-sheet"
 import { SubmissionComposer } from "@/components/submission/submission-composer"
 import { TrackingLookup } from "@/components/submission/tracking-lookup"
 
@@ -35,30 +32,15 @@ const TYPES = [
 export default async function VerifyPage() {
   const t = await getTranslations("Verify")
   return (
+    <>
+    <PageHero title={t("title")} description={t("description")} />
+    <PageSheet>
     <div className="page-container flex flex-col gap-8 py-10">
-      <PageHeader
-        title={t("title")}
-        description={t("description")}
-      />
 
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_26rem]">
         <SubmissionComposer className="enter [--d:2]" />
 
         <aside data-reveal="stagger" className="flex flex-col gap-6">
-          <figure className="relative isolate hidden aspect-[4/3] overflow-hidden border bg-muted lg:block">
-            <Image
-              src={PHOTOS.marketCall.src}
-              alt={PHOTOS.marketCall.alt}
-              fill
-              quality={PHOTO_QUALITY}
-              sizes="(min-width: 1280px) 26rem, 22rem"
-              className="-z-10 object-cover object-[center_30%]"
-            />
-            <figcaption className="absolute inset-x-0 bottom-0 flex flex-col gap-1 bg-linear-to-t from-black/85 via-black/50 to-transparent p-4 pt-12 text-white">
-              <span className="font-heading text-sm font-bold">{t("photoCaption")}</span>
-              <PhotoCredit photo={PHOTOS.marketCall} />
-            </figcaption>
-          </figure>
           <section aria-labelledby="how-it-works" className="hover-lift border bg-card p-4">
             <h2 id="how-it-works" className="mb-3 font-heading text-sm font-bold">
               {t("howTitle")}
@@ -115,5 +97,7 @@ export default async function VerifyPage() {
         </aside>
       </div>
     </div>
+    </PageSheet>
+    </>
   )
 }

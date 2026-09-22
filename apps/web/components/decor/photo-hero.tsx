@@ -1,6 +1,5 @@
 import Image from "next/image"
 
-import { KineticText } from "@/components/motion/text/kinetic-text"
 import { cn } from "@/lib/utils"
 
 import type { Photo } from "./photos"
@@ -79,40 +78,5 @@ export function PhotoHero({
       {children}
       <PhotoCredit photo={photo} className="absolute right-3 bottom-2" />
     </section>
-  )
-}
-
-// Page-title banner: a shorter PhotoHero used in place of PageHeader on public pages.
-export function PhotoBanner({
-  photo,
-  title,
-  description,
-  position,
-  eyebrow,
-}: {
-  photo: Photo
-  title: string
-  description?: string
-  position?: string
-  eyebrow?: string
-}) {
-  return (
-    <PhotoHero photo={photo} priority position={position} className="border-b">
-      <div className="flex min-h-56 page-container flex-col justify-end gap-2 py-10 md:min-h-72 md:py-14">
-        {eyebrow && (
-          <p className="enter font-heading text-xs font-semibold tracking-widest text-white/75 uppercase">
-            {eyebrow}
-          </p>
-        )}
-        <h1 className="font-heading text-3xl font-bold tracking-tight text-balance drop-shadow-sm [--kinetic-accent:var(--chart-1)] md:text-4xl xl:text-5xl">
-          <KineticText text={title} delay={eyebrow ? 90 : 0} />
-        </h1>
-        {description && (
-          <p className="enter max-w-2xl text-base text-balance text-white/85 [--d:3] md:text-lg">
-            {description}
-          </p>
-        )}
-      </div>
-    </PhotoHero>
   )
 }

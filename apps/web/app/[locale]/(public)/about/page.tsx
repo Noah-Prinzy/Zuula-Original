@@ -1,4 +1,3 @@
-import Image from "next/image"
 import Link from "next/link"
 import {
   RiArrowRightLine,
@@ -13,8 +12,7 @@ import {
   RiWhatsappLine,
 } from "@remixicon/react"
 
-import { PHOTO_QUALITY, PhotoBanner, PhotoCredit } from "@/components/decor/photo-hero"
-import { PHOTOS } from "@/components/decor/photos"
+import { PageHero, PageSheet } from "@/components/decor/page-sheet"
 import { SectionTitle } from "@/components/motion/section"
 import { KineticText } from "@/components/motion/text/kinetic-text"
 import { ScrambleText } from "@/components/motion/text/scramble-text"
@@ -135,204 +133,253 @@ const FAQS = [
 export default function AboutPage() {
   return (
     <>
-      <PhotoBanner
-        photo={PHOTOS.ugandaHills}
-        position="center 60%"
+      <PageHero
         eyebrow="About Zuula"
         title="About"
         description="Our mission, methodology and editorial independence."
       />
 
-      <section aria-labelledby="why-title" className="relative isolate overflow-hidden border-b bg-primary">
-        <Image
-          src={PHOTOS.crimsonTexture.src}
-          alt=""
-          fill
-          quality={PHOTO_QUALITY}
-          sizes="100vw"
-          className="-z-10 object-cover opacity-90"
-        />
-        <div className="page-container flex flex-col gap-12 py-16 text-primary-foreground">
-          <div data-reveal className="flex max-w-3xl flex-col gap-3">
-            <p className="font-heading text-xs font-semibold tracking-widest uppercase opacity-80">
-              <ScrambleText text="Why Zuula" />
-            </p>
-            <h2
-              id="why-title"
-              className="font-heading text-3xl font-bold tracking-tight text-balance [--kinetic-accent:var(--chart-1)] [--mark:oklch(1_0_0/0.22)] md:text-5xl"
-            >
-              <KineticText text="Built for the way news travels in Uganda." highlight={["Uganda"]} />
-            </h2>
-          </div>
-          <div data-reveal="stagger" className="grid gap-4 md:grid-cols-3">
-            {FEATURES.map((f) => (
-              <div
-                key={f.title}
-                className="hover-lift flex flex-col gap-3 border bg-card/95 p-6 text-card-foreground shadow-lg backdrop-blur-sm"
-              >
-                <f.icon className="size-7 text-primary" aria-hidden />
-                <h3 className="font-heading text-lg font-bold">{f.title}</h3>
-                <p className="text-sm text-muted-foreground">{f.body}</p>
-              </div>
-            ))}
-          </div>
-          <div data-reveal>
-            <Button size="lg" variant="secondary" asChild>
-              <Link href="/verify">
-                Check a claim <RiArrowRightLine aria-hidden />
-              </Link>
-            </Button>
-          </div>
-        </div>
-        <PhotoCredit photo={PHOTOS.crimsonTexture} className="absolute right-3 bottom-2" />
-      </section>
-
-      <div className="page-container flex flex-col gap-16 py-14">
-        <section data-reveal aria-labelledby="mission-title" className="flex flex-col gap-4">
-          <Badge variant="outline" className="w-fit">
-            Victoria University CIT
-          </Badge>
-          <h1 id="mission-title" className="max-w-3xl font-heading text-2xl font-bold text-balance md:text-3xl">
-            Uganda sees a flood of forwarded claims every day. Zuula checks them before you share.
-          </h1>
-          <p className="max-w-2xl text-base text-muted-foreground">
-            Zuula (branded from Uganda Fact-Guard) is an AI-assisted fact-checking platform built for
-            how news actually travels here — on WhatsApp, in group chats and on social media, often
-            faster than any newsroom can verify it. Submit a claim and get a verdict backed by
-            evidence, not just an opinion.
-          </p>
-        </section>
-
-        <section id="methodology" data-reveal className="flex flex-col gap-8 scroll-mt-24">
-          <SectionTitle
-            eyebrow="Methodology"
-            title="How we reach a verdict"
-            description="Every check follows the same four steps, whether it's automated or escalated to a human reviewer."
-          />
-          <ol data-reveal="stagger" className="grid gap-4 sm:grid-cols-2">
-            {STEPS.map((s, i) => (
-              <li key={s.title} className="hover-lift flex gap-3 border bg-card p-4">
-                <span className="flex size-6 shrink-0 items-center justify-center bg-primary font-heading text-xs font-bold text-primary-foreground">
-                  {i + 1}
-                </span>
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm font-medium">{s.title}</p>
-                  <p className="text-sm text-muted-foreground">{s.body}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section id="independence" data-reveal className="flex flex-col gap-8 scroll-mt-24">
-          <SectionTitle
-            eyebrow="Editorial independence"
-            title="Rules we hold ourselves to"
-            description="Zuula's verdicts aren't for sale, and they aren't final without a way to challenge them."
-          />
-          <div data-reveal="stagger" className="grid gap-4 md:grid-cols-2">
-            {PRINCIPLES.map((p) => (
-              <div key={p.title} className="hover-lift flex gap-3 border bg-card p-4">
-                <p.icon className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm font-medium">{p.title}</p>
-                  <p className="text-sm text-muted-foreground">{p.body}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section id="whatsapp" data-reveal className="flex flex-col gap-6 scroll-mt-24">
-          <SectionTitle
-            eyebrow="Coming soon"
-            title="Check a claim from WhatsApp"
-            description="No app, no data bundle for a browser — forward the message and get a verdict back in the chat."
-          />
-          <div className="hover-lift flex flex-col gap-3 border bg-card p-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex gap-3">
-              <RiWhatsappLine className="mt-0.5 size-6 shrink-0 text-primary" aria-hidden />
-              <p className="max-w-xl text-sm text-muted-foreground">
-                A WhatsApp and Telegram bot is planned for the platform&apos;s API phase, so
-                you&apos;ll be able to forward a message straight to Zuula the way you already
-                forward it to friends. It isn&apos;t live yet — for now, use{" "}
-                <Link href="/verify" className="link-grow text-foreground">
-                  Verify
-                </Link>{" "}
-                on the web.
+      <PageSheet>
+        {/* One photo per page: "Why Zuula" sits on the sheet, not on a second image. */}
+        <section aria-labelledby="why-title" className="border-b">
+          <div className="flex page-container flex-col gap-12 py-16">
+            <div data-reveal className="flex max-w-3xl flex-col gap-3">
+              <p className="font-heading text-xs font-semibold tracking-widest text-primary uppercase">
+                <ScrambleText text="Why Zuula" />
               </p>
+              <h2
+                id="why-title"
+                className="font-heading text-3xl font-bold tracking-tight text-balance md:text-5xl"
+              >
+                <KineticText
+                  text="Built for the way news travels in Uganda."
+                  highlight={["Uganda"]}
+                />
+              </h2>
             </div>
-            <Badge variant="outline" className="w-fit shrink-0">
-              Planned
-            </Badge>
-          </div>
-        </section>
-
-        <section id="faq" data-reveal className="flex flex-col gap-8 scroll-mt-24">
-          <SectionTitle eyebrow="FAQ" title="Frequently asked questions" />
-          <Accordion type="single" collapsible className="max-w-3xl border-t">
-            {FAQS.map((f) => (
-              <AccordionItem key={f.q} value={f.q}>
-                <AccordionTrigger className="py-4 text-sm">{f.q}</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  {f.a === null ? (
-                    <ul className="flex flex-col gap-2">
-                      {VERDICTS.map((v) => (
-                        <li key={v} className="flex items-center gap-2">
-                          <VerdictBadge verdict={v} size="sm" />
-                          <span>{VERDICT_META[v].description}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>
-                      {f.a}
-                      {f.link && (
-                        <Link href={f.link.href} className="link-grow text-foreground">
-                          {f.link.label}
-                        </Link>
-                      )}
-                      {f.link && "."}
-                    </p>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </section>
-
-        <section id="contact" data-reveal className="flex flex-col gap-6 scroll-mt-24 border-t pt-14">
-          <SectionTitle
-            eyebrow="Contact"
-            title="Get in touch"
-            description="Questions about a verdict, the platform or a partnership."
-          />
-          <div data-reveal="stagger" className="grid gap-4 sm:grid-cols-2">
-            <div className="hover-lift flex flex-col gap-3 border bg-card p-6">
-              <RiMailLine className="size-5 text-primary" aria-hidden />
-              <div>
-                <p className="text-sm font-medium">General enquiries</p>
-                <p className="text-sm text-muted-foreground">
-                  Media, partnerships and platform questions.
-                </p>
-              </div>
-              <a href="mailto:hello@zuula.ug" className="link-grow w-fit text-sm font-medium">
-                hello@zuula.ug
-              </a>
+            <div data-reveal="stagger" className="grid gap-4 md:grid-cols-3">
+              {FEATURES.map((f) => (
+                <div
+                  key={f.title}
+                  className="hover-lift flex flex-col gap-3 border bg-card p-6 text-card-foreground"
+                >
+                  <f.icon className="size-7 text-primary" aria-hidden />
+                  <h3 className="font-heading text-lg font-bold">{f.title}</h3>
+                  <p className="text-sm text-muted-foreground">{f.body}</p>
+                </div>
+              ))}
             </div>
-            <div className="hover-lift flex flex-col gap-3 border bg-card p-6">
-              <RiGovernmentLine className="size-5 text-primary" aria-hidden />
-              <div>
-                <p className="text-sm font-medium">Centre for Intelligent Technologies</p>
-                <p className="text-sm text-muted-foreground">Victoria University, Kampala.</p>
-              </div>
-              <Button variant="outline" size="sm" asChild className="w-fit">
-                <Link href="/developers">API &amp; developer access</Link>
+            <div data-reveal>
+              <Button size="lg" asChild>
+                <Link href="/verify">
+                  Check a claim <RiArrowRightLine aria-hidden />
+                </Link>
               </Button>
             </div>
           </div>
         </section>
-      </div>
+
+        <div className="flex page-container flex-col gap-16 py-14">
+          <section
+            data-reveal
+            aria-labelledby="mission-title"
+            className="flex flex-col gap-4"
+          >
+            <Badge variant="outline" className="w-fit">
+              Victoria University CIT
+            </Badge>
+            <h1
+              id="mission-title"
+              className="max-w-3xl font-heading text-2xl font-bold text-balance md:text-3xl"
+            >
+              Uganda sees a flood of forwarded claims every day. Zuula checks
+              them before you share.
+            </h1>
+            <p className="max-w-2xl text-base text-muted-foreground">
+              Zuula (branded from Uganda Fact-Guard) is an AI-assisted
+              fact-checking platform built for how news actually travels here —
+              on WhatsApp, in group chats and on social media, often faster than
+              any newsroom can verify it. Submit a claim and get a verdict
+              backed by evidence, not just an opinion.
+            </p>
+          </section>
+
+          <section
+            id="methodology"
+            data-reveal
+            className="flex scroll-mt-24 flex-col gap-8"
+          >
+            <SectionTitle
+              eyebrow="Methodology"
+              title="How we reach a verdict"
+              description="Every check follows the same four steps, whether it's automated or escalated to a human reviewer."
+            />
+            <ol data-reveal="stagger" className="grid gap-4 sm:grid-cols-2">
+              {STEPS.map((s, i) => (
+                <li
+                  key={s.title}
+                  className="hover-lift flex gap-3 border bg-card p-4"
+                >
+                  <span className="flex size-6 shrink-0 items-center justify-center bg-primary font-heading text-xs font-bold text-primary-foreground">
+                    {i + 1}
+                  </span>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm font-medium">{s.title}</p>
+                    <p className="text-sm text-muted-foreground">{s.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          <section
+            id="independence"
+            data-reveal
+            className="flex scroll-mt-24 flex-col gap-8"
+          >
+            <SectionTitle
+              eyebrow="Editorial independence"
+              title="Rules we hold ourselves to"
+              description="Zuula's verdicts aren't for sale, and they aren't final without a way to challenge them."
+            />
+            <div data-reveal="stagger" className="grid gap-4 md:grid-cols-2">
+              {PRINCIPLES.map((p) => (
+                <div
+                  key={p.title}
+                  className="hover-lift flex gap-3 border bg-card p-4"
+                >
+                  <p.icon
+                    className="mt-0.5 size-5 shrink-0 text-primary"
+                    aria-hidden
+                  />
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm font-medium">{p.title}</p>
+                    <p className="text-sm text-muted-foreground">{p.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section
+            id="whatsapp"
+            data-reveal
+            className="flex scroll-mt-24 flex-col gap-6"
+          >
+            <SectionTitle
+              eyebrow="Coming soon"
+              title="Check a claim from WhatsApp"
+              description="No app, no data bundle for a browser — forward the message and get a verdict back in the chat."
+            />
+            <div className="hover-lift flex flex-col gap-3 border bg-card p-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex gap-3">
+                <RiWhatsappLine
+                  className="mt-0.5 size-6 shrink-0 text-primary"
+                  aria-hidden
+                />
+                <p className="max-w-xl text-sm text-muted-foreground">
+                  A WhatsApp and Telegram bot is planned for the platform&apos;s
+                  API phase, so you&apos;ll be able to forward a message
+                  straight to Zuula the way you already forward it to friends.
+                  It isn&apos;t live yet — for now, use{" "}
+                  <Link href="/verify" className="link-grow text-foreground">
+                    Verify
+                  </Link>{" "}
+                  on the web.
+                </p>
+              </div>
+              <Badge variant="outline" className="w-fit shrink-0">
+                Planned
+              </Badge>
+            </div>
+          </section>
+
+          <section
+            id="faq"
+            data-reveal
+            className="flex scroll-mt-24 flex-col gap-8"
+          >
+            <SectionTitle eyebrow="FAQ" title="Frequently asked questions" />
+            <Accordion type="single" collapsible className="max-w-3xl border-t">
+              {FAQS.map((f) => (
+                <AccordionItem key={f.q} value={f.q}>
+                  <AccordionTrigger className="py-4 text-sm">
+                    {f.q}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground">
+                    {f.a === null ? (
+                      <ul className="flex flex-col gap-2">
+                        {VERDICTS.map((v) => (
+                          <li key={v} className="flex items-center gap-2">
+                            <VerdictBadge verdict={v} size="sm" />
+                            <span>{VERDICT_META[v].description}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>
+                        {f.a}
+                        {f.link && (
+                          <Link
+                            href={f.link.href}
+                            className="link-grow text-foreground"
+                          >
+                            {f.link.label}
+                          </Link>
+                        )}
+                        {f.link && "."}
+                      </p>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </section>
+
+          <section
+            id="contact"
+            data-reveal
+            className="flex scroll-mt-24 flex-col gap-6 border-t pt-14"
+          >
+            <SectionTitle
+              eyebrow="Contact"
+              title="Get in touch"
+              description="Questions about a verdict, the platform or a partnership."
+            />
+            <div data-reveal="stagger" className="grid gap-4 sm:grid-cols-2">
+              <div className="hover-lift flex flex-col gap-3 border bg-card p-6">
+                <RiMailLine className="size-5 text-primary" aria-hidden />
+                <div>
+                  <p className="text-sm font-medium">General enquiries</p>
+                  <p className="text-sm text-muted-foreground">
+                    Media, partnerships and platform questions.
+                  </p>
+                </div>
+                <a
+                  href="mailto:hello@zuula.ug"
+                  className="link-grow w-fit text-sm font-medium"
+                >
+                  hello@zuula.ug
+                </a>
+              </div>
+              <div className="hover-lift flex flex-col gap-3 border bg-card p-6">
+                <RiGovernmentLine className="size-5 text-primary" aria-hidden />
+                <div>
+                  <p className="text-sm font-medium">
+                    Centre for Intelligent Technologies
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Victoria University, Kampala.
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" asChild className="w-fit">
+                  <Link href="/developers">API &amp; developer access</Link>
+                </Button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </PageSheet>
     </>
   )
 }

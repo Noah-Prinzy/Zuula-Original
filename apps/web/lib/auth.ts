@@ -1,4 +1,6 @@
-import { z } from "zod"
+// zod/mini keeps the client bundle small (full zod is ~90 KB gzipped); rules and messages
+// are the same as they would be with the classic API.
+import * as z from "zod/mini"
 
 import type { Role } from "@/lib/roles"
 
@@ -23,11 +25,11 @@ export function identifierKind(v: string): "email" | "phone" | null {
   return null
 }
 
-export const identifier = z
-  .string()
-  .trim()
-  .min(1, "identifierRequired")
-  .refine((v) => identifierKind(v) !== null, "identifierInvalid")
+export const identifier = z.string().check(
+  z.trim(),
+  z.minLength(1, "identifierRequired"),
+  z.refine((v) => identifierKind(v) !== null, "identifierInvalid")
+)
 
 // Mask for "we sent a code to …" messages.
 export function maskIdentifier(v: string) {
@@ -49,41 +51,52 @@ export const PASSWORD_RULES = [
 ] as const
 
 export function passwordStrength(p: string) {
-  const score = PASSWORD_RULES.filter((r) => r.test(p)).length as 0 | 1 | 2 | 3 | 4
+  const score = PASSWORD_RULES.filter((r) => r.test(p)).length as
+    0 | 1 | 2 | 3 | 4
   return { score }
 }
 
 // FR-AUTH-04: 12-character minimum is required; the other rules guide towards strength.
-const newPassword = z
-  .string()
-  .min(PASSWORD_MIN, "passwordMin")
-  .refine((p) => passwordStrength(p).score >= 3, "passwordWeak")
+const newPassword = z.string().check(
+  z.minLength(PASSWORD_MIN, "passwordMin"),
+  z.refine((p) => passwordStrength(p).score >= 3, "passwordWeak")
+)
 
 export const signInSchema = z.object({
   identifier,
-  password: z.string().min(1, "passwordRequired"),
+  password: z.string().check(z.minLength(1, "passwordRequired")),
   remember: z.boolean(),
 })
 
 export const signUpSchema = z
   .object({
-    name: z.string().trim().min(2, "nameRequired"),
+    name: z.string().check(z.trim(), z.minLength(2, "nameRequired")),
     identifier,
     password: newPassword,
     confirm: z.string(),
-    consent: z.boolean().refine((v) => v, "consentRequired"),
+    consent: z.boolean().check(z.refine((v) => v, "consentRequired")),
   })
-  .refine((v) => v.password === v.confirm, { path: ["confirm"], message: "passwordsMismatch" })
+  .check(
+    z.refine((v) => v.password === v.confirm, {
+      path: ["confirm"],
+      message: "passwordsMismatch",
+    })
+  )
 
 export const forgotSchema = z.object({ identifier })
 
 export const resetSchema = z
   .object({
-    code: z.string().regex(/^\d{6}$/, "codeSixDigits"),
+    code: z.string().check(z.regex(/^\d{6}$/, "codeSixDigits")),
     password: newPassword,
     confirm: z.string(),
   })
-  .refine((v) => v.password === v.confirm, { path: ["confirm"], message: "passwordsMismatch" })
+  .check(
+    z.refine((v) => v.password === v.confirm, {
+      path: ["confirm"],
+      message: "passwordsMismatch",
+    })
+  )
 
 export const OTP_LENGTH = 6
 export const RESEND_SECONDS = 30
@@ -112,7 +125,12 @@ export function isDemoCodeValid(code: string) {
 
 const PENDING_KEY = "zuula.pending-auth"
 
-export type PendingAuth = { role: Role; identifier: string; next: string; name?: string }
+export type PendingAuth = {
+  role: Role
+  identifier: string
+  next: string
+  name?: string
+}
 
 export function setPendingAuth(p: PendingAuth) {
   try {

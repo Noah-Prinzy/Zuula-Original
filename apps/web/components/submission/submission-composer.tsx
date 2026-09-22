@@ -161,7 +161,7 @@ export function SubmissionComposer({
             }}
             className="gap-0"
           >
-            <div className="border-b px-3 pt-3 sm:px-4">
+            <div className={cn("border-b px-3 sm:px-4", compact ? "pt-1.5" : "pt-3")}>
               <TabsList variant="line" className="w-full justify-start">
                 {TABS.map((t) => (
                   <TabsTrigger key={t.value} value={t.value} disabled={submitting} className="flex-none">
@@ -172,7 +172,7 @@ export function SubmissionComposer({
               </TabsList>
             </div>
 
-            <div className="p-3 sm:p-4">
+            <div className={compact ? "px-3 py-2.5 sm:px-4" : "p-3 sm:p-4"}>
               <TabsContent value="text">
                 <Controller
                   control={control}
@@ -185,11 +185,11 @@ export function SubmissionComposer({
                       <Textarea
                         {...field}
                         id="submit-text"
-                        rows={compact ? 5 : 8}
+                        rows={compact ? 3 : 8}
                         disabled={submitting}
                         aria-invalid={fieldState.invalid}
                         placeholder="Paste a message, post or claim you want to check…"
-                        className="min-h-32 resize-y text-base"
+                        className={cn("resize-y text-base", compact ? "min-h-20" : "min-h-32")}
                       />
                       <div className="flex justify-between gap-2 text-xs text-muted-foreground">
                         <FieldError errors={[fieldState.error]} />
@@ -319,7 +319,12 @@ export function SubmissionComposer({
         )}
       />
 
-      <div className="flex flex-col gap-3 border-t bg-muted/30 p-3 sm:flex-row sm:items-center sm:p-4">
+      <div
+        className={cn(
+          "flex flex-col gap-3 border-t bg-muted/30 p-3 sm:flex-row sm:items-center",
+          compact ? "sm:px-4 sm:py-2" : "sm:p-4"
+        )}
+      >
         <Controller
           control={control}
           name="language"
@@ -349,7 +354,7 @@ export function SubmissionComposer({
             <span className="hidden text-xs text-muted-foreground lg:inline">
               <Kbd>Ctrl</Kbd> + <Kbd>Enter</Kbd>
             </span>
-            <Button type="submit" size="lg" disabled={submitting} className="w-full px-5 sm:w-auto">
+            <Button type="submit" size={compact ? "default" : "lg"} disabled={submitting} className="w-full px-5 sm:w-auto">
               {submitting ? <Spinner /> : <RiSearchEyeLine aria-hidden />}
               {submitting ? (type === "media" ? "Uploading…" : "Submitting…") : "Verify"}
             </Button>
@@ -373,7 +378,13 @@ export function SubmissionComposer({
           </>
         )}
       </div>
-      <p className="border-t px-3 py-2 text-[11px] text-muted-foreground sm:px-4">
+      {/* Compact (Home) folds the consent line into the notice row above to save height. */}
+      <p
+        className={cn(
+          "border-t px-3 py-2 text-[11px] text-muted-foreground sm:px-4",
+          compact && "sm:-mt-px sm:border-t-0 sm:pt-0"
+        )}
+      >
         By submitting you agree to our{" "}
         <Link href="/legal/terms" className="underline underline-offset-2">
           Terms

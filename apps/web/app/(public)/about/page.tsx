@@ -1,17 +1,23 @@
+import Image from "next/image"
 import Link from "next/link"
 import {
+  RiArrowRightLine,
   RiFileSearchLine,
+  RiGlobalLine,
   RiGovernmentLine,
   RiGroupLine,
   RiMailLine,
+  RiRobot2Line,
   RiScales3Line,
   RiShieldCheckLine,
   RiWhatsappLine,
 } from "@remixicon/react"
 
-import { PhotoBanner } from "@/components/decor/photo-hero"
+import { PHOTO_QUALITY, PhotoBanner, PhotoCredit } from "@/components/decor/photo-hero"
 import { PHOTOS } from "@/components/decor/photos"
 import { SectionTitle } from "@/components/motion/section"
+import { KineticText } from "@/components/motion/text/kinetic-text"
+import { ScrambleText } from "@/components/motion/text/scramble-text"
 import {
   Accordion,
   AccordionContent,
@@ -28,6 +34,25 @@ export const metadata = {
   title: "About",
   description: "Zuula's mission, methodology, editorial independence and FAQ.",
 }
+
+// "Why Zuula" band, moved here from Home.
+const FEATURES = [
+  {
+    icon: RiShieldCheckLine,
+    title: "Trusted sources",
+    body: "Claims are cross-referenced against Ugandan and international outlets and fact-checkers.",
+  },
+  {
+    icon: RiRobot2Line,
+    title: "AI content detection",
+    body: "Flags AI-generated text, deepfake images, synthetic audio and manipulated video.",
+  },
+  {
+    icon: RiGlobalLine,
+    title: "Ugandan languages",
+    body: "English, Luganda, Acholi, Runyankole and Ateso.",
+  },
+]
 
 const STEPS = [
   {
@@ -117,6 +142,50 @@ export default function AboutPage() {
         title="About"
         description="Our mission, methodology and editorial independence."
       />
+
+      <section aria-labelledby="why-title" className="relative isolate overflow-hidden border-b bg-primary">
+        <Image
+          src={PHOTOS.crimsonTexture.src}
+          alt=""
+          fill
+          quality={PHOTO_QUALITY}
+          sizes="100vw"
+          className="-z-10 object-cover opacity-90"
+        />
+        <div className="page-container flex flex-col gap-12 py-16 text-primary-foreground">
+          <div data-reveal className="flex max-w-3xl flex-col gap-3">
+            <p className="font-heading text-xs font-semibold tracking-widest uppercase opacity-80">
+              <ScrambleText text="Why Zuula" />
+            </p>
+            <h2
+              id="why-title"
+              className="font-heading text-3xl font-bold tracking-tight text-balance [--kinetic-accent:var(--chart-1)] [--mark:oklch(1_0_0/0.22)] md:text-5xl"
+            >
+              <KineticText text="Built for the way news travels in Uganda." highlight={["Uganda"]} />
+            </h2>
+          </div>
+          <div data-reveal="stagger" className="grid gap-4 md:grid-cols-3">
+            {FEATURES.map((f) => (
+              <div
+                key={f.title}
+                className="hover-lift flex flex-col gap-3 border bg-card/95 p-6 text-card-foreground shadow-lg backdrop-blur-sm"
+              >
+                <f.icon className="size-7 text-primary" aria-hidden />
+                <h3 className="font-heading text-lg font-bold">{f.title}</h3>
+                <p className="text-sm text-muted-foreground">{f.body}</p>
+              </div>
+            ))}
+          </div>
+          <div data-reveal>
+            <Button size="lg" variant="secondary" asChild>
+              <Link href="/verify">
+                Check a claim <RiArrowRightLine aria-hidden />
+              </Link>
+            </Button>
+          </div>
+        </div>
+        <PhotoCredit photo={PHOTOS.crimsonTexture} className="absolute right-3 bottom-2" />
+      </section>
 
       <div className="page-container flex flex-col gap-16 py-14">
         <section data-reveal aria-labelledby="mission-title" className="flex flex-col gap-4">

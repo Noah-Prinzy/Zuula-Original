@@ -2,7 +2,6 @@ import { PageSheet } from "@/components/decor/page-sheet"
 import { RouteBackdrop } from "@/components/decor/route-backdrop"
 import { RoleSwitcher } from "@/components/shell/role-switcher"
 import { SectionLayout } from "@/components/shell/section-nav"
-import { SiteFooter } from "@/components/shell/site-footer"
 import { SiteHeader } from "@/components/shell/site-header"
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -17,7 +16,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <SectionLayout>{children}</SectionLayout>
         </PageSheet>
       </main>
-      <SiteFooter />
     </div>
   )
 }

@@ -91,6 +91,14 @@ describe("WordRotator", () => {
     expect(active(container)).toBe("claim")
   })
 
+  it("marks the first word as first paint until it rotates (no fade-in, for LCP)", () => {
+    const { container } = render(<WordRotator words={words} interval={1000} />)
+    const root = container.firstElementChild as HTMLElement
+    expect(root).toHaveAttribute("data-initial")
+    act(() => vi.advanceTimersByTime(1000))
+    expect(root).not.toHaveAttribute("data-initial")
+  })
+
   it("applies the entrance delay only to the first word", () => {
     const { container } = render(<WordRotator words={words} interval={1000} delay={230} />)
     const root = container.firstElementChild as HTMLElement

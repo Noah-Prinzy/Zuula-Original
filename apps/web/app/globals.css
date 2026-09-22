@@ -220,6 +220,19 @@ html:has(.snap-page) {
     filter: blur(6px);
   }
 }
+/* On-paint variants for above-the-fold content. They never start at opacity 0: Chrome only
+   counts Largest Contentful Paint once text is visible, so a fade-in from 0 on the hero
+   delayed mobile LCP by 2–4 s (CREST audit #1). Movement only; the text is readable at once. */
+@keyframes zuula-settle {
+  from {
+    transform: translate3d(0, var(--reveal-distance), 0);
+  }
+}
+@keyframes zuula-word-settle {
+  from {
+    transform: translate3d(0, 0.3em, 0);
+  }
+}
 @keyframes zuula-underline {
   from {
     transform: scaleX(0);
@@ -227,16 +240,16 @@ html:has(.snap-page) {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  /* Plays on first paint: for content that is on screen when the page loads. */
+  /* Plays on first paint: for content that is on screen when the page loads. Transform
+     only (see zuula-settle), so it never holds back LCP. */
   .enter {
-    animation: zuula-rise var(--reveal-duration) var(--ease-out-soft) backwards;
+    animation: zuula-settle var(--reveal-duration) var(--ease-out-soft) backwards;
     animation-delay: calc(var(--d, 0) * 90ms);
   }
 
-  /* Page transition: each route segment eases in when a template remounts it. */
-  .page-enter {
-    animation: zuula-fade 450ms ease-out backwards;
-  }
+  /* Page transition: intentionally none. .page-enter wraps the whole route, which is always
+     above the fold; fading it from 0 delayed LCP, and a transform on it would break sticky
+     positioning. The class stays as a hook (components/motion/page-transition.tsx). */
 
   /* Scroll reveal: RevealObserver sets data-revealed as the element enters the viewport.
      Revealed elements play a one-shot animation with backwards fill, so nothing lingers
@@ -266,11 +279,16 @@ html:has(.snap-page) {
   [data-reveal="stagger"] > :nth-child(7) { --d: 4.8; }
   [data-reveal="stagger"] > :nth-child(n + 8) { --d: 5.6; }
 
-  /* Word-by-word headline (SplitText). Plays on paint, or on reveal inside [data-reveal]. */
+  /* Word-by-word headline (SplitText, KineticText). On paint (page titles, the Home hero)
+     words only settle into place; below the fold, inside [data-reveal], they also fade and
+     unblur as they scroll in. */
   .split-word {
     display: inline-block;
-    animation: zuula-word 800ms var(--ease-out-soft) backwards;
+    animation: zuula-word-settle 800ms var(--ease-out-soft) backwards;
     animation-delay: calc(var(--base, 0ms) + var(--i, 0) * 55ms);
+  }
+  [data-reveal] .split-word {
+    animation-name: zuula-word;
   }
   html[data-motion] [data-reveal]:not([data-revealed]) .split-word {
     animation-play-state: paused;
@@ -519,6 +537,11 @@ html:has(.snap-page) {
   .word-rotator-item[data-state="in"] .word-rotator-char {
     animation: zuula-roll-in 650ms var(--ease-out-soft) backwards;
     animation-delay: calc(var(--base, 0ms) + var(--c, 0) * 32ms);
+  }
+  /* The first word is part of the page's first paint (the Home hero h1): settle it into
+     place without starting invisible, so it doesn't hold back LCP. Later words roll in. */
+  .word-rotator[data-initial] .word-rotator-item[data-state="in"] .word-rotator-char {
+    animation-name: zuula-word-settle;
   }
   .word-rotator-item[data-state="out"] .word-rotator-char {
     animation: zuula-roll-out 420ms cubic-bezier(0.5, 0, 0.75, 0) forwards;

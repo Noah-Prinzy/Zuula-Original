@@ -17,9 +17,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <SectionLayout>{children}</SectionLayout>
         </PageSheet>
       </main>
-      <div className="bg-background">
-        <SiteFooter />
-      </div>
+      <SiteFooter />
     </div>
   )
 }

@@ -37,7 +37,7 @@ export function SiteFooter() {
   const t = useTranslations("Footer")
   const tc = useTranslations("Common")
   return (
-    <footer className="border-t bg-muted/40">
+    <footer className="border-t border-border/50 bg-background/90 backdrop-blur-xl">
       <div className="page-container grid gap-8 py-10 md:grid-cols-[1.5fr_repeat(3,1fr)]">
         <div className="flex flex-col gap-3">
           <Logo />

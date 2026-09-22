@@ -19,9 +19,7 @@ export default function PublicLayout({
         {children}
       </main>
       <HideOnHome>
-        <div className="bg-background">
-          <SiteFooter />
-        </div>
+        <SiteFooter />
       </HideOnHome>
     </div>
   )

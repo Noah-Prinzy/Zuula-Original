@@ -46,10 +46,14 @@ export function PageHero({
 }
 
 // Full-width surface for a page's body. Rather than a floating card cut off from the photo
-// above it, its top edge fades from the photo into the theme background over ~10rem; past
-// that the background is fully solid, so text keeps the theme's normal WCAG contrast for the
-// rest of a (often long) page. No shadow, no inset margins: it reads as a continuation of the
-// hero, not a box sitting on top of it.
+// above it, the top fades from the photo into the theme background over ~10rem; past that the
+// background is fully solid, so text and every real page element keep the theme's normal WCAG
+// contrast, whatever the page's length. No shadow, no inset margins: it reads as a
+// continuation of the hero, not a box sitting on top of it.
+//
+// A second, empty spacer below the content fades back out to the fixed backdrop, so the
+// (also translucent) SiteFooter blends with the photo instead of butting into another solid
+// block. It holds no content on purpose — content only ever sits on the fully solid section.
 export function PageSheet({
   className,
   children,
@@ -58,14 +62,15 @@ export function PageSheet({
   children: React.ReactNode
 }) {
   return (
-    <div
-      className={cn(
-        "relative flex flex-col bg-[linear-gradient(to_bottom,transparent_0%,var(--background)_10rem,var(--background)_100%)]",
-        className
-      )}
-    >
-      {children}
-      <RoutePhotoCredit className="page-container pb-3 text-right text-muted-foreground hover:text-foreground" />
+    <div className={cn("relative flex flex-col", className)}>
+      <div className="flex flex-1 flex-col bg-[linear-gradient(to_bottom,transparent_0%,var(--background)_10rem,var(--background)_100%)]">
+        {children}
+        <RoutePhotoCredit className="page-container pb-3 text-right text-muted-foreground hover:text-foreground" />
+      </div>
+      <div
+        aria-hidden
+        className="h-32 bg-[linear-gradient(to_bottom,var(--background)_0%,transparent_100%)]"
+      />
     </div>
   )
 }

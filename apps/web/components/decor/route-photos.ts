@@ -10,7 +10,7 @@ const ROUTES: [prefix: string, entry: RoutePhoto][] = [
   // Public
   ["/about", { photo: PHOTOS.ugandaHills, position: "center 60%" }],
   ["/fact-checks/", { photo: PHOTOS.kampalaSunset }],
-  ["/fact-checks", { photo: PHOTOS.newspaperBundle }],
+  ["/fact-checks", { photo: PHOTOS.monitorFrontpages, position: "center 25%" }],
   ["/verify", { photo: PHOTOS.newspapers, position: "75% 45%" }],
   ["/developers", { photo: PHOTOS.worldWire }],
   // Auth

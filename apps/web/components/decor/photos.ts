@@ -8,8 +8,8 @@ import kampalaSkyline from "@/public/images/kampala-skyline.jpg"
 import kampalaStreet from "@/public/images/kampala-street.jpg"
 import kampalaSunset from "@/public/images/kampala-sunset.jpg"
 import lakeVictoria from "@/public/images/lake-victoria.jpg"
+import monitorFrontpages from "@/public/images/monitor-frontpages.webp"
 import murchisonFalls from "@/public/images/murchison-falls.jpg"
-import newspaperBundle from "@/public/images/newspaper-bundle.webp"
 import newspaperWall from "@/public/images/newspaper-wall.webp"
 import newspapers from "@/public/images/newspapers.jpg"
 import nightRoad from "@/public/images/night-road.jpg"
@@ -60,9 +60,9 @@ export const PHOTOS = {
       url: "https://unsplash.com/photos/WYd_PkCa1BY",
     },
   },
-  newspaperBundle: {
-    src: newspaperBundle,
-    alt: "A bundle of newspapers tied with string",
+  monitorFrontpages: {
+    src: monitorFrontpages,
+    alt: "A collage of Daily Monitor and Sunday Monitor Uganda newspaper front pages",
     credit: null,
   },
   newspaperWall: {

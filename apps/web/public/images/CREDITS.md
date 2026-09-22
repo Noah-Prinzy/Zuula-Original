@@ -11,7 +11,7 @@ full-page background photo, mapped by URL in `components/decor/route-photos.ts`;
 | uganda-hills.jpg | Random Institute | https://unsplash.com/photos/KQ5djKAN35s | About |
 | newspapers.jpg | AbsolutVision | https://unsplash.com/photos/WYd_PkCa1BY | Verify |
 | kampala-sunset.jpg | Robin Kutesa | https://unsplash.com/photos/Q3ymlvOJGFs | Fact-check report |
-| newspaper-bundle.webp | supplied by Noah, source/licence not confirmed | — | Library |
+| monitor-frontpages.webp | supplied by Noah, source/licence not confirmed | — | Library |
 | newspaper-wall.webp | supplied by Noah, source/licence not confirmed | — | Home hero |
 | world-wire.webp | supplied by Noah, source/licence not confirmed | — | Developers (API) |
 | crimson-waves.jpg | Pawel Czerwinski | https://unsplash.com/photos/DQ2lqx_6RD0 | Sign in: two-factor |
@@ -32,15 +32,24 @@ instead of the white-text `PageHero`): Offline, Privacy, Terms, Submission statu
 under Account, Admin and Review (the whole signed-in app shell — see `(app)/layout.tsx`, which
 doesn't render `RouteBackdrop` at all).
 
-## The three `supplied by Noah` files
+## The `supplied by Noah` files
 
-`newspaper-bundle.webp`, `newspaper-wall.webp` and `world-wire.webp` were pasted directly into
+`monitor-frontpages.webp`, `newspaper-wall.webp` and `world-wire.webp` were pasted directly into
 the conversation, not sourced from Unsplash. Their original source and licence aren't known —
 please confirm you have the right to use them commercially before this goes to production, or
 swap them for licensed equivalents. Two other supplied images were **not** used: a
 magnifying-glass/5-Ws graphic carried a visible "123RF" stock-photo watermark, and an original
 newspaper-archive stack photo was dropped from Verify in favour of newspapers.jpg once
-newspaper-wall.webp took over the Home hero.
+newspaper-wall.webp took over the Home hero. A `newspaper-bundle.webp` used briefly on Library
+was removed once `monitor-frontpages.webp` replaced it there.
+
+**Resolution note:** all of the supplied files above came in far smaller than the Unsplash pool
+(678–736px wide, vs. 3000–3200px for the rest). No amount of Next.js image-quality/sizes config
+can add detail a source file doesn't have, so each was upscaled to 1600px wide with a Lanczos
+filter plus a light unsharp-mask pass (`sharp`, see git history for the exact params) — this
+improves how they hold up when stretched across a full-bleed hero, but it's not a substitute for
+real higher-resolution originals. If you have access to bigger versions of any of these, send
+them over and I'll swap them in directly.
 
 ## Faces
 

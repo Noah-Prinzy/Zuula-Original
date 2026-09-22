@@ -29,10 +29,9 @@ const NO_PHOTO_PATHS = [
   "/legal/privacy",
   "/legal/terms",
   "/submissions",
-  "/account/activity",
   "/account",
-  "/admin/sources",
   "/admin",
+  "/review",
 ]
 
 const FALLBACK: RoutePhoto = { photo: PHOTOS.kampalaSkyline }

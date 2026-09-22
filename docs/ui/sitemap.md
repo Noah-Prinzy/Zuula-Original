@@ -90,7 +90,7 @@ Remaining Phase 1 work across the app:
 | Item | Status |
 |---|---|
 | Translations (next-intl, 5 languages) | In progress: shell, sign-in, library and report translated; Home, About and legal pending. Locale routes (`app/[locale]/`) being added |
-| PWA (manifest, service worker, offline fallback) | In progress |
-| Error pages (404, error boundaries) | In progress |
+| PWA (manifest, service worker, offline fallback) | Built: `app/manifest.ts`, `public/sw.js` (production only; keeps the last 30 viewed reports offline, never caches account, review or admin pages). The offline fallback still needs testing on a real network drop after a production deploy |
+| Error pages (404, error boundaries) | Built: `error.tsx` per route group, `global-error.tsx`, `not-found.tsx` |
 | Accessibility (WCAG 2.1 AA) and Lighthouse ≥ 80 pass | Not started |
 | Tests | Not started |

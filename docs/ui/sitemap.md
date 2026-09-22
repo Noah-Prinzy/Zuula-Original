@@ -2,6 +2,8 @@
 
 Status: **v0.2 (approved)** — 21 Sep 2026.
 
+Routes below are the public URLs. In code, every page lives under `apps/web/app/[locale]/(public|auth|app)/…`. The language is never in the URL: `proxy.ts` (next-intl, `localePrefix: "never"`) reads the `NEXT_LOCALE` cookie and rewrites each request to the matching `[locale]` segment, so every page is prerendered once per language.
+
 ## 1. Pages
 
 ### Public (site layout)

@@ -19,6 +19,8 @@ Deadline **30 Nov 2026**, one developer.
 
 Repo layout: `apps/web` (this app), `apps/api` (P2–P3), `services/ai` (P4), `packages/shared`. Only `apps/web` has code so far.
 
+Pages live in `app/[locale]/(public|auth|app)/`. The URL never carries the language: `proxy.ts` (next-intl, `localePrefix: "never"`) maps the `NEXT_LOCALE` cookie to the `[locale]` segment, so each language is prerendered. English strings live in `messages/en.json`.
+
 ### Changes from the specification
 
 These were agreed during planning and still need the supervisor's sign-off.

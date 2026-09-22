@@ -9,6 +9,8 @@ so P3's frontend integration is a drop-in swap from the local mock simulation to
 import time
 from datetime import UTC, datetime
 
+from app.adapters.clamav import get_clamav_scanner
+from app.adapters.storage import get_object_storage
 from app.core.config import get_analysis_settings
 from app.providers.analysis import get_analysis_provider
 from app.realtime import redis_client
@@ -104,6 +106,16 @@ def run_submission_pipeline(
         seconds = STEP_SECONDS[step]
         publish_step(r, tracking_id, {"step": step, "status": "active", "seconds": seconds})
         time.sleep(seconds * scale)
+
+        # No real file upload handling yet (create_submission takes a JSON body, not
+        # multipart) — these two calls exercise the adapter interfaces P3's real upload flow
+        # will call with the actual file bytes, but scan/store nothing real today.
+        if step == "scan":
+            get_clamav_scanner().scan(b"")
+        elif step == "media":
+            get_object_storage().put(
+                key=f"{tracking_id}/media", data=b"", content_type="application/octet-stream"
+            )
 
         if step == fail_at:
             state["status"] = "failed"

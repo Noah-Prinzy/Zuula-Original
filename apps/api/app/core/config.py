@@ -45,6 +45,48 @@ class AnalysisSettings(BaseSettings):
     pipeline_step_scale: float = 1.0
 
 
+class AdaptersSettings(BaseSettings):
+    """Config for every Step 4 integration adapter (app/adapters/**) — one class since
+    they're all equally inert in P2 (every adapter is a stub; these values are read by
+    exactly nothing yet, only documented in .env.example for what P3's real
+    implementations will need). Field names match .env.example's var names, no ZUULA_
+    prefix — same convention as CelerySettings/AnalysisSettings."""
+
+    model_config = SettingsConfigDict(extra="ignore")
+
+    google_oauth_client_id: str = ""
+    google_oauth_client_secret: str = ""
+    facebook_oauth_client_id: str = ""
+    facebook_oauth_client_secret: str = ""
+
+    africastalking_username: str = "sandbox"
+    africastalking_api_key: str = ""
+
+    turnstile_site_key: str = ""
+    turnstile_secret_key: str = ""
+
+    clamav_host: str = "clamav"
+    clamav_port: int = 3310
+
+    s3_endpoint_url: str = ""
+    s3_bucket: str = "zuula-media-dev"
+    s3_access_key_id: str = ""
+    s3_secret_access_key: str = ""
+    s3_region: str = "us-east-1"
+
+    email_from: str = "hello@zuula.ug"
+    email_smtp_host: str = ""
+    email_smtp_port: int = 587
+    email_smtp_user: str = ""
+    email_smtp_password: str = ""
+
+    # FR-SUBMIT-04: WhatsApp/Telegram messages create submissions — see app/webhooks/.
+    whatsapp_verify_token: str = ""
+    whatsapp_access_token: str = ""
+    whatsapp_phone_number_id: str = ""
+    telegram_bot_token: str = ""
+
+
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
@@ -58,3 +100,8 @@ def get_celery_settings() -> CelerySettings:
 @lru_cache
 def get_analysis_settings() -> AnalysisSettings:
     return AnalysisSettings()
+
+
+@lru_cache
+def get_adapters_settings() -> AdaptersSettings:
+    return AdaptersSettings()

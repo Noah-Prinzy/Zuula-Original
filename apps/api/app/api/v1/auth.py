@@ -1,7 +1,12 @@
 import re
+import secrets
 
 from fastapi import Body
+from fastapi.responses import RedirectResponse
 
+from app.adapters.email import get_email_sender
+from app.adapters.oauth import get_oauth_provider
+from app.adapters.sms import get_sms_sender
 from app.core.errors import ApiError
 from app.core.router import APIRouter
 from app.core.security import STUB_USERS
@@ -11,6 +16,10 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 _CODE_RE = re.compile(r"^\d{6}$")
 _NEEDS_2FA = {"expert", "admin"}  # FR-AUTH-05
+
+
+def _new_code() -> str:
+    return f"{secrets.randbelow(1_000_000):06d}"
 
 
 def _role_for_identifier(identifier: str) -> str:
@@ -49,6 +58,9 @@ def sign_in(body: dict = Body(...)):  # noqa: B008
         raise ApiError("unauthorized", "Enter your email/phone and password.")
     role = _role_for_identifier(identifier)
     if role in _NEEDS_2FA:
+        get_sms_sender().send(
+            to=identifier, message=f"Your Zuula verification code is {_new_code()}."
+        )
         challenge = TwoFactorChallenge(
             challenge_id=f"tfc_{role}", masked_identifier=_mask(identifier)
         )
@@ -68,6 +80,10 @@ def verify_two_factor(body: dict = Body(...)):  # noqa: B008
 
 @router.post("/two-factor/resend", status_code=202)
 def resend_two_factor(body: dict = Body(...)):  # noqa: B008
+    challenge_id = body.get("challengeId", "")
+    get_sms_sender().send(
+        to=challenge_id or "unknown", message=f"Your Zuula verification code is {_new_code()}."
+    )
     return {}
 
 
@@ -78,6 +94,13 @@ def sign_out():
 
 @router.post("/forgot-password", status_code=202)
 def forgot_password(body: dict = Body(...)):  # noqa: B008
+    identifier = body.get("identifier", "")
+    if identifier:
+        get_email_sender().send(
+            to=identifier,
+            subject="Reset your Zuula password",
+            body=f"Your password reset code is {_new_code()}.",
+        )
     return {}
 
 
@@ -89,15 +112,24 @@ def reset_password(body: dict = Body(...)):  # noqa: B008
     return {}
 
 
-@router.get("/oauth/{provider}/start", status_code=302)
+@router.get("/oauth/{provider}/start")
 def start_oauth(provider: str, next: str | None = None):  # noqa: A002
     if provider not in ("google", "facebook"):
         raise ApiError("not_found", f"Unknown provider '{provider}'.")
-    return {}
+    url = get_oauth_provider(provider).authorize_url(
+        redirect_uri=f"/api/v1/auth/oauth/{provider}/callback", state=next or "/"
+    )
+    return RedirectResponse(url, status_code=302)
 
 
-@router.get("/oauth/{provider}/callback", status_code=302)
-def oauth_callback(provider: str):
+@router.get("/oauth/{provider}/callback")
+def oauth_callback(provider: str, code: str = "", state: str = "/"):
     if provider not in ("google", "facebook"):
         raise ApiError("not_found", f"Unknown provider '{provider}'.")
-    return {}
+    # P2 stub: exchanges the code (always "succeeds" — see app/adapters/oauth.py) but doesn't
+    # set a real session cookie yet. app/core/security.py's X-Zuula-Role header is the P2
+    # auth stub; P3 wires this profile into the real session/user-lookup it replaces.
+    get_oauth_provider(provider).exchange_code(
+        code=code, redirect_uri=f"/api/v1/auth/oauth/{provider}/callback"
+    )
+    return RedirectResponse(state, status_code=302)

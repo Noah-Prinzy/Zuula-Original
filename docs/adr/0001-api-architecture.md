@@ -1,11 +1,12 @@
 # ADR 0001: API architecture (P2)
 
-**Status:** Accepted. Step 1 (the contract, [PR #1](../../apps/api/openapi.yaml)) and Step 2
-(the FastAPI skeleton, [PR #2](https://github.com/Noah-Prinzy/zuula/pull/2)) are merged;
-Step 3 (the real submission pipeline and realtime delivery) is this revision's addition —
-see the Queue and Realtime sections below, both rewritten from Step 2's forward-looking
-placeholders to describe what's actually built. Several decisions here are explicitly
-P2-only and are expected to be superseded in P3 — each says so.
+**Status:** Accepted. Step 1 (the contract, [PR #1](../../apps/api/openapi.yaml)), Step 2
+(the FastAPI skeleton, [PR #2](https://github.com/Noah-Prinzy/zuula/pull/2)) and Step 3 (the
+real submission pipeline and realtime delivery, [PR #3](https://github.com/Noah-Prinzy/zuula/pull/3))
+are merged; Step 4 (integration adapters) is this revision's addition — see the Adapters
+section below, rewritten from a placeholder-only summary into a real per-adapter account.
+Several decisions here are explicitly P2-only and are expected to be superseded in P3 —
+each says so.
 
 ## Context
 
@@ -136,19 +137,53 @@ a rewrite of the pipeline that calls it.
 ## Adapters (external integrations)
 
 **Decision:** every external integration the contract implies other than the analysis
-provider (which has its own section above, added in Step 3) — ClamAV, S3-compatible
-storage, Whisper (or equivalent) transcription, Africa's Talking (SMS/USSD), Cloudflare
-Turnstile, WhatsApp/Telegram bot channels, OAuth, outbound email — is still out of scope and
-represented only as placeholder settings in `app/core/config.py`/`.env.example`. No adapter
-code exists yet; the pipeline's ClamAV/storage/transcription steps (`app/worker/pipeline.py`)
-are named stages with a simulated duration, not calls to anything.
+provider (its own section above, Step 3) now has a `Protocol` interface plus a stub
+implementation in `app/adapters/`, wired into a real call site — not just defined and left
+unused. None of them call the real service:
 
-**Why defer instead of stubbing each with a fake client now:** these adapters' job is purely
-external I/O (call a real service, get a real result) with no meaningful shape decision left
-to make ahead of time the way the analysis provider had (P2's central design question there
-was the swappable-interface/§10.1 one, not the stub's content). Building each adapter behind
-a real interface belongs with the feature that first needs it — Step 4 — so the abstraction
-boundary is informed by an actual caller instead of guessed in advance.
+| Adapter | `app/adapters/` | Wired into | Stub behavior |
+|---|---|---|---|
+| Google/Facebook OAuth | `oauth.py` | `app/api/v1/auth.py`'s `start_oauth`/`oauth_callback`, now real `RedirectResponse`s instead of an empty `{}` body with a decorative 302 status | `authorize_url()` builds a fake link; `exchange_code()` always "succeeds" with a fixed demo profile |
+| Africa's Talking SMS | `sms.py` | `sign_in`'s 2FA branch, `two-factor/resend` | Logs the message; nothing is sent |
+| Cloudflare Turnstile (FR-AUTH-07) | `turnstile.py` | `app/api/v1/submissions.py`'s `create_submission` — enforced only when `get_current_user()` finds no one signed in | Checks the token is present and non-blank; no call to Cloudflare's siteverify endpoint |
+| ClamAV | `clamav.py` | `app/worker/pipeline.py`'s `scan` step | Always reports clean |
+| S3-compatible storage | `storage.py` | `app/worker/pipeline.py`'s `media` step | Stores nothing; returns a deterministic fake URL |
+| Email | `email.py` | `auth.py`'s `forgot_password` | Logs the message; nothing is sent |
+| WhatsApp Cloud API, Telegram Bot (FR-SUBMIT-04) | `whatsapp.py`, `telegram.py` | New `app/webhooks/` routes (below) | Parses the real payload shape; replies are logged, not sent |
+
+**Why these are stubs but still wired in, unlike a typical "interface with no caller" no-op:**
+a Protocol nothing calls doesn't prove its own shape is right — the call site is what would
+have to change if the interface were wrong (wrong argument, wrong return type, a step that
+needed to be async and isn't). Wiring each one in now, even though every implementation is
+inert, means P3 replaces one class per adapter (`StubX` → a real client) with no ripple into
+the routes or the pipeline that call it.
+
+**ClamAV/S3 in the pipeline don't see real bytes yet.** `create_submission` still takes a
+JSON body, not a multipart file upload — building that is a bigger, separate change than
+Step 4's adapter-interface scope. The `scan`/`media` pipeline steps call their adapters with
+placeholder empty bytes today; P3's real multipart handling is what gives them something
+real to scan and store.
+
+**One deviation the test suite forced, not a design choice:** WhatsApp's real webhook
+verification (`GET /webhooks/whatsapp`) uses Meta's own query parameter names verbatim —
+`hub.mode`, `hub.verify_token`, `hub.challenge`, literal dots included, which is what Meta's
+servers actually send. `openapi-core`'s Starlette request matching mishandles a literal `.`
+in a query parameter name (confirmed in isolation: the identical setup with an underscore
+instead of a dot validates fine) — so `tests/contract/`'s two tests for this one operation
+go through a plain, unvalidated `TestClient` instead of the usual contract-validating one,
+with a comment explaining why. The contract itself (`openapi.yaml`) still declares Meta's
+real parameter names; only the test tooling has the gap.
+
+## Inbound webhooks (`app/webhooks/`)
+
+**Decision:** `GET/POST /webhooks/whatsapp` and `POST /webhooks/telegram` are new paths, not
+part of the core (`/api/v1`) or partner (`/v1`) surfaces Step 1 designed — they're called by
+Meta's and Telegram's own servers, not by `apps/web` or a partner, so neither `sessionAuth`
+nor `partnerApiKey` applies (`security: []`; real signature/secret verification is P3). Both
+POST handlers parse the provider's real payload shape, then call the same
+`enqueue_submission()` helper `POST /api/v1/submissions` uses — a chat message becomes a
+submission through the identical tracking-id/state/pipeline path a website visitor's does,
+not a parallel one.
 
 ## Pagination
 

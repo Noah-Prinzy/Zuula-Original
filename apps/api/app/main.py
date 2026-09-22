@@ -5,6 +5,7 @@ from app.api.v1 import router as api_v1_router
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
 from app.partner.v1 import router as partner_v1_router
+from app.webhooks import router as webhooks_router
 
 settings = get_settings()
 
@@ -29,6 +30,7 @@ register_error_handlers(app)
 
 app.include_router(api_v1_router)
 app.include_router(partner_v1_router)
+app.include_router(webhooks_router)
 
 
 @app.get("/healthz", tags=["health"])

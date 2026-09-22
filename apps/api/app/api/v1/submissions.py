@@ -2,13 +2,16 @@ import asyncio
 import json
 import secrets
 
-from fastapi import Body, Header
+from fastapi import Body, Depends, Header
 from fastapi.responses import StreamingResponse
 
+from app.adapters.turnstile import get_turnstile_verifier
 from app.core.errors import ApiError
 from app.core.router import APIRouter
+from app.core.security import get_current_user
 from app.realtime import redis_client
 from app.realtime.submissions import load_state, new_state, save_state, subscribe
+from app.schemas.account import UserProfile
 from app.schemas.submission import SubmissionAccepted
 from app.worker.pipeline import PIPELINES, STEP_SECONDS, run_submission_pipeline
 
@@ -44,17 +47,12 @@ def _content_and_preview(body: dict, sub_type: str) -> tuple[str, str]:
     return "", body.get("headline") or "Media upload"
 
 
-@router.post("", response_model=SubmissionAccepted, status_code=202)
-def create_submission(
-    body: dict = Body(...),  # noqa: B008 — stub accepts any shape; P3 validates against SubmissionInput
-    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
-):
-    sub_type = body.get("type")
-    if sub_type not in _VALID_TYPES:
-        raise ApiError("bad_request", f"type must be one of {sorted(_VALID_TYPES)}.")
-
-    text, preview = _content_and_preview(body, sub_type)
-    language = body.get("language") or "auto"
+def enqueue_submission(
+    *, sub_type: str, text: str, preview: str, language: str = "auto"
+) -> SubmissionAccepted:
+    """Shared by the HTTP route below and app/webhooks/{whatsapp,telegram}.py (FR-SUBMIT-04:
+    a chat message creates a submission the same way a website POST does — same tracking id
+    shape, same pipeline, same state store)."""
     tracking_id = _generate_tracking_id()
     report_id = f"fc-new-{tracking_id.replace('-', '').lower()}"
 
@@ -77,6 +75,25 @@ def create_submission(
         estimated_seconds=estimated,
         status_url=f"/api/v1/submissions/{tracking_id}",
     )
+
+
+@router.post("", response_model=SubmissionAccepted, status_code=202)
+def create_submission(
+    body: dict = Body(...),  # noqa: B008 — stub accepts any shape; P3 validates against SubmissionInput
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+    user: UserProfile | None = Depends(get_current_user),  # noqa: B008
+):
+    sub_type = body.get("type")
+    if sub_type not in _VALID_TYPES:
+        raise ApiError("bad_request", f"type must be one of {sorted(_VALID_TYPES)}.")
+
+    # FR-AUTH-07: anonymous submissions need a Turnstile token; signed-in ones don't.
+    if user is None and not get_turnstile_verifier().verify(body.get("captchaToken")):
+        raise ApiError("bad_request", "Complete the captcha to submit while signed out.")
+
+    text, preview = _content_and_preview(body, sub_type)
+    language = body.get("language") or "auto"
+    return enqueue_submission(sub_type=sub_type, text=text, preview=preview, language=language)
 
 
 def _status_response(state: dict) -> dict:

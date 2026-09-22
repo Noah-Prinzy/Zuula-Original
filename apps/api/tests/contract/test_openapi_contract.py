@@ -152,6 +152,31 @@ class TestAuth:
         )
         assert r.status_code == 200
 
+    def test_two_factor_resend(self, core_client):
+        r = core_client.post("/api/v1/auth/two-factor/resend", json={"challengeId": "tfc_admin"})
+        assert r.status_code == 202
+
+    def test_oauth_start_redirects_to_provider(self, core_client):
+        r = core_client.get("/api/v1/auth/oauth/google/start", follow_redirects=False)
+        assert r.status_code == 302
+        assert r.headers["location"].startswith("https://google.example/")
+
+    def test_oauth_start_unknown_provider(self, core_client):
+        # openapi.yaml constrains {provider} to enum [google, facebook], so openapi-core
+        # itself rejects anything else before the request reaches app.core.errors' own
+        # not_found check (which exists for a raw, non-contract-validated caller).
+        r = core_client.get("/api/v1/auth/oauth/unknown/start", follow_redirects=False)
+        assert r.status_code == 400
+
+    def test_oauth_callback_redirects(self, core_client):
+        r = core_client.get(
+            "/api/v1/auth/oauth/facebook/callback",
+            params={"code": "stub-code", "state": "/account"},
+            follow_redirects=False,
+        )
+        assert r.status_code == 302
+        assert r.headers["location"] == "/account"
+
     def test_sign_out(self, core_client):
         assert core_client.post("/api/v1/auth/sign-out").status_code == 204
 
@@ -215,18 +240,32 @@ class TestApiKeys:
         assert core_client.delete("/api/v1/me/api-keys/k1", headers=JOURNALIST).status_code == 204
 
 
+ANON_SUBMISSION = {"type": "text", "content": "x" * 30, "captchaToken": "stub-token"}
+
+
 class TestSubmissions:
     def test_create(self, core_client):
-        r = core_client.post("/api/v1/submissions", json={"type": "text", "content": "x" * 30})
+        r = core_client.post("/api/v1/submissions", json=ANON_SUBMISSION)
         assert r.status_code == 202
         assert r.json()["trackingId"]
+
+    def test_create_anonymous_without_captcha_rejected(self, core_client):
+        # FR-AUTH-07: no captchaToken and no signed-in role (core_client sends the sessionAuth
+        # cookie so openapi-core's own security check passes, but no X-Zuula-Role header, so
+        # app.core.security.get_current_user sees no one signed in).
+        r = core_client.post("/api/v1/submissions", json={"type": "text", "content": "x" * 30})
+        assert r.status_code == 400
+
+    def test_create_signed_in_without_captcha_ok(self, core_client):
+        r = core_client.post(
+            "/api/v1/submissions", json={"type": "text", "content": "x" * 30}, headers=PUBLIC
+        )
+        assert r.status_code == 202
 
     def test_status(self, core_client):
         # Celery runs eagerly in tests (tests/conftest.py) with pipeline_step_scale=0, so by
         # the time create_submission() returns, the pipeline has already run to completion.
-        created = core_client.post(
-            "/api/v1/submissions", json={"type": "text", "content": "x" * 30}
-        ).json()
+        created = core_client.post("/api/v1/submissions", json=ANON_SUBMISSION).json()
         r = core_client.get(f"/api/v1/submissions/{created['trackingId']}")
         assert r.status_code == 200, r.text
         body = r.json()
@@ -239,9 +278,7 @@ class TestSubmissions:
         assert core_client.get("/api/v1/submissions/ZL-9999-99").status_code == 404
 
     def test_events_replays_to_done(self, core_client):
-        created = core_client.post(
-            "/api/v1/submissions", json={"type": "text", "content": "x" * 30}
-        ).json()
+        created = core_client.post("/api/v1/submissions", json=ANON_SUBMISSION).json()
         r = core_client.get(f"/api/v1/submissions/{created['trackingId']}/events")
         assert r.status_code == 200
         assert "event: done" in r.text
@@ -249,10 +286,68 @@ class TestSubmissions:
 
     def test_url_with_fail_in_it_fails(self, core_client):
         created = core_client.post(
-            "/api/v1/submissions", json={"type": "url", "url": "https://example.com/fail-demo"}
+            "/api/v1/submissions",
+            json={
+                "type": "url",
+                "url": "https://example.com/fail-demo",
+                "captchaToken": "stub-token",
+            },
         ).json()
         r = core_client.get(f"/api/v1/submissions/{created['trackingId']}")
         assert r.json()["status"] == "failed"
+
+
+class TestWebhooks:
+    # These two go through a plain, unvalidated client rather than core_client: openapi-core's
+    # Starlette path/parameter matching mishandles a literal "." in a query parameter name
+    # (confirmed in isolation — a `hub_mode` alias validates fine through the same middleware,
+    # `hub.mode` always 400s before the request even reaches the route). Meta's real Cloud API
+    # sends exactly hub.mode/hub.verify_token/hub.challenge, so the contract keeps those names
+    # rather than working around the test tool; only these two tests can't use the contract-
+    # validating client. The request/response shape is still declared in openapi.yaml and
+    # still worth getting right — it just can't be checked by this particular library today.
+    def test_whatsapp_verify_matching_token(self):
+        # AdaptersSettings.whatsapp_verify_token defaults to "" (no .env override in tests),
+        # so an empty token here is the one that matches.
+        client = TestClient(_app, base_url="https://zuula.ug")
+        r = client.get(
+            "/webhooks/whatsapp",
+            params={"hub.mode": "subscribe", "hub.verify_token": "", "hub.challenge": "c123"},
+        )
+        assert r.status_code == 200
+        assert r.text == "c123"
+
+    def test_whatsapp_verify_wrong_token(self):
+        client = TestClient(_app, base_url="https://zuula.ug")
+        r = client.get(
+            "/webhooks/whatsapp",
+            params={"hub.mode": "subscribe", "hub.verify_token": "wrong", "hub.challenge": "c123"},
+        )
+        assert r.status_code == 403
+
+    def test_whatsapp_receive_message(self, core_client):
+        payload = {
+            "entry": [
+                {
+                    "changes": [
+                        {
+                            "value": {
+                                "messages": [
+                                    {"from": "256700000000", "text": {"body": "Is this claim true?"}}
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+        r = core_client.post("/webhooks/whatsapp", json=payload)
+        assert r.status_code == 200
+
+    def test_telegram_receive_message(self, core_client):
+        payload = {"message": {"chat": {"id": 42}, "text": "Is this claim true?"}}
+        r = core_client.post("/webhooks/telegram", json=payload)
+        assert r.status_code == 200
 
 
 class TestRatings:

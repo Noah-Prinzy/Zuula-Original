@@ -51,10 +51,12 @@ there means the code and the contract have drifted — either fix the route or f
 
 `tests/pipeline/` tests `app/worker/pipeline.py`, `app/providers/analysis.py` and
 `app/realtime/` directly (step sequencing per submission type, the failure path, pub/sub).
-Both suites run against a fake Redis (`tests/conftest.py`, `fakeredis`) with Celery in eager
-mode and pipeline step durations scaled to 0 — no live Redis server or worker process needed,
-and the suite doesn't spend real seconds sleeping through a text submission's ~8-second
-simulated pipeline.
+`tests/adapters/` tests each `app/adapters/` module directly (OAuth URL/profile shape,
+WhatsApp/Telegram payload parsing, Turnstile presence check, ...). All three suites run
+against a fake Redis (`tests/conftest.py`, `fakeredis`) with Celery in eager mode and
+pipeline step durations scaled to 0 — no live Redis server or worker process needed, and the
+suite doesn't spend real seconds sleeping through a text submission's ~8-second simulated
+pipeline.
 
 ## Two OpenAPI documents
 
@@ -83,18 +85,21 @@ app/
   stubs/                 In-memory sample data transliterated from apps/web/lib/mock/*.ts
   providers/
     analysis.py          AnalysisProvider interface + StubAnalysisProvider (the pipeline's AI step)
+  adapters/               One interface + stub per Step 4 integration (oauth, sms, turnstile, clamav, storage, email, whatsapp, telegram) — see the ADR for what each is wired into
   realtime/
     redis_client.py       Production get_redis()/get_async_redis() wiring
     submissions.py         Shared submission state + pub/sub (worker <-> API process), redis-client-agnostic for tests
   api/v1/                 Core API routers (auth, account, api-keys, submissions, fact-checks, ratings, review, notifications, admin)
   partner/v1/             Partner API routers (checks, fact-checks)
+  webhooks/                Inbound WhatsApp/Telegram webhooks (FR-SUBMIT-04) — a message becomes a submission the same way a website POST does
   worker/
     __init__.py            Celery app + a `ping` task
     pipeline.py             The real submission pipeline (PIPELINES/STEP_SECONDS mirror apps/web/lib/analysis.ts)
 tests/
   contract/                 The openapi-core-backed contract test suite
   pipeline/                 Direct tests of the pipeline task, AnalysisProvider, and realtime pub/sub
-  conftest.py                Shared fake-Redis + eager-Celery fixture both suites use
+  adapters/                 Direct tests of each app/adapters/ module
+  conftest.py                Shared fake-Redis + eager-Celery fixture all three suites use
 ```
 
 ### A note on `response_model_exclude_none`
@@ -120,11 +125,16 @@ This is all documented more fully in the ADR, but briefly:
   Writes (ratings, review decisions, admin edits, etc.) don't persist across requests.
 - **The submission pipeline is real** (Celery, `app/worker/pipeline.py`): a submission
   actually runs through named steps with real timing and live SSE progress, matching
-  `apps/web/lib/analysis.ts` exactly. What's still a stand-in inside it: ClamAV scanning,
-  storage and transcription are simulated stages (no real ClamAV/S3/Whisper calls — those
-  adapters are Step 4), and the AI/verdict step (`app.providers.analysis`) deterministically
-  returns one of the existing sample reports' analysis rather than a freshly generated one.
-  Submission state lives in Redis with a 1-hour TTL, not a database — there's no persisted
-  submission history yet.
+  `apps/web/lib/analysis.ts` exactly. The AI/verdict step (`app.providers.analysis`)
+  deterministically returns one of the existing sample reports' analysis rather than a
+  freshly generated one. Submission state lives in Redis with a 1-hour TTL, not a database —
+  there's no persisted submission history yet.
+- **Every integration adapter is a stub** (`app/adapters/`): OAuth, SMS, email, Turnstile,
+  ClamAV, S3 storage, WhatsApp and Telegram all have a real interface wired into a real call
+  site (see the ADR's table), but none of them call the actual service — no request to
+  Google/Meta, no SMS or email actually sent, no file actually scanned or stored. Submitting
+  by WhatsApp/Telegram works end to end (parses the real payload shape, creates a real
+  submission through the same pipeline a website POST uses) except that no reply is actually
+  sent back.
 - **Rate limiting** (partner API) is an in-memory per-process counter, not the real
   Redis-backed limiter.

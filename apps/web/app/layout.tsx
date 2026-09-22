@@ -8,6 +8,7 @@ import { MOTION_INIT_SCRIPT } from "@/components/motion/motion-init"
 import { RevealObserver } from "@/components/motion/reveal-observer"
 import { IntlProvider } from "@/components/providers/intl-provider"
 import { SessionProvider } from "@/components/providers/session-provider"
+import { ServiceWorker } from "@/components/pwa/service-worker"
 import { RouteProgress } from "@/components/shell/route-progress"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
@@ -78,6 +79,7 @@ export default async function RootLayout({
           <RouteProgress />
         </Suspense>
         <RevealObserver />
+        <ServiceWorker />
         <IntlProvider locale={locale} messages={messages}>
           <ThemeProvider>
             <SessionProvider>

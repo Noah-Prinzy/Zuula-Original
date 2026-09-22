@@ -711,19 +711,19 @@
     "headline": {
       "line1Before": "Check a",
       "line1After": "",
-      "line1Words": [
-        "claim",
-        "rumour",
-        "photo",
-        "video",
-        "voice note"
-      ],
+      "line1Words": {
+        "0": "claim",
+        "1": "rumour",
+        "2": "photo",
+        "3": "video",
+        "4": "voice note"
+      },
       "line2Before": "before you",
       "line2After": "it",
-      "line2Words": [
-        "share",
-        "believe"
-      ]
+      "line2Words": {
+        "0": "share",
+        "1": "believe"
+      }
     },
     "subtitle": "Paste a message, a link or upload media. Zuula tells you whether it is authentic, false or AI-generated — and <scribble>shows you the sources</scribble>.",
     "carousel": {

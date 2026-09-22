@@ -1,9 +1,11 @@
+import { LOCALES } from "@/lib/locales"
+
 import { PHOTOS, type Photo } from "./photos"
 
 export type RoutePhoto = { photo: Photo; position?: string }
 
 // One background photo per page (RouteBackdrop). The most specific prefix wins, so list
-// longer paths first. Home ("/") is left out: its full-screen hero brings its own photo.
+// longer paths first.
 const ROUTES: [prefix: string, entry: RoutePhoto][] = [
   // Public
   ["/about", { photo: PHOTOS.ugandaHills, position: "center 60%" }],
@@ -35,8 +37,12 @@ const ROUTES: [prefix: string, entry: RoutePhoto][] = [
 
 const FALLBACK: RoutePhoto = { photo: PHOTOS.kampalaSkyline }
 
+// Home: "/" in the address bar, or "/<locale>" after proxy.ts rewrites it on the server.
+const HOME: RoutePhoto = { photo: PHOTOS.kampalaSkyline, position: "center 40%" }
+const HOME_PATHS = new Set(["/", ...LOCALES.map((l) => `/${l.code}`)])
+
 export function photoForPath(pathname: string): RoutePhoto | null {
-  if (pathname === "/") return null
+  if (HOME_PATHS.has(pathname)) return HOME
   for (const [prefix, entry] of ROUTES) {
     if (
       pathname === prefix ||

@@ -12,6 +12,7 @@ export function PhotoCredit({
   className,
   ...props
 }: { photo: Photo } & React.ComponentProps<"a">) {
+  if (!photo.credit) return null
   return (
     <a
       {...props}

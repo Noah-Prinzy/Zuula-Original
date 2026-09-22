@@ -1,7 +1,8 @@
 import Link from "next/link"
 
 import { ArticleSections, type ArticleSection } from "@/components/shell/article-sections"
-import { PageHero, PageSheet } from "@/components/decor/page-sheet"
+import { PageSheet } from "@/components/decor/page-sheet"
+import { PageHeader } from "@/components/shell/page-header"
 import { Badge } from "@/components/ui/badge"
 
 export const metadata = {
@@ -149,17 +150,18 @@ const SECTIONS: ArticleSection[] = [
 
 export default function PrivacyPage() {
   return (
-    <>
-      <PageHero title="Privacy" description="How we collect, use and protect your data.">
-        <Badge variant="outline" className="enter mt-2 w-fit border-white/40 text-white [--d:4]">
+    <PageSheet>
+      <PageHeader
+        title="Privacy"
+        description="How we collect, use and protect your data."
+        className="page-container pt-8"
+      />
+      <div className="page-container flex flex-col gap-10 py-10">
+        <Badge variant="outline" className="w-fit">
           Last updated {LAST_UPDATED}
         </Badge>
-      </PageHero>
-      <PageSheet>
-        <div className="page-container flex flex-col gap-10 py-10">
-          <ArticleSections sections={SECTIONS} />
-        </div>
-      </PageSheet>
-    </>
+        <ArticleSections sections={SECTIONS} />
+      </div>
+    </PageSheet>
   )
 }

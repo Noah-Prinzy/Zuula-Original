@@ -9,16 +9,20 @@ import kampalaStreet from "@/public/images/kampala-street.jpg"
 import kampalaSunset from "@/public/images/kampala-sunset.jpg"
 import lakeVictoria from "@/public/images/lake-victoria.jpg"
 import murchisonFalls from "@/public/images/murchison-falls.jpg"
+import newspaperArchive from "@/public/images/newspaper-archive.webp"
+import newspaperBundle from "@/public/images/newspaper-bundle.webp"
 import newspapers from "@/public/images/newspapers.jpg"
 import nightRoad from "@/public/images/night-road.jpg"
 import nileBoat from "@/public/images/nile-boat.jpg"
 import teaRoad from "@/public/images/tea-road.jpg"
 import ugandaHills from "@/public/images/uganda-hills.jpg"
+import worldWire from "@/public/images/world-wire.webp"
 
 export type Photo = {
   src: StaticImageData
   alt: string
-  credit: { name: string; url: string }
+  /** null when the source/licence isn't known (e.g. supplied directly, not sourced from Unsplash). */
+  credit: { name: string; url: string } | null
 }
 
 // Decorative photography, all from Unsplash (free licence), stored at 2400–3200px so they
@@ -55,6 +59,21 @@ export const PHOTOS = {
       name: "AbsolutVision",
       url: "https://unsplash.com/photos/WYd_PkCa1BY",
     },
+  },
+  newspaperArchive: {
+    src: newspaperArchive,
+    alt: "Stacks of old newspaper archives",
+    credit: null,
+  },
+  newspaperBundle: {
+    src: newspaperBundle,
+    alt: "A bundle of newspapers tied with string",
+    credit: null,
+  },
+  worldWire: {
+    src: worldWire,
+    alt: "A world map tracking a wire-service flight path",
+    credit: null,
   },
   crimsonTexture: {
     src: crimsonTexture,

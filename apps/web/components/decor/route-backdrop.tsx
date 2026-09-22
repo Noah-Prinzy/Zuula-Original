@@ -22,7 +22,7 @@ export function RouteBackdrop() {
       className="pointer-events-none fixed inset-0 -z-10 bg-foreground dark:bg-card"
     >
       <Image
-        key={entry.photo.credit.url}
+        key={entry.photo.src.src}
         src={entry.photo.src}
         alt=""
         fill

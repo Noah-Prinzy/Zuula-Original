@@ -45,9 +45,10 @@ export function PageHero({
   )
 }
 
-// Full-width surface for a page's body: a solid card that docks under the hero photo, its top
-// corners rounded and lifted off the backdrop with a shadow. A clean, deliberate edge — not a
-// flat rectangle butting into the photo, and no fade/blend trick doing the work instead.
+// Full-width surface for a page's body: a solid card that docks under the hero photo, square
+// corners to match the app's sharp-edged design language (inputs, badges, cards are all
+// rounded-none), lifted off the backdrop with a shadow. A clean, deliberate edge — not a flat
+// rectangle butting into the photo, and no fade/blend trick doing the work instead.
 export function PageSheet({
   className,
   children,
@@ -58,7 +59,7 @@ export function PageSheet({
   return (
     <div
       className={cn(
-        "relative flex flex-col rounded-t-3xl border-t bg-background shadow-[0_-20px_40px_-28px_rgba(0,0,0,0.45)] md:rounded-t-[2.5rem]",
+        "relative flex flex-col border-t bg-background shadow-[0_-20px_40px_-28px_rgba(0,0,0,0.45)]",
         className
       )}
     >

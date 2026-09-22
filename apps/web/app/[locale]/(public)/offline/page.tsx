@@ -1,7 +1,8 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
-import { PageHero, PageSheet } from "@/components/decor/page-sheet"
+import { PageSheet } from "@/components/decor/page-sheet"
+import { PageHeader } from "@/components/shell/page-header"
 import { SavedReports } from "@/components/pwa/saved-reports"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -15,17 +16,11 @@ export default async function OfflinePage() {
   const t = await getTranslations("Offline")
 
   return (
-    <>
-      <PageHero
-        eyebrow={t("eyebrow")}
-        title={t("title")}
-        description={t("description")}
-      />
-      <PageSheet>
-        <div className="page-container max-w-4xl py-10">
-          <SavedReports />
-        </div>
-      </PageSheet>
-    </>
+    <PageSheet>
+      <PageHeader title={t("title")} description={t("description")} className="page-container pt-8" />
+      <div className="page-container max-w-4xl py-10">
+        <SavedReports />
+      </div>
+    </PageSheet>
   )
 }

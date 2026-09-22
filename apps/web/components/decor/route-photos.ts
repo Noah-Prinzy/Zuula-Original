@@ -10,13 +10,9 @@ const ROUTES: [prefix: string, entry: RoutePhoto][] = [
   // Public
   ["/about", { photo: PHOTOS.ugandaHills, position: "center 60%" }],
   ["/fact-checks/", { photo: PHOTOS.kampalaSunset }],
-  ["/fact-checks", { photo: PHOTOS.newspapers }],
-  ["/verify", { photo: PHOTOS.crimsonTexture }],
-  ["/developers", { photo: PHOTOS.crimsonWaves }],
-  ["/offline", { photo: PHOTOS.hillRoad }],
-  ["/legal/privacy", { photo: PHOTOS.lakeVictoria }],
-  ["/legal/terms", { photo: PHOTOS.nileBoat }],
-  ["/submissions", { photo: PHOTOS.teaRoad }],
+  ["/fact-checks", { photo: PHOTOS.newspaperBundle }],
+  ["/verify", { photo: PHOTOS.newspaperArchive, position: "center 30%" }],
+  ["/developers", { photo: PHOTOS.worldWire }],
   // Auth
   ["/sign-in/two-factor", { photo: PHOTOS.crimsonWaves }],
   ["/sign-in", { photo: PHOTOS.teaRoad }],
@@ -24,27 +20,39 @@ const ROUTES: [prefix: string, entry: RoutePhoto][] = [
   ["/sign-up", { photo: PHOTOS.boatsSunset }],
   ["/forgot-password", { photo: PHOTOS.kampalaStreet }],
   ["/reset-password", { photo: PHOTOS.nightRoad }],
-  // Signed-in app
-  ["/account/activity", { photo: PHOTOS.murchisonFalls }],
-  ["/account", { photo: PHOTOS.boatsSunset }],
-  ["/admin/sources", { photo: PHOTOS.nightRoad }],
-  ["/admin", { photo: PHOTOS.kampalaStreet }],
+]
+
+// These routes are content-dense or purely utilitarian; they skip the full-page backdrop photo
+// entirely (RouteBackdrop renders nothing) instead of forcing a photo onto every screen.
+const NO_PHOTO_PATHS = [
+  "/offline",
+  "/legal/privacy",
+  "/legal/terms",
+  "/submissions",
+  "/account/activity",
+  "/account",
+  "/admin/sources",
+  "/admin",
 ]
 
 const FALLBACK: RoutePhoto = { photo: PHOTOS.kampalaSkyline }
 
 // Home: "/" in the address bar, or "/<locale>" after proxy.ts rewrites it on the server.
-const HOME: RoutePhoto = { photo: PHOTOS.kampalaSkyline, position: "center 40%" }
+const HOME: RoutePhoto = { photo: PHOTOS.newspapers, position: "75% 45%" }
 const HOME_PATHS = new Set(["/", ...LOCALES.map((l) => `/${l.code}`)])
+
+function matches(pathname: string, prefix: string) {
+  return (
+    pathname === prefix ||
+    pathname.startsWith(prefix.endsWith("/") ? prefix : `${prefix}/`)
+  )
+}
 
 export function photoForPath(pathname: string): RoutePhoto | null {
   if (HOME_PATHS.has(pathname)) return HOME
+  if (NO_PHOTO_PATHS.some((prefix) => matches(pathname, prefix))) return null
   for (const [prefix, entry] of ROUTES) {
-    if (
-      pathname === prefix ||
-      pathname.startsWith(prefix.endsWith("/") ? prefix : `${prefix}/`)
-    )
-      return entry
+    if (matches(pathname, prefix)) return entry
   }
   return FALLBACK
 }

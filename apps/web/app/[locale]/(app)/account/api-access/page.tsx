@@ -1,12 +1,20 @@
+import type { Metadata } from "next"
+import { useTranslations } from "next-intl"
+import { getTranslations } from "next-intl/server"
+
 import { PageHeader } from "@/components/shell/page-header"
 import { ApiKeys } from "@/components/account/api-keys"
 
-export const metadata = { title: "API Keys" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Pages.apiKeys")
+  return { title: t("title") }
+}
 
 export default function Page() {
+  const t = useTranslations("Pages.apiKeys")
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="API Keys" description="Check content from your own newsroom tools." />
+      <PageHeader title={t("title")} description={t("description")} />
       <ApiKeys />
     </div>
   )

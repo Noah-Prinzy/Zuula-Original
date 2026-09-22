@@ -1204,6 +1204,85 @@
       "reason": "Reason"
     }
   },
+  "Pages": {
+    "activity": {
+      "title": "Activity",
+      "description": "Everything you've submitted and rated."
+    },
+    "alerts": {
+      "title": "Alerts",
+      "description": "Choose the topics you follow and how alerts reach you."
+    },
+    "apiKeys": {
+      "title": "API Keys",
+      "description": "Check content from your own newsroom tools."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Results of your checks, topic alerts and announcements."
+    },
+    "profile": {
+      "title": "Profile",
+      "description": "Your details, security and personal data."
+    },
+    "accreditation": {
+      "title": "Accreditation",
+      "description": "Verified Journalists help the community judge verdicts."
+    },
+    "auditLog": {
+      "title": "Audit Log",
+      "description": "Every administrative and expert action, with who, when and why."
+    },
+    "broadcasts": {
+      "title": "Broadcasts",
+      "description": "Emergency alerts about high-priority misinformation."
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Escalation thresholds, rating weights, review SLA and retraining."
+    },
+    "moderation": {
+      "title": "Moderation",
+      "description": "Reported content and suspected rating manipulation."
+    },
+    "adminOverview": {
+      "title": "Admin overview",
+      "description": "Year-one targets, platform activity and system health."
+    },
+    "reports": {
+      "title": "Reports",
+      "description": "Monthly misinformation trends in Uganda."
+    },
+    "sources": {
+      "title": "Sources",
+      "description": "The trusted sources claims are cross-referenced against."
+    },
+    "users": {
+      "title": "Users",
+      "description": "Activate, suspend, approve accreditations and change roles."
+    },
+    "reviewHistory": {
+      "title": "Review history",
+      "description": "Every decision you've made, as recorded in the audit log."
+    },
+    "reviewOverview": {
+      "title": "Review overview",
+      "description": "Flagged verdicts, review deadlines and your recent decisions."
+    },
+    "reviewQueue": {
+      "title": "Review queue",
+      "description": "Verdicts flagged by the community, readers or low AI confidence. Most urgent first."
+    },
+    "caseReview": {
+      "title": "Case review",
+      "description": "Check the evidence, then confirm or override the verdict.",
+      "metaTitle": "Case {id}"
+    },
+    "site": {
+      "title": "Zuula — Uganda Fact-Guard",
+      "description": "AI-powered fake news and misinformation detection for Uganda. Developed by Victoria University CIT."
+    }
+  },
   "Community": {
     "status": {
       "verified": {

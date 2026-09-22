@@ -2,7 +2,7 @@ import { Suspense } from "react"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { locale as rootLocale } from "next/root-params"
-import { getMessages } from "next-intl/server"
+import { getMessages, getTranslations } from "next-intl/server"
 import { Geist, Geist_Mono, Lora, Raleway } from "next/font/google"
 
 import "../globals.css"
@@ -39,10 +39,9 @@ const fontMono = Geist_Mono({
   variable: "--font-mono",
 })
 
-export const metadata: Metadata = {
-  title: "Zuula — Uganda Fact-Guard",
-  description:
-    "AI-powered fake news and misinformation detection for Uganda. Developed by Victoria University CIT.",
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Pages.site")
+  return { title: t("title"), description: t("description") }
 }
 
 export default async function RootLayout({
@@ -56,6 +55,7 @@ export default async function RootLayout({
   const locale = await rootLocale()
   if (!isLocale(locale)) notFound()
   const messages = await getMessages()
+  const tc = await getTranslations("Common")
 
   return (
     <html
@@ -78,7 +78,7 @@ export default async function RootLayout({
           href="#main"
           className="sr-only z-50 bg-primary px-3 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
         >
-          Skip to content
+          {tc("skipToContent")}
         </a>
         <Suspense fallback={null}>
           <RouteProgress />

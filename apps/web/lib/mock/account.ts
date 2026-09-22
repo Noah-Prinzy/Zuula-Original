@@ -205,7 +205,10 @@ export const SAMPLE_API_USAGE = { usedThisHour: 37, last24h: 412 }
 
 // ---- Formatting ----
 
-export function relativeTime(iso: string, now = new Date("2026-09-21T12:00:00+03:00")) {
+// Fixed "now" for the sample data, so server and browser render the same relative times.
+export const MOCK_NOW = new Date("2026-09-21T12:00:00+03:00")
+
+export function relativeTime(iso: string, now = MOCK_NOW) {
   const diff = (now.getTime() - new Date(iso).getTime()) / 1000
   if (diff < 60) return "just now"
   if (diff < 3600) return `${Math.floor(diff / 60)} min ago`

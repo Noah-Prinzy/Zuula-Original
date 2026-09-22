@@ -3,8 +3,9 @@
 import * as React from "react"
 import Link from "next/link"
 import { RiCheckDoubleLine, RiMore2Line, RiNotificationOffLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
-import { NotificationIcon, notificationLabel } from "@/components/account/notification-icon"
+import { NotificationIcon, useNotificationLabel } from "@/components/account/notification-icon"
 import {
   markAllRead,
   markRead,
@@ -21,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { relativeTime } from "@/lib/mock/account"
+import { useRelativeTime } from "@/hooks/use-relative-time"
 import { cn } from "@/lib/utils"
 
 type Filter = "all" | "unread"
@@ -29,6 +30,11 @@ type Filter = "all" | "unread"
 export function NotificationsList() {
   const { items, unread } = useNotifications()
   const [filter, setFilter] = React.useState<Filter>("all")
+  const t = useTranslations("Account.notifications")
+  const tn = useTranslations("Notifications")
+  const tc = useTranslations("Common")
+  const notificationLabel = useNotificationLabel()
+  const relativeTime = useRelativeTime()
   const shown = filter === "unread" ? items.filter((n) => !n.read) : items
 
   return (
@@ -40,17 +46,17 @@ export function NotificationsList() {
           size="sm"
           value={filter}
           onValueChange={(v) => v && setFilter(v as Filter)}
-          aria-label="Filter notifications"
+          aria-label={t("filterLabel")}
         >
-          <ToggleGroupItem value="all">All ({items.length})</ToggleGroupItem>
-          <ToggleGroupItem value="unread">Unread ({unread})</ToggleGroupItem>
+          <ToggleGroupItem value="all">{t("all", { count: items.length })}</ToggleGroupItem>
+          <ToggleGroupItem value="unread">{t("unread", { count: unread })}</ToggleGroupItem>
         </ToggleGroup>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={markAllRead} disabled={unread === 0}>
-            <RiCheckDoubleLine aria-hidden /> Mark all read
+            <RiCheckDoubleLine aria-hidden /> {tn("markAllRead")}
           </Button>
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/account/alerts">Alert settings</Link>
+            <Link href="/account/alerts">{t("alertSettings")}</Link>
           </Button>
         </div>
       </div>
@@ -61,8 +67,8 @@ export function NotificationsList() {
             <EmptyMedia variant="icon">
               <RiNotificationOffLine aria-hidden />
             </EmptyMedia>
-            <EmptyTitle>{filter === "unread" ? "You're all caught up" : "No notifications"}</EmptyTitle>
-            <EmptyDescription>Results of your checks and alerts for topics you follow appear here.</EmptyDescription>
+            <EmptyTitle>{filter === "unread" ? t("emptyUnread") : t("emptyAll")}</EmptyTitle>
+            <EmptyDescription>{t("emptyBody")}</EmptyDescription>
           </EmptyHeader>
         </Empty>
       ) : (
@@ -88,20 +94,20 @@ export function NotificationsList() {
                 <p className="text-sm text-muted-foreground">{n.body}</p>
               </div>
               <div className="relative z-10 flex items-start gap-2">
-                {!n.read && <span className="mt-2 size-2 bg-primary" aria-label="Unread" />}
+                {!n.read && <span className="mt-2 size-2 bg-primary" aria-label={t("unreadDot")} />}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon-sm" aria-label={`Options for “${n.title}”`}>
+                    <Button variant="ghost" size="icon-sm" aria-label={t("options", { title: n.title })}>
                       <RiMore2Line aria-hidden />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     {n.read ? (
-                      <DropdownMenuItem onSelect={() => markUnread(n.id)}>Mark as unread</DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => markUnread(n.id)}>{t("markUnread")}</DropdownMenuItem>
                     ) : (
-                      <DropdownMenuItem onSelect={() => markRead(n.id)}>Mark as read</DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => markRead(n.id)}>{t("markRead")}</DropdownMenuItem>
                     )}
-                    <DropdownMenuItem onSelect={() => removeNotification(n.id)}>Remove</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => removeNotification(n.id)}>{tc("remove")}</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

@@ -9,6 +9,7 @@ import {
   RiTelegramLine,
   RiWhatsappLine,
 } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { SettingsSection } from "@/components/account/settings-section"
@@ -16,35 +17,34 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Switch } from "@/components/ui/switch"
+import { useContentLabels } from "@/hooks/use-content-labels"
 import { cn } from "@/lib/utils"
 
 // FR-NOTIFY-01: topic subscriptions.
+// Names come from the Categories namespace, hints from Account.alerts.topicHints.<id>.
 const TOPICS = [
-  { id: "health", label: "Health", description: "Disease outbreaks, cures, vaccines" },
-  { id: "politics", label: "Politics", description: "Government, parliament, public figures" },
-  { id: "elections", label: "Elections", description: "Voting, results, campaigns" },
-  { id: "economy", label: "Economy", description: "Prices, currency, taxes, jobs" },
-  { id: "education", label: "Education", description: "Schools, exams, universities" },
-  { id: "technology", label: "Technology", description: "Scams, phishing, mobile money" },
-  { id: "weather", label: "Weather", description: "Floods, droughts, disasters" },
-  { id: "security", label: "Security", description: "Crime, conflict, public safety" },
-]
-
-// FR-NOTIFY-02 / 04: delivery channels.
-const CHANNELS = [
-  { id: "inapp", label: "In-app", description: "The bell in Zuula", icon: RiNotification3Line, fixed: true },
-  { id: "email", label: "Email", description: "To your account email", icon: RiMailLine },
-  { id: "push", label: "Push notifications", description: "On phones where Zuula is installed", icon: RiSmartphoneLine },
-  { id: "sms", label: "SMS", description: "Needs a phone number on your profile", icon: RiMessage2Line },
-  { id: "whatsapp", label: "WhatsApp", description: "Connect your WhatsApp number", icon: RiWhatsappLine, connect: true },
-  { id: "telegram", label: "Telegram", description: "Connect the Zuula Telegram bot", icon: RiTelegramLine, connect: true },
+  { id: "health", category: "Health" },
+  { id: "politics", category: "Politics" },
+  { id: "elections", category: "Elections" },
+  { id: "economy", category: "Economy" },
+  { id: "education", category: "Education" },
+  { id: "technology", category: "Technology" },
+  { id: "weather", category: "Weather" },
+  { id: "security", category: "Security" },
 ] as const
 
-const FREQUENCIES = [
-  { value: "instant", label: "As it happens", description: "Best for journalists and reviewers" },
-  { value: "daily", label: "Daily digest", description: "One summary every evening" },
-  { value: "weekly", label: "Weekly digest", description: "One summary every Monday" },
-]
+// FR-NOTIFY-02 / 04: delivery channels. Text lives in Account.alerts.channels.<id>.
+const CHANNELS = [
+  { id: "inapp", icon: RiNotification3Line, fixed: true },
+  { id: "email", icon: RiMailLine },
+  { id: "push", icon: RiSmartphoneLine },
+  { id: "sms", icon: RiMessage2Line },
+  { id: "whatsapp", icon: RiWhatsappLine, connect: true },
+  { id: "telegram", icon: RiTelegramLine, connect: true },
+] as const
+
+const FREQUENCIES = ["instant", "daily", "weekly"] as const
+type Frequency = (typeof FREQUENCIES)[number]
 
 function ToggleRow({
   id,
@@ -85,8 +85,11 @@ export function AlertSettings() {
   const [channels, setChannels] = React.useState<Record<string, boolean>>({ inapp: true, email: true, push: false, sms: false })
   const [connected, setConnected] = React.useState<Record<string, boolean>>({})
   const [types, setTypes] = React.useState({ results: true, viral: true, reviews: true })
-  const [frequency, setFrequency] = React.useState("instant")
+  const [frequency, setFrequency] = React.useState<Frequency>("instant")
   const [dirty, setDirty] = React.useState(false)
+  const t = useTranslations("Account.alerts")
+  const ta = useTranslations("Account")
+  const labels = useContentLabels()
 
   const touch = <T,>(fn: (v: T) => void) => (v: T) => {
     fn(v)
@@ -96,16 +99,16 @@ export function AlertSettings() {
 
   function save() {
     setDirty(false)
-    toast.success("Alert preferences saved", {
-      description: `${followed} topic${followed === 1 ? "" : "s"} · ${FREQUENCIES.find((f) => f.value === frequency)?.label}`,
+    toast.success(t("saved"), {
+      description: t("savedSummary", { count: followed, frequency: t(`frequencies.${frequency}.label`) }),
     })
   }
 
   const saveBar = (
     <>
-      {dirty && <span className="mr-auto text-xs text-muted-foreground">You have unsaved changes</span>}
+      {dirty && <span className="mr-auto text-xs text-muted-foreground">{ta("unsavedChanges")}</span>}
       <Button onClick={save} disabled={!dirty}>
-        Save preferences
+        {t("save")}
       </Button>
     </>
   )
@@ -114,40 +117,40 @@ export function AlertSettings() {
     <div className="grid items-start gap-6 xl:grid-cols-2">
       <SettingsSection
         id="topics"
-        title="Topics you follow"
-        description="Get alerted when new fact-checks are published in these topics."
+        title={t("topicsTitle")}
+        description={t("topicsDescription")}
         footer={saveBar}
         className="xl:row-span-2"
       >
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="xs" onClick={() => touch(setTopics)(Object.fromEntries(TOPICS.map((t) => [t.id, true])))}>
-            Follow all
+          <Button variant="outline" size="xs" onClick={() => touch(setTopics)(Object.fromEntries(TOPICS.map((topic) => [topic.id, true])))}>
+            {t("followAll")}
           </Button>
           <Button variant="outline" size="xs" onClick={() => touch(setTopics)({})}>
-            Clear
+            {t("clear")}
           </Button>
-          <span className="ml-auto text-xs text-muted-foreground">{followed} of {TOPICS.length} followed</span>
+          <span className="ml-auto text-xs text-muted-foreground">{t("followed", { count: followed, total: TOPICS.length })}</span>
         </div>
         <div className="grid gap-2 sm:grid-cols-2">
-          {TOPICS.map((t) => {
-            const on = !!topics[t.id]
+          {TOPICS.map((topic) => {
+            const on = !!topics[topic.id]
             return (
               <label
-                key={t.id}
-                htmlFor={`topic-${t.id}`}
+                key={topic.id}
+                htmlFor={`topic-${topic.id}`}
                 className={cn(
                   "flex cursor-pointer items-start gap-3 border p-3 transition-colors hover:bg-muted/40",
                   on && "border-primary/50 bg-primary/5"
                 )}
               >
                 <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="text-sm font-medium">{t.label}</span>
-                  <span className="text-xs text-muted-foreground">{t.description}</span>
+                  <span className="text-sm font-medium">{labels.category(topic.category)}</span>
+                  <span className="text-xs text-muted-foreground">{t(`topicHints.${topic.id}`)}</span>
                 </div>
                 <Switch
-                  id={`topic-${t.id}`}
+                  id={`topic-${topic.id}`}
                   checked={on}
-                  onCheckedChange={(v) => touch(setTopics)({ ...topics, [t.id]: v })}
+                  onCheckedChange={(v) => touch(setTopics)({ ...topics, [topic.id]: v })}
                 />
               </label>
             )
@@ -155,40 +158,40 @@ export function AlertSettings() {
         </div>
       </SettingsSection>
 
-      <SettingsSection id="alert-types" title="What to alert me about">
+      <SettingsSection id="alert-types" title={t("typesTitle")}>
         <ToggleRow
           id="type-results"
-          label="My submission results"
-          description="When a check you submitted is finished."
+          label={t("types.results.label")}
+          description={t("types.results.description")}
           checked={types.results}
           onChange={(v) => touch(setTypes)({ ...types, results: v })}
         />
         <ToggleRow
           id="type-viral"
-          label="Viral misinformation"
-          description="When a false claim is spreading fast, even outside your topics."
+          label={t("types.viral.label")}
+          description={t("types.viral.description")}
           checked={types.viral}
           onChange={(v) => touch(setTypes)({ ...types, viral: v })}
         />
         <ToggleRow
           id="type-reviews"
-          label="Expert reviews"
-          description="When a verdict you rated is confirmed or changed by an expert."
+          label={t("types.reviews.label")}
+          description={t("types.reviews.description")}
           checked={types.reviews}
           onChange={(v) => touch(setTypes)({ ...types, reviews: v })}
         />
         <ToggleRow
           id="type-broadcast"
-          label="Emergency broadcasts"
-          description="High-priority alerts from Zuula administrators. Always on."
+          label={t("types.broadcast.label")}
+          description={t("types.broadcast.description")}
           checked
           disabled
           onChange={() => {}}
-          extra={<Badge variant="secondary">Required</Badge>}
+          extra={<Badge variant="secondary">{t("required")}</Badge>}
         />
       </SettingsSection>
 
-      <SettingsSection id="delivery" title="How and when" description="Choose where alerts reach you and how often.">
+      <SettingsSection id="delivery" title={t("deliveryTitle")} description={t("deliveryDescription")}>
         <div className="flex flex-col gap-4">
           {CHANNELS.map((c) => {
             const needsConnect = "connect" in c && c.connect && !connected[c.id]
@@ -197,8 +200,8 @@ export function AlertSettings() {
                 key={c.id}
                 id={`channel-${c.id}`}
                 icon={c.icon}
-                label={c.label}
-                description={c.description}
+                label={t(`channels.${c.id}.label`)}
+                description={t(`channels.${c.id}.description`)}
                 checked={"fixed" in c && c.fixed ? true : !!channels[c.id]}
                 disabled={("fixed" in c && c.fixed) || needsConnect}
                 onChange={(v) => touch(setChannels)({ ...channels, [c.id]: v })}
@@ -209,12 +212,12 @@ export function AlertSettings() {
                       size="xs"
                       onClick={() => {
                         setConnected({ ...connected, [c.id]: true })
-                        toast.info(`${c.label} connection is simulated`, {
-                          description: "The real connection flow arrives with the messaging integrations.",
+                        toast.info(t("connectSimulated", { channel: t(`channels.${c.id}.label`) }), {
+                          description: t("connectSimulatedBody"),
                         })
                       }}
                     >
-                      Connect
+                      {t("connect")}
                     </Button>
                   ) : null
                 }
@@ -223,24 +226,24 @@ export function AlertSettings() {
           })}
         </div>
         <fieldset className="flex flex-col gap-2 border-t pt-4">
-          <legend className="mb-2 text-sm font-medium">Frequency for topic alerts</legend>
-          <RadioGroup value={frequency} onValueChange={touch(setFrequency)} className="gap-2">
+          <legend className="mb-2 text-sm font-medium">{t("frequencyLegend")}</legend>
+          <RadioGroup value={frequency} onValueChange={(v) => touch(setFrequency)(v as Frequency)} className="gap-2">
             {FREQUENCIES.map((f) => (
               <label
-                key={f.value}
-                htmlFor={`freq-${f.value}`}
+                key={f}
+                htmlFor={`freq-${f}`}
                 className="flex cursor-pointer items-start gap-3 border p-3 has-[[data-state=checked]]:border-primary/50 has-[[data-state=checked]]:bg-primary/5"
               >
-                <RadioGroupItem id={`freq-${f.value}`} value={f.value} className="mt-0.5" />
+                <RadioGroupItem id={`freq-${f}`} value={f} className="mt-0.5" />
                 <span className="flex flex-col">
-                  <span className="text-sm font-medium">{f.label}</span>
-                  <span className="text-xs text-muted-foreground">{f.description}</span>
+                  <span className="text-sm font-medium">{t(`frequencies.${f}.label`)}</span>
+                  <span className="text-xs text-muted-foreground">{t(`frequencies.${f}.description`)}</span>
                 </span>
               </label>
             ))}
           </RadioGroup>
           <p className="text-xs text-muted-foreground">
-            Results of your own checks and emergency broadcasts are always sent straight away.
+            {t("frequencyNote")}
           </p>
         </fieldset>
       </SettingsSection>

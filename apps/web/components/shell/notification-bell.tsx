@@ -9,7 +9,7 @@ import { markAllRead, markRead, useNotifications } from "@/components/account/no
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { relativeTime } from "@/lib/mock/account"
+import { useRelativeTime } from "@/hooks/use-relative-time"
 import { cn } from "@/lib/utils"
 
 const LATEST = 5
@@ -17,6 +17,7 @@ const LATEST = 5
 export function NotificationBell() {
   const { items, unread } = useNotifications()
   const t = useTranslations("Notifications")
+  const relativeTime = useRelativeTime()
 
   return (
     <Popover>

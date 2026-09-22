@@ -9,6 +9,7 @@ import {
   RiShieldCheckLine,
   RiSmartphoneLine,
 } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { PasswordInput } from "@/components/auth/password-input"
@@ -45,7 +46,6 @@ import { Switch } from "@/components/ui/switch"
 import { identifierKind, isDemoCodeValid, PASSWORD_MIN, passwordStrength } from "@/lib/auth"
 import { LOCALES, type LocaleCode } from "@/lib/locales"
 import { SAMPLE_RATINGS, SAMPLE_SESSIONS, SAMPLE_SUBMISSIONS } from "@/lib/mock/account"
-import { ROLE_LABELS } from "@/lib/roles"
 import { initials } from "@/lib/utils"
 
 function DetailsSection() {
@@ -56,27 +56,30 @@ function DetailsSection() {
   const [district, setDistrict] = React.useState("Kampala")
   const [lang, setLang] = React.useState<LocaleCode>(locale)
   const [errors, setErrors] = React.useState<Record<string, string>>({})
+  const t = useTranslations("Account.profile")
+  const tc = useTranslations("Common")
+  const tr = useTranslations("Roles")
 
   function save(e: React.FormEvent) {
     e.preventDefault()
     const next: Record<string, string> = {}
-    if (name.trim().length < 2) next.name = "Enter your full name."
-    if (email && identifierKind(email) !== "email") next.email = "Enter a valid email address."
-    if (phone && identifierKind(phone) !== "phone") next.phone = "Enter a Ugandan number like 07XX XXX XXX."
-    if (!email && !phone) next.email = "Add an email or a phone number."
+    if (name.trim().length < 2) next.name = t("errors.name")
+    if (email && identifierKind(email) !== "email") next.email = t("errors.email")
+    if (phone && identifierKind(phone) !== "phone") next.phone = t("errors.phone")
+    if (!email && !phone) next.email = t("errors.contact")
     setErrors(next)
     if (Object.keys(next).length) return
     setLocale(lang)
-    toast.success("Profile saved")
+    toast.success(t("saved"))
   }
 
   return (
     <form noValidate onSubmit={save} className="contents">
       <SettingsSection
         id="details"
-        title="Your details"
-        description="Shown with your ratings and comments. Your email and phone are never public."
-        footer={<Button type="submit">Save changes</Button>}
+        title={t("detailsTitle")}
+        description={t("detailsDescription")}
+        footer={<Button type="submit">{tc("saveChanges")}</Button>}
       >
         <div className="flex items-center gap-3">
           <Avatar className="size-12">
@@ -86,29 +89,29 @@ function DetailsSection() {
             <span className="font-medium">{name || "—"}</span>
             {user && (
               <Badge variant="outline" className="w-fit">
-                {ROLE_LABELS[user.role]}
+                {tr(user.role)}
               </Badge>
             )}
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field data-invalid={!!errors.name} className="sm:col-span-2">
-            <FieldLabel htmlFor="profile-name">Full name</FieldLabel>
+            <FieldLabel htmlFor="profile-name">{t("fullName")}</FieldLabel>
             <Input id="profile-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" aria-invalid={!!errors.name} />
             {errors.name && <FieldError>{errors.name}</FieldError>}
           </Field>
           <Field data-invalid={!!errors.email}>
-            <FieldLabel htmlFor="profile-email">Email</FieldLabel>
+            <FieldLabel htmlFor="profile-email">{t("email")}</FieldLabel>
             <Input id="profile-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" aria-invalid={!!errors.email} />
             {errors.email && <FieldError>{errors.email}</FieldError>}
           </Field>
           <Field data-invalid={!!errors.phone}>
-            <FieldLabel htmlFor="profile-phone">Phone (for SMS alerts)</FieldLabel>
+            <FieldLabel htmlFor="profile-phone">{t("phone")}</FieldLabel>
             <Input id="profile-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" placeholder="07XX XXX XXX" aria-invalid={!!errors.phone} />
             {errors.phone && <FieldError>{errors.phone}</FieldError>}
           </Field>
           <Field>
-            <FieldLabel htmlFor="profile-language">Preferred language</FieldLabel>
+            <FieldLabel htmlFor="profile-language">{t("language")}</FieldLabel>
             <NativeSelect id="profile-language" className="w-full" value={lang} onChange={(e) => setLang(e.target.value as LocaleCode)}>
               {LOCALES.map((l) => (
                 <NativeSelectOption key={l.code} value={l.code}>
@@ -116,12 +119,12 @@ function DetailsSection() {
                 </NativeSelectOption>
               ))}
             </NativeSelect>
-            <FieldDescription>Used for the interface and for your alerts.</FieldDescription>
+            <FieldDescription>{t("languageHint")}</FieldDescription>
           </Field>
           <Field>
-            <FieldLabel htmlFor="profile-district">District</FieldLabel>
+            <FieldLabel htmlFor="profile-district">{t("district")}</FieldLabel>
             <Input id="profile-district" value={district} onChange={(e) => setDistrict(e.target.value)} />
-            <FieldDescription>Helps us send you local alerts.</FieldDescription>
+            <FieldDescription>{t("districtHint")}</FieldDescription>
           </Field>
         </div>
       </SettingsSection>
@@ -134,6 +137,8 @@ function PasswordDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
   const [next, setNext] = React.useState("")
   const [confirm, setConfirm] = React.useState("")
   const [error, setError] = React.useState<string | null>(null)
+  const t = useTranslations("Account.profile.password")
+  const tc = useTranslations("Common")
 
   function reset() {
     setCurrent("")
@@ -144,14 +149,14 @@ function PasswordDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
 
   function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (!current) return setError("Enter your current password.")
+    if (!current) return setError(t("currentRequired"))
     if (next.length < PASSWORD_MIN || passwordStrength(next).score < 3)
-      return setError(`Use at least ${PASSWORD_MIN} characters with letters, numbers and symbols.`)
-    if (next !== confirm) return setError("New passwords don't match.")
-    if (next === current) return setError("Choose a password you haven't used before.")
+      return setError(t("weak", { min: PASSWORD_MIN }))
+    if (next !== confirm) return setError(t("mismatch"))
+    if (next === current) return setError(t("reused"))
     onOpenChange(false)
     reset()
-    toast.success("Password changed", { description: "Other devices have been signed out." })
+    toast.success(t("changed"), { description: t("changedBody") })
   }
 
   return (
@@ -165,28 +170,28 @@ function PasswordDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
       <DialogContent>
         <form noValidate onSubmit={submit} className="flex flex-col gap-4">
           <DialogHeader>
-            <DialogTitle>Change password</DialogTitle>
-            <DialogDescription>You&apos;ll stay signed in here. Other devices will be signed out.</DialogDescription>
+            <DialogTitle>{t("title")}</DialogTitle>
+            <DialogDescription>{t("description")}</DialogDescription>
           </DialogHeader>
           <Field>
-            <FieldLabel htmlFor="pw-current">Current password</FieldLabel>
+            <FieldLabel htmlFor="pw-current">{t("current")}</FieldLabel>
             <PasswordInput id="pw-current" value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" />
           </Field>
           <Field>
-            <FieldLabel htmlFor="pw-new">New password</FieldLabel>
+            <FieldLabel htmlFor="pw-new">{t("new")}</FieldLabel>
             <PasswordInput id="pw-new" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" aria-describedby="pw-new-strength" />
             <PasswordStrength id="pw-new-strength" password={next} />
           </Field>
           <Field data-invalid={!!error}>
-            <FieldLabel htmlFor="pw-confirm">Confirm new password</FieldLabel>
+            <FieldLabel htmlFor="pw-confirm">{t("confirm")}</FieldLabel>
             <PasswordInput id="pw-confirm" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
             {error && <FieldError>{error}</FieldError>}
           </Field>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {tc("cancel")}
             </Button>
-            <Button type="submit">Change password</Button>
+            <Button type="submit">{t("title")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -208,10 +213,12 @@ function TwoFactorDialog({
 }) {
   const [code, setCode] = React.useState("")
   const [error, setError] = React.useState<string | null>(null)
+  const t = useTranslations("Account.profile.tfa")
+  const tc = useTranslations("Common")
 
   function confirm(value = code) {
     if (!isDemoCodeValid(value)) {
-      setError("That code didn't match. Check the time on your phone and try again.")
+      setError(t("mismatch"))
       setCode("")
       return
     }
@@ -219,25 +226,22 @@ function TwoFactorDialog({
     setError(null)
     onEnabled()
     onOpenChange(false)
-    toast.success("Two-factor authentication is on", { description: "Save your backup codes somewhere safe." })
+    toast.success(t("enabled"), { description: t("enabledBody") })
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Set up two-factor authentication</DialogTitle>
-          <DialogDescription>
-            Add Zuula to an authenticator app (Google Authenticator, Microsoft Authenticator, Authy), then enter the
-            6-digit code it shows.
-          </DialogDescription>
+          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-2 border bg-muted/40 p-3">
-          <span className="text-xs text-muted-foreground">Setup key (enter it manually or scan the QR code once live)</span>
+          <span className="text-xs text-muted-foreground">{t("setupKey")}</span>
           <code className="font-mono text-lg tracking-widest">{DEMO_SECRET}</code>
         </div>
         <Field data-invalid={!!error}>
-          <FieldLabel htmlFor="tfa-setup-code">Code from your app</FieldLabel>
+          <FieldLabel htmlFor="tfa-setup-code">{t("code")}</FieldLabel>
           <CodeInput
             id="tfa-setup-code"
             value={code}
@@ -248,13 +252,13 @@ function TwoFactorDialog({
             onComplete={confirm}
             invalid={!!error}
           />
-          {error ? <FieldError>{error}</FieldError> : <FieldDescription>Demo: any 6 digits except 000000.</FieldDescription>}
+          {error ? <FieldError>{error}</FieldError> : <FieldDescription>{t("demoHint")}</FieldDescription>}
         </Field>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {tc("cancel")}
           </Button>
-          <Button onClick={() => confirm()}>Turn on</Button>
+          <Button onClick={() => confirm()}>{t("turnOn")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -268,16 +272,18 @@ function SecuritySection() {
   const [tfaOpen, setTfaOpen] = React.useState(false)
   const [tfaOn, setTfaOn] = React.useState(required)
   const [sessions, setSessions] = React.useState(SAMPLE_SESSIONS)
+  const t = useTranslations("Account.profile")
+  const tr = useTranslations("Roles")
 
   return (
-    <SettingsSection id="security" title="Security" description="Protect your account and see where you're signed in.">
+    <SettingsSection id="security" title={t("securityTitle")} description={t("securityDescription")}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-medium">Password</p>
-          <p className="text-xs text-muted-foreground">Last changed 3 months ago</p>
+          <p className="text-sm font-medium">{t("passwordLabel")}</p>
+          <p className="text-xs text-muted-foreground">{t("passwordAge")}</p>
         </div>
         <Button variant="outline" onClick={() => setPwOpen(true)}>
-          Change password
+          {t("password.title")}
         </Button>
       </div>
 
@@ -285,12 +291,10 @@ function SecuritySection() {
         <div className="flex flex-col gap-0.5">
           <label htmlFor="tfa-switch" className="flex items-center gap-2 text-sm font-medium">
             <RiShieldCheckLine className="size-4 text-primary" aria-hidden />
-            Two-factor authentication
+            {t("tfa.label")}
           </label>
           <p className="text-xs text-muted-foreground">
-            {required
-              ? `Required for ${ROLE_LABELS[role!]}s and always on.`
-              : "Ask for a code from your phone when you sign in."}
+            {required ? t("tfa.required", { role: tr(role!) }) : t("tfa.optional")}
           </p>
         </div>
         <Switch
@@ -301,7 +305,7 @@ function SecuritySection() {
             if (on) setTfaOpen(true)
             else {
               setTfaOn(false)
-              toast.info("Two-factor authentication is off")
+              toast.info(t("tfa.disabled"))
             }
           }}
         />
@@ -309,7 +313,7 @@ function SecuritySection() {
 
       <div className="flex flex-col gap-2 border-t pt-4">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-medium">Signed-in devices</p>
+          <p className="text-sm font-medium">{t("devices")}</p>
           {sessions.length > 1 && (
             <Button
               variant="link"
@@ -317,10 +321,10 @@ function SecuritySection() {
               className="px-0"
               onClick={() => {
                 setSessions((s) => s.filter((d) => d.current))
-                toast.success("Signed out of other devices")
+                toast.success(t("signedOutOthers"))
               }}
             >
-              Sign out of all others
+              {t("signOutOthers")}
             </Button>
           )}
         </div>
@@ -333,7 +337,7 @@ function SecuritySection() {
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="text-sm">
                     {d.device}
-                    {d.current && <Badge variant="secondary" className="ml-2">This device</Badge>}
+                    {d.current && <Badge variant="secondary" className="ml-2">{t("thisDevice")}</Badge>}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {d.location} · {d.lastActive}
@@ -345,10 +349,10 @@ function SecuritySection() {
                     size="sm"
                     onClick={() => {
                       setSessions((s) => s.filter((x) => x.id !== d.id))
-                      toast.success(`Signed out of ${d.device}`)
+                      toast.success(t("signedOutOf", { device: d.device }))
                     }}
                   >
-                    Sign out
+                    {t("signOut")}
                   </Button>
                 )}
               </li>
@@ -367,6 +371,8 @@ function DataSection() {
   const router = useRouter()
   const { user, signOut } = useSession()
   const [confirmText, setConfirmText] = React.useState("")
+  const t = useTranslations("Account.profile")
+  const tc = useTranslations("Common")
 
   // DPPA 2019 right of access: everything we hold about the user as a JSON file.
   function exportData() {
@@ -383,64 +389,61 @@ function DataSection() {
     a.download = "zuula-my-data.json"
     a.click()
     URL.revokeObjectURL(url)
-    toast.success("Your data is downloading")
+    toast.success(t("downloading"))
   }
 
   return (
     <SettingsSection
       id="your-data"
-      title="Your data"
-      description="Under the Data Protection and Privacy Act, 2019 you can download or delete your personal data at any time."
+      title={t("dataTitle")}
+      description={t("dataDescription")}
       tone="danger"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-medium">Download your data</p>
-          <p className="text-xs text-muted-foreground">Profile, submissions, ratings and comments as a JSON file.</p>
+          <p className="text-sm font-medium">{t("downloadTitle")}</p>
+          <p className="text-xs text-muted-foreground">{t("downloadBody")}</p>
         </div>
         <Button variant="outline" onClick={exportData}>
-          <RiDownload2Line aria-hidden /> Download
+          <RiDownload2Line aria-hidden /> {t("download")}
         </Button>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
         <div className="max-w-xl">
-          <p className="text-sm font-medium">Delete your account</p>
-          <p className="text-xs text-muted-foreground">
-            Removes your profile and personal data. Your ratings stay as anonymous counts. Submitted content is
-            anonymised after the 12-month audit period.
-          </p>
+          <p className="text-sm font-medium">{t("deleteTitle")}</p>
+          <p className="text-xs text-muted-foreground">{t("deleteBody")}</p>
         </div>
         <AlertDialog onOpenChange={(o) => !o && setConfirmText("")}>
           <AlertDialogTrigger asChild>
             <Button variant="destructive">
-              <RiDeleteBin6Line aria-hidden /> Delete account
+              <RiDeleteBin6Line aria-hidden /> {t("deleteAccount")}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+              <AlertDialogTitle>{t("deleteConfirmTitle")}</AlertDialogTitle>
               <AlertDialogDescription>
-                This can&apos;t be undone. Type <strong>DELETE</strong> to confirm.
+                {t.rich("deleteConfirmBody", { strong: (chunks) => <strong>{chunks}</strong> })}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <Input
-              aria-label="Type DELETE to confirm"
+              aria-label={t("deleteConfirmLabel")}
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
               autoComplete="off"
             />
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 disabled={confirmText !== "DELETE"}
                 className="bg-destructive text-white hover:bg-destructive/90"
                 onClick={() => {
                   signOut()
-                  toast.success("Account deleted", { description: "Your personal data has been removed." })
+                  toast.success(t("deleted"), { description: t("deletedBody") })
                   router.push("/")
                 }}
               >
-                Delete account
+                {t("deleteAccount")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

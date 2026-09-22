@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { RiAddLine, RiAlertLine, RiFileCopyLine, RiKey2Line } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { SettingsSection } from "@/components/account/settings-section"
@@ -32,19 +33,18 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/u
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
+import { useRelativeTime } from "@/hooks/use-relative-time"
+import { useFormat } from "@/lib/format"
 import {
   API_RATE_LIMIT,
-  relativeTime,
   SAMPLE_API_KEYS,
   SAMPLE_API_USAGE,
   type ApiKey,
   type ApiScope,
 } from "@/lib/mock/account"
 
-const SCOPES: { value: ApiScope; label: string; description: string }[] = [
-  { value: "submit", label: "Submit content", description: "POST /v1/checks: send text, links or media for verification" },
-  { value: "read", label: "Read results", description: "GET /v1/checks and /v1/fact-checks: verdicts, explanations, citations" },
-]
+// Text lives in Account.apiKeys.scopes.<scope>.
+const SCOPES: ApiScope[] = ["submit", "read"]
 
 const MAX_KEYS = 5
 
@@ -54,12 +54,12 @@ function demoSecret() {
   return `zl_live_${hex}`
 }
 
-async function copy(text: string) {
+async function copy(text: string, success: string, failure: string) {
   try {
     await navigator.clipboard.writeText(text)
-    toast.success("Copied to clipboard")
+    toast.success(success)
   } catch {
-    toast.error("Couldn't copy. Select the key and copy it manually.")
+    toast.error(failure)
   }
 }
 
@@ -76,6 +76,8 @@ function CreateKeyDialog({
   const [scopes, setScopes] = React.useState<ApiScope[]>(["submit", "read"])
   const [error, setError] = React.useState<string | null>(null)
   const [secret, setSecret] = React.useState<string | null>(null)
+  const t = useTranslations("Account.apiKeys")
+  const tc = useTranslations("Common")
 
   function close(o: boolean) {
     onOpenChange(o)
@@ -89,8 +91,8 @@ function CreateKeyDialog({
 
   function create(e: React.FormEvent) {
     e.preventDefault()
-    if (name.trim().length < 2) return setError("Give the key a name so you recognise it later.")
-    if (scopes.length === 0) return setError("Choose at least one permission.")
+    if (name.trim().length < 2) return setError(t("nameRequired"))
+    if (scopes.length === 0) return setError(t("scopeRequired"))
     const s = demoSecret()
     setSecret(s)
     onCreate({
@@ -109,48 +111,45 @@ function CreateKeyDialog({
         {secret ? (
           <>
             <DialogHeader>
-              <DialogTitle>Copy your new key</DialogTitle>
-              <DialogDescription>
-                This is the only time we show the full key. Store it in a password manager or your server&apos;s secret
-                store, never in front-end code.
-              </DialogDescription>
+              <DialogTitle>{t("copyTitle")}</DialogTitle>
+              <DialogDescription>{t("copyBody")}</DialogDescription>
             </DialogHeader>
             <div className="flex items-center gap-2 border bg-muted/40 p-3">
               <code className="min-w-0 flex-1 font-mono text-sm break-all">{secret}</code>
-              <Button variant="outline" size="icon-sm" onClick={() => copy(secret)} aria-label="Copy key">
+              <Button variant="outline" size="icon-sm" onClick={() => copy(secret, t("copied"), t("copyFailed"))} aria-label={t("copyKey")}>
                 <RiFileCopyLine aria-hidden />
               </Button>
             </div>
             <DialogFooter>
-              <Button onClick={() => close(false)}>I&apos;ve saved it</Button>
+              <Button onClick={() => close(false)}>{t("saved")}</Button>
             </DialogFooter>
           </>
         ) : (
           <form noValidate onSubmit={create} className="flex flex-col gap-4">
             <DialogHeader>
-              <DialogTitle>Create an API key</DialogTitle>
-              <DialogDescription>Each key is limited to {API_RATE_LIMIT} requests per hour.</DialogDescription>
+              <DialogTitle>{t("createTitle")}</DialogTitle>
+              <DialogDescription>{t("createBody", { limit: API_RATE_LIMIT })}</DialogDescription>
             </DialogHeader>
             <Field>
-              <FieldLabel htmlFor="key-name">Name</FieldLabel>
-              <Input id="key-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Newsroom CMS" autoComplete="off" />
+              <FieldLabel htmlFor="key-name">{t("name")}</FieldLabel>
+              <Input id="key-name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("namePlaceholder")} autoComplete="off" />
             </Field>
             <FieldSet>
-              <FieldLegend variant="label">Permissions</FieldLegend>
+              <FieldLegend variant="label">{t("permissions")}</FieldLegend>
               <div className="flex flex-col gap-3">
                 {SCOPES.map((s) => (
-                  <div key={s.value} className="flex items-start gap-2">
+                  <div key={s} className="flex items-start gap-2">
                     <Checkbox
-                      id={`scope-${s.value}`}
-                      checked={scopes.includes(s.value)}
+                      id={`scope-${s}`}
+                      checked={scopes.includes(s)}
                       onCheckedChange={(c) =>
-                        setScopes((cur) => (c === true ? [...cur, s.value] : cur.filter((x) => x !== s.value)))
+                        setScopes((cur) => (c === true ? [...cur, s] : cur.filter((x) => x !== s)))
                       }
                       className="mt-0.5"
                     />
-                    <label htmlFor={`scope-${s.value}`} className="flex flex-col">
-                      <span className="text-sm font-medium">{s.label}</span>
-                      <span className="font-mono text-xs text-muted-foreground">{s.description}</span>
+                    <label htmlFor={`scope-${s}`} className="flex flex-col">
+                      <span className="text-sm font-medium">{t(`scopes.${s}.label`)}</span>
+                      <span className="font-mono text-xs text-muted-foreground">{t(`scopes.${s}.description`)}</span>
                     </label>
                   </div>
                 ))}
@@ -159,9 +158,9 @@ function CreateKeyDialog({
             {error && <FieldError>{error}</FieldError>}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => close(false)}>
-                Cancel
+                {tc("cancel")}
               </Button>
-              <Button type="submit">Create key</Button>
+              <Button type="submit">{t("createKey")}</Button>
             </DialogFooter>
           </form>
         )}
@@ -175,24 +174,28 @@ export function ApiKeys() {
   const [keys, setKeys] = React.useState(SAMPLE_API_KEYS)
   const [open, setOpen] = React.useState(false)
   const pct = Math.round((SAMPLE_API_USAGE.usedThisHour / API_RATE_LIMIT) * 100)
+  const t = useTranslations("Account.apiKeys")
+  const tc = useTranslations("Common")
+  const f = useFormat()
+  const relativeTime = useRelativeTime()
 
   return (
     <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
       <SettingsSection
         id="keys"
-        title="Your keys"
-        description="Use keys to submit content and read results from your own tools."
+        title={t("keysTitle")}
+        description={t("keysDescription")}
         footer={
           <Button onClick={() => setOpen(true)} disabled={keys.length >= MAX_KEYS}>
-            <RiAddLine aria-hidden /> Create key
+            <RiAddLine aria-hidden /> {t("createKey")}
           </Button>
         }
       >
         {keys.length === 0 ? (
           <Empty className="border border-dashed">
             <EmptyHeader>
-              <EmptyTitle>No API keys</EmptyTitle>
-              <EmptyDescription>Create a key to start using the Zuula API.</EmptyDescription>
+              <EmptyTitle>{t("emptyTitle")}</EmptyTitle>
+              <EmptyDescription>{t("emptyBody")}</EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (
@@ -209,33 +212,31 @@ export function ApiKeys() {
                         {s}
                       </Badge>
                     ))}
-                    <span>Created {k.createdAt}</span>
-                    <span>· {k.lastUsedAt ? `Last used ${relativeTime(k.lastUsedAt)}` : "Never used"}</span>
+                    <span>{t("created", { date: f.date(k.createdAt) })}</span>
+                    <span>· {k.lastUsedAt ? t("lastUsed", { when: relativeTime(k.lastUsedAt) }) : t("neverUsed")}</span>
                   </div>
                 </div>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                      Revoke
+                      {t("revoke")}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Revoke “{k.name}”?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Anything using this key stops working immediately. This can&apos;t be undone.
-                      </AlertDialogDescription>
+                      <AlertDialogTitle>{t("revokeTitle", { name: k.name })}</AlertDialogTitle>
+                      <AlertDialogDescription>{t("revokeBody")}</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
                       <AlertDialogAction
                         className="bg-destructive text-white hover:bg-destructive/90"
                         onClick={() => {
                           setKeys((ks) => ks.filter((x) => x.id !== k.id))
-                          toast.success(`Revoked “${k.name}”`)
+                          toast.success(t("revoked", { name: k.name }))
                         }}
                       >
-                        Revoke key
+                        {t("revokeKey")}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -245,35 +246,36 @@ export function ApiKeys() {
           </ul>
         )}
         {keys.length >= MAX_KEYS && (
-          <p className="text-xs text-muted-foreground">You can have up to {MAX_KEYS} keys. Revoke one to create another.</p>
+          <p className="text-xs text-muted-foreground">{t("maxKeys", { max: MAX_KEYS })}</p>
         )}
       </SettingsSection>
 
       <div className="flex flex-col gap-6">
-        <SettingsSection id="usage" title="Usage">
+        <SettingsSection id="usage" title={t("usageTitle")}>
           <div className="flex flex-col gap-2">
             <div className="flex items-baseline justify-between text-sm">
-              <span>This hour</span>
+              <span>{t("thisHour")}</span>
               <span className="font-mono tabular-nums">
                 {SAMPLE_API_USAGE.usedThisHour} / {API_RATE_LIMIT}
               </span>
             </div>
-            <Progress value={pct} aria-label={`${pct}% of hourly limit used`} />
+            <Progress value={pct} aria-label={t("usageLabel", { percent: pct })} />
             <p className="text-xs text-muted-foreground">
-              {SAMPLE_API_USAGE.last24h.toLocaleString()} requests in the last 24 hours. Limits reset every hour. Need
-              more? Contact us about a partner plan.
+              {t("usageBody", { count: f.number(SAMPLE_API_USAGE.last24h) })}
             </p>
           </div>
         </SettingsSection>
         <div className="flex gap-3 border border-verdict-likely-false/40 bg-verdict-likely-false/5 p-4 text-sm">
           <RiAlertLine className="mt-0.5 size-4 shrink-0 text-verdict-likely-false" aria-hidden />
           <p>
-            Keep keys secret. Send them in the <code className="font-mono text-xs">Authorization</code> header from your
-            server only. Read the{" "}
-            <Link href="/developers" className="text-primary underline underline-offset-2">
-              API documentation
-            </Link>
-            .
+            {t.rich("secretNote", {
+              code: (chunks) => <code className="font-mono text-xs">{chunks}</code>,
+              link: (chunks) => (
+                <Link href="/developers" className="text-primary underline underline-offset-2">
+                  {chunks}
+                </Link>
+              ),
+            })}
           </p>
         </div>
       </div>

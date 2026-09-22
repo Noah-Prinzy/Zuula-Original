@@ -9,6 +9,7 @@ import {
   RiTimeLine,
   RiVerifiedBadgeLine,
 } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { SettingsSection } from "@/components/account/settings-section"
@@ -19,26 +20,29 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { identifierKind } from "@/lib/auth"
+import { useFormat } from "@/lib/format"
 import { formatBytes, MAX_FILE_BYTES } from "@/lib/submission"
 import { cn } from "@/lib/utils"
 
+// Text lives in Account.accreditation.benefits.<key>.
 const BENEFITS = [
-  { icon: RiScales3Line, text: "Your ratings count 2× in the Community Confidence Score." },
-  { icon: RiVerifiedBadgeLine, text: "A Verified Journalist badge next to your name and comments." },
-  { icon: RiAwardFill, text: "API access to check content from your newsroom's tools." },
-]
+  { key: "weight", icon: RiScales3Line },
+  { key: "badge", icon: RiVerifiedBadgeLine },
+  { key: "api", icon: RiAwardFill },
+] as const
 
 const OUTLETS = ["New Vision", "Daily Monitor", "Nile Post", "ChimpReports", "Uganda Radio Network", "The Observer", "NBS Television", "NTV Uganda"]
 
 type Stage = "form" | "submitted"
 
 function Benefits() {
+  const t = useTranslations("Account.accreditation.benefits")
   return (
     <ul className="flex flex-col gap-3">
       {BENEFITS.map((b) => (
-        <li key={b.text} className="flex gap-3 text-sm">
+        <li key={b.key} className="flex gap-3 text-sm">
           <b.icon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
-          {b.text}
+          {t(b.key)}
         </li>
       ))}
     </ul>
@@ -46,10 +50,12 @@ function Benefits() {
 }
 
 function Timeline({ submittedAt }: { submittedAt: Date }) {
-  const steps = [
-    { label: "Application submitted", detail: submittedAt.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }), done: true },
-    { label: "Under review", detail: "An administrator checks your credentials with your media house. Usually 5 working days.", active: true },
-    { label: "Decision", detail: "We'll notify you by email and in Zuula." },
+  const t = useTranslations("Account.accreditation.timeline")
+  const f = useFormat()
+  const steps: { label: string; detail: string; done?: boolean; active?: boolean }[] = [
+    { label: t("submitted"), detail: f.dateTime(submittedAt), done: true },
+    { label: t("review"), detail: t("reviewDetail"), active: true },
+    { label: t("decision"), detail: t("decisionDetail") },
   ]
   return (
     <ol className="flex flex-col">
@@ -87,40 +93,41 @@ function ApplicationForm({ onSubmitted }: { onSubmitted: () => void }) {
   const [declare, setDeclare] = React.useState(false)
   const [errors, setErrors] = React.useState<Record<string, string>>({})
   const [busy, setBusy] = React.useState(false)
+  const t = useTranslations("Account.accreditation")
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     const next: Record<string, string> = {}
-    if (outlet.trim().length < 2) next.outlet = "Enter your media house."
-    if (title.trim().length < 2) next.title = "Enter your job title."
-    if (identifierKind(workEmail) !== "email") next.workEmail = "Enter your work email address."
-    if (!file) next.file = "Upload your press card or letter of employment."
-    else if (file.size > MAX_FILE_BYTES) next.file = "Files must be 50 MB or smaller."
-    if (!declare) next.declare = "Please confirm the declaration."
+    if (outlet.trim().length < 2) next.outlet = t("errors.outlet")
+    if (title.trim().length < 2) next.title = t("errors.title")
+    if (identifierKind(workEmail) !== "email") next.workEmail = t("errors.workEmail")
+    if (!file) next.file = t("errors.file")
+    else if (file.size > MAX_FILE_BYTES) next.file = t("errors.fileSize")
+    if (!declare) next.declare = t("errors.declare")
     setErrors(next)
     if (Object.keys(next).length) return
     setBusy(true)
     await new Promise((r) => setTimeout(r, 700))
     setBusy(false)
     onSubmitted()
-    toast.success("Application submitted", { description: "We'll let you know within 5 working days." })
+    toast.success(t("submitted"), { description: t("submittedBody") })
   }
 
   return (
     <form noValidate onSubmit={submit} className="contents">
       <SettingsSection
         id="apply"
-        title="Apply for Verified Journalist status"
-        description={`Applying as ${user?.name ?? "you"}. We verify every application with the media house.`}
+        title={t("applyTitle")}
+        description={t("applyDescription", { name: user?.name ?? t("you") })}
         footer={
           <Button type="submit" disabled={busy}>
-            {busy ? "Submitting…" : "Submit application"}
+            {busy ? t("submitting") : t("submit")}
           </Button>
         }
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <Field data-invalid={!!errors.outlet}>
-            <FieldLabel htmlFor="acc-outlet">Media house</FieldLabel>
+            <FieldLabel htmlFor="acc-outlet">{t("outlet")}</FieldLabel>
             <Input id="acc-outlet" list="acc-outlets" value={outlet} onChange={(e) => setOutlet(e.target.value)} aria-invalid={!!errors.outlet} />
             <datalist id="acc-outlets">
               {OUTLETS.map((o) => (
@@ -130,22 +137,22 @@ function ApplicationForm({ onSubmitted }: { onSubmitted: () => void }) {
             {errors.outlet && <FieldError>{errors.outlet}</FieldError>}
           </Field>
           <Field data-invalid={!!errors.title}>
-            <FieldLabel htmlFor="acc-title">Job title</FieldLabel>
-            <Input id="acc-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Health reporter" aria-invalid={!!errors.title} />
+            <FieldLabel htmlFor="acc-title">{t("jobTitle")}</FieldLabel>
+            <Input id="acc-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("jobTitlePlaceholder")} aria-invalid={!!errors.title} />
             {errors.title && <FieldError>{errors.title}</FieldError>}
           </Field>
           <Field data-invalid={!!errors.workEmail}>
-            <FieldLabel htmlFor="acc-email">Work email</FieldLabel>
+            <FieldLabel htmlFor="acc-email">{t("workEmail")}</FieldLabel>
             <Input id="acc-email" type="email" value={workEmail} onChange={(e) => setWorkEmail(e.target.value)} placeholder="name@newsroom.co.ug" aria-invalid={!!errors.workEmail} />
-            <FieldDescription>We send a confirmation link here.</FieldDescription>
+            <FieldDescription>{t("workEmailHint")}</FieldDescription>
             {errors.workEmail && <FieldError>{errors.workEmail}</FieldError>}
           </Field>
           <Field>
-            <FieldLabel htmlFor="acc-membership">UJA membership number (optional)</FieldLabel>
-            <Input id="acc-membership" value={membership} onChange={(e) => setMembership(e.target.value)} placeholder="Uganda Journalists Association" />
+            <FieldLabel htmlFor="acc-membership">{t("membership")}</FieldLabel>
+            <Input id="acc-membership" value={membership} onChange={(e) => setMembership(e.target.value)} placeholder={t("membershipPlaceholder")} />
           </Field>
           <Field data-invalid={!!errors.file} className="sm:col-span-2">
-            <FieldLabel htmlFor="acc-file">Press card or letter of employment</FieldLabel>
+            <FieldLabel htmlFor="acc-file">{t("file")}</FieldLabel>
             <label
               htmlFor="acc-file"
               className={cn(
@@ -155,7 +162,7 @@ function ApplicationForm({ onSubmitted }: { onSubmitted: () => void }) {
             >
               <RiFileUploadLine className="size-5 text-muted-foreground" aria-hidden />
               <span className="min-w-0 flex-1 truncate">
-                {file ? `${file.name} · ${formatBytes(file.size)}` : "Choose a PDF or photo (up to 50 MB)"}
+                {file ? `${file.name} · ${formatBytes(file.size)}` : t("filePrompt")}
               </span>
               <input
                 id="acc-file"
@@ -168,15 +175,14 @@ function ApplicationForm({ onSubmitted }: { onSubmitted: () => void }) {
             {errors.file && <FieldError>{errors.file}</FieldError>}
           </Field>
           <Field className="sm:col-span-2">
-            <FieldLabel htmlFor="acc-links">Links to your published work (optional)</FieldLabel>
-            <Textarea id="acc-links" rows={3} value={links} onChange={(e) => setLinks(e.target.value)} placeholder="One link per line" />
+            <FieldLabel htmlFor="acc-links">{t("links")}</FieldLabel>
+            <Textarea id="acc-links" rows={3} value={links} onChange={(e) => setLinks(e.target.value)} placeholder={t("linksPlaceholder")} />
           </Field>
           <Field data-invalid={!!errors.declare} className="sm:col-span-2">
             <div className="flex items-start gap-2">
               <Checkbox id="acc-declare" checked={declare} onCheckedChange={(c) => setDeclare(c === true)} className="mt-0.5" aria-invalid={!!errors.declare} />
               <FieldLabel htmlFor="acc-declare" className="block font-normal leading-snug">
-                I confirm these details are true, and I&apos;ll rate verdicts on evidence, not on political or commercial
-                interest. Zuula may remove the badge if this is broken.
+                {t("declaration")}
               </FieldLabel>
             </div>
             {errors.declare && <FieldError>{errors.declare}</FieldError>}
@@ -192,32 +198,32 @@ export function Accreditation() {
   const { role, user } = useSession()
   const [stage, setStage] = React.useState<Stage>("form")
   const [submittedAt, setSubmittedAt] = React.useState<Date | null>(null)
+  const t = useTranslations("Account.accreditation")
+  const f = useFormat()
 
   if (role === "journalist") {
     return (
       <div className="grid items-start gap-6 xl:grid-cols-2">
-        <SettingsSection id="status" title="You're a Verified Journalist">
+        <SettingsSection id="status" title={t("verifiedTitle")}>
           <div className="flex items-start gap-3 border border-verdict-authentic/40 bg-verdict-authentic/5 p-4">
             <RiVerifiedBadgeLine className="size-6 shrink-0 text-verdict-authentic" aria-hidden />
             <dl className="grid flex-1 grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-              <dt className="text-muted-foreground">Name</dt>
+              <dt className="text-muted-foreground">{t("name")}</dt>
               <dd>{user?.name}</dd>
-              <dt className="text-muted-foreground">Media house</dt>
-              <dd>Daily Monitor (sample)</dd>
-              <dt className="text-muted-foreground">Verified</dt>
-              <dd>12 Aug 2026</dd>
-              <dt className="text-muted-foreground">Renews</dt>
-              <dd>12 Aug 2027</dd>
+              <dt className="text-muted-foreground">{t("outlet")}</dt>
+              <dd>{t("sampleOutlet")}</dd>
+              <dt className="text-muted-foreground">{t("verified")}</dt>
+              <dd>{f.date("2026-08-12")}</dd>
+              <dt className="text-muted-foreground">{t("renews")}</dt>
+              <dd>{f.date("2027-08-12")}</dd>
             </dl>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Changed newsroom? Update your details and we&apos;ll re-verify them. Your badge stays while we check.
-          </p>
-          <Button variant="outline" className="w-fit" onClick={() => toast.info("Update requests open with the accounts API")}>
-            Update details
+          <p className="text-sm text-muted-foreground">{t("changedNewsroom")}</p>
+          <Button variant="outline" className="w-fit" onClick={() => toast.info(t("updateLater"))}>
+            {t("updateDetails")}
           </Button>
         </SettingsSection>
-        <SettingsSection id="benefits" title="Your benefits">
+        <SettingsSection id="benefits" title={t("benefitsTitle")}>
           <Benefits />
         </SettingsSection>
       </div>
@@ -236,23 +242,23 @@ export function Accreditation() {
       ) : (
         <SettingsSection
           id="application"
-          title="Application received"
+          title={t("receivedTitle")}
           footer={
             <Button
               variant="ghost"
               onClick={() => {
                 setStage("form")
-                toast.info("Application withdrawn")
+                toast.info(t("withdrawn"))
               }}
             >
-              Withdraw application
+              {t("withdraw")}
             </Button>
           }
         >
           {submittedAt && <Timeline submittedAt={submittedAt} />}
         </SettingsSection>
       )}
-      <SettingsSection id="benefits" title="Why get verified?" description="For working journalists at recognised Ugandan media houses.">
+      <SettingsSection id="benefits" title={t("whyTitle")} description={t("whyDescription")}>
         <Benefits />
       </SettingsSection>
     </div>

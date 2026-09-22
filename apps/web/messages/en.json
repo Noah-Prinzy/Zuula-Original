@@ -21,7 +21,9 @@
     "screenInProgressBody": "This screen is part of the Phase 1 build.",
     "screenInProgressSpec": "This screen is part of the Phase 1 build ({spec}).",
     "skipToContent": "Skip to content",
-    "loading": "Loading"
+    "loading": "Loading",
+    "justNow": "just now",
+    "ago": "{unit, select, minute {{count} min ago} hour {{count} h ago} other {{count, plural, =1 {yesterday} other {# days ago}}}}"
   },
   "Nav": {
     "main": "Main",
@@ -459,6 +461,305 @@
     "captcha": {
       "on": "Protected by Cloudflare Turnstile.",
       "off": "Human check (Cloudflare Turnstile) is off in development."
+    }
+  },
+  "Account": {
+    "unsavedChanges": "You have unsaved changes",
+    "notifications": {
+      "kinds": {
+        "verdict-ready": "Result ready",
+        "topic-alert": "Topic alert",
+        "review-outcome": "Expert review",
+        "broadcast": "Emergency alert",
+        "accreditation": "Account"
+      },
+      "filterLabel": "Filter notifications",
+      "all": "All ({count})",
+      "unread": "Unread ({count})",
+      "alertSettings": "Alert settings",
+      "emptyUnread": "You're all caught up",
+      "emptyAll": "No notifications",
+      "emptyBody": "Results of your checks and alerts for topics you follow appear here.",
+      "unreadDot": "Unread",
+      "options": "Options for “{title}”",
+      "markUnread": "Mark as unread",
+      "markRead": "Mark as read"
+    },
+    "activity": {
+      "types": {
+        "text": "Text",
+        "url": "Link",
+        "media": "Media",
+        "article": "Article"
+      },
+      "checking": "Checking",
+      "failed": "Failed",
+      "emptyTitle": "No submissions yet",
+      "emptyBody": "Things you check while signed in appear here.",
+      "verifyClaim": "Verify a claim",
+      "viewReport": "View report",
+      "viewStatus": "View status",
+      "resubmit": "Resubmit",
+      "resubmitLabel": "Resubmit {id}",
+      "youRated": "{vote, select, accurate {You rated it accurate} other {You rated it inaccurate}}",
+      "submissionsTab": "Submissions ({count})",
+      "ratingsTab": "Ratings ({count})"
+    },
+    "alerts": {
+      "topicHints": {
+        "health": "Disease outbreaks, cures, vaccines",
+        "politics": "Government, parliament, public figures",
+        "elections": "Voting, results, campaigns",
+        "economy": "Prices, currency, taxes, jobs",
+        "education": "Schools, exams, universities",
+        "technology": "Scams, phishing, mobile money",
+        "weather": "Floods, droughts, disasters",
+        "security": "Crime, conflict, public safety"
+      },
+      "channels": {
+        "inapp": {
+          "label": "In-app",
+          "description": "The bell in Zuula"
+        },
+        "email": {
+          "label": "Email",
+          "description": "To your account email"
+        },
+        "push": {
+          "label": "Push notifications",
+          "description": "On phones where Zuula is installed"
+        },
+        "sms": {
+          "label": "SMS",
+          "description": "Needs a phone number on your profile"
+        },
+        "whatsapp": {
+          "label": "WhatsApp",
+          "description": "Connect your WhatsApp number"
+        },
+        "telegram": {
+          "label": "Telegram",
+          "description": "Connect the Zuula Telegram bot"
+        }
+      },
+      "frequencies": {
+        "instant": {
+          "label": "As it happens",
+          "description": "Best for journalists and reviewers"
+        },
+        "daily": {
+          "label": "Daily digest",
+          "description": "One summary every evening"
+        },
+        "weekly": {
+          "label": "Weekly digest",
+          "description": "One summary every Monday"
+        }
+      },
+      "saved": "Alert preferences saved",
+      "savedSummary": "{count, plural, one {# topic} other {# topics}} · {frequency}",
+      "save": "Save preferences",
+      "topicsTitle": "Topics you follow",
+      "topicsDescription": "Get alerted when new fact-checks are published in these topics.",
+      "followAll": "Follow all",
+      "clear": "Clear",
+      "followed": "{count} of {total} followed",
+      "typesTitle": "What to alert me about",
+      "types": {
+        "results": {
+          "label": "My submission results",
+          "description": "When a check you submitted is finished."
+        },
+        "viral": {
+          "label": "Viral misinformation",
+          "description": "When a false claim is spreading fast, even outside your topics."
+        },
+        "reviews": {
+          "label": "Expert reviews",
+          "description": "When a verdict you rated is confirmed or changed by an expert."
+        },
+        "broadcast": {
+          "label": "Emergency broadcasts",
+          "description": "High-priority alerts from Zuula administrators. Always on."
+        }
+      },
+      "required": "Required",
+      "deliveryTitle": "How and when",
+      "deliveryDescription": "Choose where alerts reach you and how often.",
+      "connect": "Connect",
+      "connectSimulated": "{channel} connection is simulated",
+      "connectSimulatedBody": "The real connection flow arrives with the messaging integrations.",
+      "frequencyLegend": "Frequency for topic alerts",
+      "frequencyNote": "Results of your own checks and emergency broadcasts are always sent straight away."
+    },
+    "apiKeys": {
+      "scopes": {
+        "submit": {
+          "label": "Submit content",
+          "description": "POST /v1/checks: send text, links or media for verification"
+        },
+        "read": {
+          "label": "Read results",
+          "description": "GET /v1/checks and /v1/fact-checks: verdicts, explanations, citations"
+        }
+      },
+      "copied": "Copied to clipboard",
+      "copyFailed": "Couldn't copy. Select the key and copy it manually.",
+      "nameRequired": "Give the key a name so you recognise it later.",
+      "scopeRequired": "Choose at least one permission.",
+      "copyTitle": "Copy your new key",
+      "copyBody": "This is the only time we show the full key. Store it in a password manager or your server's secret store, never in front-end code.",
+      "copyKey": "Copy key",
+      "saved": "I've saved it",
+      "createTitle": "Create an API key",
+      "createBody": "Each key is limited to {limit} requests per hour.",
+      "name": "Name",
+      "namePlaceholder": "e.g. Newsroom CMS",
+      "permissions": "Permissions",
+      "createKey": "Create key",
+      "keysTitle": "Your keys",
+      "keysDescription": "Use keys to submit content and read results from your own tools.",
+      "emptyTitle": "No API keys",
+      "emptyBody": "Create a key to start using the Zuula API.",
+      "created": "Created {date}",
+      "lastUsed": "Last used {when}",
+      "neverUsed": "Never used",
+      "revoke": "Revoke",
+      "revokeTitle": "Revoke “{name}”?",
+      "revokeBody": "Anything using this key stops working immediately. This can't be undone.",
+      "revokeKey": "Revoke key",
+      "revoked": "Revoked “{name}”",
+      "maxKeys": "You can have up to {max} keys. Revoke one to create another.",
+      "usageTitle": "Usage",
+      "thisHour": "This hour",
+      "usageLabel": "{percent}% of hourly limit used",
+      "usageBody": "{count} requests in the last 24 hours. Limits reset every hour. Need more? Contact us about a partner plan.",
+      "secretNote": "Keep keys secret. Send them in the <code>Authorization</code> header from your server only. Read the <link>API documentation</link>."
+    },
+    "accreditation": {
+      "benefits": {
+        "weight": "Your ratings count 2× in the Community Confidence Score.",
+        "badge": "A Verified Journalist badge next to your name and comments.",
+        "api": "API access to check content from your newsroom's tools."
+      },
+      "timeline": {
+        "submitted": "Application submitted",
+        "review": "Under review",
+        "reviewDetail": "An administrator checks your credentials with your media house. Usually 5 working days.",
+        "decision": "Decision",
+        "decisionDetail": "We'll notify you by email and in Zuula."
+      },
+      "errors": {
+        "outlet": "Enter your media house.",
+        "title": "Enter your job title.",
+        "workEmail": "Enter your work email address.",
+        "file": "Upload your press card or letter of employment.",
+        "fileSize": "Files must be 50 MB or smaller.",
+        "declare": "Please confirm the declaration."
+      },
+      "submitted": "Application submitted",
+      "submittedBody": "We'll let you know within 5 working days.",
+      "applyTitle": "Apply for Verified Journalist status",
+      "applyDescription": "Applying as {name}. We verify every application with the media house.",
+      "you": "you",
+      "submitting": "Submitting…",
+      "submit": "Submit application",
+      "outlet": "Media house",
+      "jobTitle": "Job title",
+      "jobTitlePlaceholder": "e.g. Health reporter",
+      "workEmail": "Work email",
+      "workEmailHint": "We send a confirmation link here.",
+      "membership": "UJA membership number (optional)",
+      "membershipPlaceholder": "Uganda Journalists Association",
+      "file": "Press card or letter of employment",
+      "filePrompt": "Choose a PDF or photo (up to 50 MB)",
+      "links": "Links to your published work (optional)",
+      "linksPlaceholder": "One link per line",
+      "declaration": "I confirm these details are true, and I'll rate verdicts on evidence, not on political or commercial interest. Zuula may remove the badge if this is broken.",
+      "verifiedTitle": "You're a Verified Journalist",
+      "name": "Name",
+      "verified": "Verified",
+      "renews": "Renews",
+      "sampleOutlet": "Daily Monitor (sample)",
+      "changedNewsroom": "Changed newsroom? Update your details and we'll re-verify them. Your badge stays while we check.",
+      "updateDetails": "Update details",
+      "updateLater": "Update requests open with the accounts API",
+      "benefitsTitle": "Your benefits",
+      "receivedTitle": "Application received",
+      "withdraw": "Withdraw application",
+      "withdrawn": "Application withdrawn",
+      "whyTitle": "Why get verified?",
+      "whyDescription": "For working journalists at recognised Ugandan media houses."
+    },
+    "profile": {
+      "errors": {
+        "name": "Enter your full name.",
+        "email": "Enter a valid email address.",
+        "phone": "Enter a Ugandan number like 07XX XXX XXX.",
+        "contact": "Add an email or a phone number."
+      },
+      "saved": "Profile saved",
+      "detailsTitle": "Your details",
+      "detailsDescription": "Shown with your ratings and comments. Your email and phone are never public.",
+      "fullName": "Full name",
+      "email": "Email",
+      "phone": "Phone (for SMS alerts)",
+      "language": "Preferred language",
+      "languageHint": "Used for the interface and for your alerts.",
+      "district": "District",
+      "districtHint": "Helps us send you local alerts.",
+      "password": {
+        "currentRequired": "Enter your current password.",
+        "weak": "Use at least {min} characters with letters, numbers and symbols.",
+        "mismatch": "New passwords don't match.",
+        "reused": "Choose a password you haven't used before.",
+        "changed": "Password changed",
+        "changedBody": "Other devices have been signed out.",
+        "title": "Change password",
+        "description": "You'll stay signed in here. Other devices will be signed out.",
+        "current": "Current password",
+        "new": "New password",
+        "confirm": "Confirm new password"
+      },
+      "tfa": {
+        "mismatch": "That code didn't match. Check the time on your phone and try again.",
+        "enabled": "Two-factor authentication is on",
+        "enabledBody": "Save your backup codes somewhere safe.",
+        "disabled": "Two-factor authentication is off",
+        "title": "Set up two-factor authentication",
+        "description": "Add Zuula to an authenticator app (Google Authenticator, Microsoft Authenticator, Authy), then enter the 6-digit code it shows.",
+        "setupKey": "Setup key (enter it manually or scan the QR code once live)",
+        "code": "Code from your app",
+        "demoHint": "Demo: any 6 digits except 000000.",
+        "turnOn": "Turn on",
+        "label": "Two-factor authentication",
+        "required": "Required for {role} accounts and always on.",
+        "optional": "Ask for a code from your phone when you sign in."
+      },
+      "securityTitle": "Security",
+      "securityDescription": "Protect your account and see where you're signed in.",
+      "passwordLabel": "Password",
+      "passwordAge": "Last changed 3 months ago",
+      "devices": "Signed-in devices",
+      "signOutOthers": "Sign out of all others",
+      "signedOutOthers": "Signed out of other devices",
+      "thisDevice": "This device",
+      "signOut": "Sign out",
+      "signedOutOf": "Signed out of {device}",
+      "dataTitle": "Your data",
+      "dataDescription": "Under the Data Protection and Privacy Act, 2019 you can download or delete your personal data at any time.",
+      "downloadTitle": "Download your data",
+      "downloadBody": "Profile, submissions, ratings and comments as a JSON file.",
+      "download": "Download",
+      "downloading": "Your data is downloading",
+      "deleteTitle": "Delete your account",
+      "deleteBody": "Removes your profile and personal data. Your ratings stay as anonymous counts. Submitted content is anonymised after the 12-month audit period.",
+      "deleteAccount": "Delete account",
+      "deleteConfirmTitle": "Delete your account?",
+      "deleteConfirmBody": "This can't be undone. Type <strong>DELETE</strong> to confirm.",
+      "deleteConfirmLabel": "Type DELETE to confirm",
+      "deleted": "Account deleted",
+      "deletedBody": "Your personal data has been removed."
     }
   },
   "Community": {

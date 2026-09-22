@@ -5,20 +5,23 @@ import {
   RiNotification3Line,
   RiUserStarLine,
 } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import type { NotificationKind } from "@/lib/mock/account"
 import { cn } from "@/lib/utils"
 
-const META: Record<NotificationKind, { icon: typeof RiFileCheckLine; className: string; label: string }> = {
-  "verdict-ready": { icon: RiFileCheckLine, className: "bg-verdict-authentic/10 text-verdict-authentic", label: "Result ready" },
-  "topic-alert": { icon: RiNotification3Line, className: "bg-primary/10 text-primary", label: "Topic alert" },
-  "review-outcome": { icon: RiUserStarLine, className: "bg-verdict-ai-generated/10 text-verdict-ai-generated", label: "Expert review" },
-  broadcast: { icon: RiAlarmWarningLine, className: "bg-verdict-false/10 text-verdict-false", label: "Emergency alert" },
-  accreditation: { icon: RiAwardLine, className: "bg-muted text-muted-foreground", label: "Account" },
+// Labels live in Account.notifications.kinds.<kind>.
+const META: Record<NotificationKind, { icon: typeof RiFileCheckLine; className: string }> = {
+  "verdict-ready": { icon: RiFileCheckLine, className: "bg-verdict-authentic/10 text-verdict-authentic" },
+  "topic-alert": { icon: RiNotification3Line, className: "bg-primary/10 text-primary" },
+  "review-outcome": { icon: RiUserStarLine, className: "bg-verdict-ai-generated/10 text-verdict-ai-generated" },
+  broadcast: { icon: RiAlarmWarningLine, className: "bg-verdict-false/10 text-verdict-false" },
+  accreditation: { icon: RiAwardLine, className: "bg-muted text-muted-foreground" },
 }
 
-export function notificationLabel(kind: NotificationKind) {
-  return META[kind].label
+export function useNotificationLabel() {
+  const t = useTranslations("Account.notifications.kinds")
+  return (kind: NotificationKind) => t(kind)
 }
 
 export function NotificationIcon({ kind, className }: { kind: NotificationKind; className?: string }) {

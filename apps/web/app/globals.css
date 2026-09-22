@@ -13,10 +13,11 @@
     --popover-foreground: oklch(0.148 0.004 228.8);
     --primary: oklch(0.514 0.222 16.935);
     --primary-foreground: oklch(0.969 0.015 12.422);
+    --primary-text: oklch(0.514 0.222 16.935);
     --secondary: oklch(0.967 0.001 286.375);
     --secondary-foreground: oklch(0.21 0.006 285.885);
     --muted: oklch(0.963 0.002 197.1);
-    --muted-foreground: oklch(0.56 0.021 213.5);
+    --muted-foreground: oklch(0.52 0.021 213.5);
     --accent: oklch(0.963 0.002 197.1);
     --accent-foreground: oklch(0.218 0.008 223.9);
     --destructive: oklch(0.577 0.245 27.325);
@@ -54,6 +55,7 @@
     --popover-foreground: oklch(0.987 0.002 197.1);
     --primary: oklch(0.455 0.188 13.697);
     --primary-foreground: oklch(0.969 0.015 12.422);
+    --primary-text: oklch(0.7 0.19 15);
     --secondary: oklch(0.274 0.006 286.033);
     --secondary-foreground: oklch(0.985 0 0);
     --muted: oklch(0.275 0.011 216.9);
@@ -149,6 +151,17 @@
     @apply font-serif;
     }
 }
+/* Accessibility (WCAG 2.1 AA) -------------------------------------------------------------
+   1.4.3: crimson text and links need a lighter tint on dark surfaces; fills keep --primary.
+   1.4.1: crimson links inside running text are underlined, so they don't rely on colour. */
+.dark .text-primary {
+  color: var(--primary-text);
+}
+:where(p, li, dd, td, label, figcaption, span) > a:where(.text-primary) {
+  text-decoration-line: underline;
+  text-underline-offset: 4px;
+}
+
 /* Motion + sections ------------------------------------------------------------------------
    Viewport sections, reveal-on-scroll and text animation. Every animation is gated behind
    prefers-reduced-motion: no-preference, and hidden-until-revealed states also require

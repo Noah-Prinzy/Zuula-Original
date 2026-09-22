@@ -23,7 +23,7 @@ export function PasswordInput({ className, ...props }: Omit<React.ComponentProps
         onClick={() => setVisible((v) => !v)}
         aria-label={visible ? t("hide") : t("show")}
         aria-pressed={visible}
-        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
+        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground hover:text-foreground focus-visible:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:ring-inset"
       >
         {visible ? <RiEyeOffLine className="size-4" aria-hidden /> : <RiEyeLine className="size-4" aria-hidden />}
       </button>

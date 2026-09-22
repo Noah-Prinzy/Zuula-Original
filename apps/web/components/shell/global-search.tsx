@@ -53,11 +53,10 @@ export function GlobalSearch() {
         size="sm"
         onClick={() => setOpen(true)}
         className="w-full justify-start text-muted-foreground md:w-56"
-        aria-label={t("label")}
       >
         <RiSearchLine aria-hidden />
         <span className="truncate">{t("button")}</span>
-        <Kbd className="ml-auto hidden md:inline-flex">{t("shortcut")}</Kbd>
+        <Kbd aria-hidden className="ml-auto hidden md:inline-flex">{t("shortcut")}</Kbd>
       </Button>
       <CommandDialog
         open={open}

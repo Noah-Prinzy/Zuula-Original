@@ -17,7 +17,10 @@ export function RoleSwitcher() {
   if (process.env.NEXT_PUBLIC_ROLE_SWITCHER === "false") return null
 
   return (
-    <div className="flex items-center justify-center gap-2 border-b bg-muted px-4 py-1 text-xs text-muted-foreground">
+    <aside
+      aria-label={t("viewAs")}
+      className="flex items-center justify-center gap-2 border-b bg-muted px-4 py-1 text-xs text-muted-foreground"
+    >
       <RiFlaskLine className="size-3.5" aria-hidden />
       <label htmlFor="role-switcher">{t("viewAs")}</label>
       <NativeSelect
@@ -37,6 +40,6 @@ export function RoleSwitcher() {
           </NativeSelectOption>
         ))}
       </NativeSelect>
-    </div>
+    </aside>
   )
 }

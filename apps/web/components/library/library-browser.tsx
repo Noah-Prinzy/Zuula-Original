@@ -225,14 +225,14 @@ export function LibraryBrowser({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <p aria-live="polite" className="text-muted-foreground">
+          <h2 aria-live="polite" className="font-normal text-muted-foreground">
             {t.rich(query.q ? "countFor" : "count", {
               count: result.total,
               query: query.q,
               strong: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
               q: (chunks) => <span className="text-foreground">{chunks}</span>,
             })}
-          </p>
+          </h2>
           {chips.map((c) => (
             <button
               key={c.label}

@@ -1850,7 +1850,7 @@
         },
         "languages": {
           "q": "Which languages does Zuula support?",
-          "a": "Claims can be checked in English, Luganda, Acholi, Runyankole and Ateso. Translating the interface itself into those languages is still in progress — today the language switcher only remembers your preference."
+          "a": "Claims can be checked in English, Luganda, Acholi, Runyankole and Ateso. The interface is being translated into those languages too; anything not yet translated appears in English."
         },
         "data": {
           "q": "How is my data protected?",

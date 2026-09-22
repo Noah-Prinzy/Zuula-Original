@@ -12,6 +12,7 @@ import {
   RiRefreshLine,
   RiTimeLine,
 } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { useSession } from "@/components/providers/session-provider"
@@ -19,7 +20,8 @@ import { startNavigationProgress } from "@/components/shell/route-progress"
 import { AnalysisProgress, type AnalysisState } from "@/components/submission/analysis-progress"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { expectedTime, pipelineFor } from "@/lib/analysis"
+import { pipelineFor } from "@/lib/analysis"
+import { useFormat } from "@/lib/format"
 import { getSubmission, type StoredSubmission } from "@/lib/mock/submissions"
 import { CONTENT_LANGUAGES } from "@/lib/submission"
 import { cn } from "@/lib/utils"
@@ -32,38 +34,40 @@ function reportFor(s: StoredSubmission | null) {
   return s?.type === "media" ? "/fact-checks/fc-2026-0157" : "/fact-checks/fc-2026-0142"
 }
 
-async function copy(text: string, label: string) {
+async function copy(text: string, success: string, failure: string) {
   try {
     await navigator.clipboard.writeText(text)
-    toast.success(`${label} copied`)
+    toast.success(success)
   } catch {
-    toast.error("Couldn't copy. Select and copy it manually.")
+    toast.error(failure)
   }
 }
 
 function TrackingIdCard({ trackingId }: { trackingId: string }) {
+  const t = useTranslations("Status")
   return (
     <div className="flex flex-col gap-3 border bg-card p-4">
       <div>
-        <p className="text-xs text-muted-foreground">Tracking ID</p>
+        <p className="text-xs text-muted-foreground">{t("trackingId")}</p>
         <p className="font-mono text-2xl font-bold tracking-wider">{trackingId}</p>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" onClick={() => copy(trackingId, "Tracking ID")}>
-          <RiFileCopyLine aria-hidden /> Copy ID
+        <Button variant="outline" size="sm" onClick={() => copy(trackingId, t("idCopied"), t("copyFailed"))}>
+          <RiFileCopyLine aria-hidden /> {t("copyId")}
         </Button>
-        <Button variant="outline" size="sm" onClick={() => copy(window.location.href, "Link")}>
-          <RiLinkM aria-hidden /> Copy link
+        <Button variant="outline" size="sm" onClick={() => copy(window.location.href, t("linkCopied"), t("copyFailed"))}>
+          <RiLinkM aria-hidden /> {t("copyLink")}
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Save this ID to come back to your result from any device.
-      </p>
+      <p className="text-xs text-muted-foreground">{t("saveIdHint")}</p>
     </div>
   )
 }
 
 function Tracker({ trackingId, submission }: { trackingId: string; submission: StoredSubmission | null }) {
+  const t = useTranslations("Status")
+  const ts = useTranslations("Submit")
+  const f = useFormat()
   const router = useRouter()
   const { user } = useSession()
   const type = submission?.type ?? "text"
@@ -120,7 +124,7 @@ function Tracker({ trackingId, submission }: { trackingId: string; submission: S
   }
 
   const language =
-    CONTENT_LANGUAGES.find((l) => l.code === submission?.language)?.label ?? "Detect automatically"
+    CONTENT_LANGUAGES.find((l) => l.code === submission?.language)?.label ?? ts("detectLanguage")
 
   return (
     <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_26rem]">
@@ -130,40 +134,35 @@ function Tracker({ trackingId, submission }: { trackingId: string; submission: S
             <div className="flex items-start gap-3">
               <RiCheckboxCircleFill className="size-7 shrink-0 text-verdict-authentic" aria-hidden />
               <div>
-                <h2 className="font-heading text-lg font-bold">Your report is ready</h2>
+                <h2 className="font-heading text-lg font-bold">{t("readyTitle")}</h2>
                 <p className="text-sm text-muted-foreground">
-                  {countdown !== null
-                    ? `Opening it in ${countdown} second${countdown === 1 ? "" : "s"}…`
-                    : "See the verdict, the evidence and what the community thinks."}
+                  {countdown !== null ? t("openingIn", { count: countdown }) : t("readyBody")}
                 </p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button asChild size="lg">
                 <Link href={reportFor(submission)}>
-                  View report <RiArrowRightLine aria-hidden />
+                  {t("viewReport")} <RiArrowRightLine aria-hidden />
                 </Link>
               </Button>
               {countdown !== null && (
                 <Button variant="ghost" size="lg" onClick={() => setCountdown(null)}>
-                  Stay on this page
+                  {t("stay")}
                 </Button>
               )}
             </div>
           </div>
         ) : state === "error" ? (
           <div role="alert" className="flex flex-col gap-3 border border-destructive/40 bg-destructive/5 p-5">
-            <h2 className="font-heading text-lg font-bold">We couldn&apos;t finish this check</h2>
-            <p className="text-sm text-muted-foreground">
-              The link couldn&apos;t be opened. It may be private, removed or blocking automated
-              access. Try again, or paste the article text instead.
-            </p>
+            <h2 className="font-heading text-lg font-bold">{t("errorTitle")}</h2>
+            <p className="text-sm text-muted-foreground">{t("errorBody")}</p>
             <div className="flex flex-wrap gap-2">
               <Button onClick={retry}>
-                <RiRefreshLine aria-hidden /> Try again
+                <RiRefreshLine aria-hidden /> {t("tryAgain")}
               </Button>
               <Button variant="outline" asChild>
-                <Link href="/verify">Paste the text instead</Link>
+                <Link href="/verify">{t("pasteInstead")}</Link>
               </Button>
             </div>
           </div>
@@ -171,34 +170,40 @@ function Tracker({ trackingId, submission }: { trackingId: string; submission: S
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <RiTimeLine className="size-4" aria-hidden />
             <span>
-              {elapsed.toFixed(1)}s elapsed · usually takes {expectedTime(type)}
+              {t("elapsed", {
+                seconds: f.number(elapsed, { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+                expected: t(type === "media" ? "expected.media" : "expected.text"),
+              })}
             </span>
           </div>
         )}
 
         <section aria-labelledby="progress-title" className="border bg-card p-5">
           <h2 id="progress-title" className="sr-only">
-            Analysis progress
+            {t("progressTitle")}
           </h2>
           <AnalysisProgress
             steps={steps}
             current={current}
             state={state}
-            error="Couldn't open the link."
+            error={t("fetchError")}
           />
         </section>
 
         {submission && (
           <section aria-labelledby="submitted-title" className="border bg-card p-5">
             <h2 id="submitted-title" className="mb-2 font-heading text-sm font-bold">
-              What you submitted
+              {t("submittedTitle")}
             </h2>
             <p className={cn("text-sm break-words", submission.type === "url" && "font-mono")}>
               {submission.preview || "—"}
             </p>
             <p className="mt-2 text-xs text-muted-foreground">
-              {submission.type === "media" ? "Media file" : submission.type[0].toUpperCase() + submission.type.slice(1)} ·{" "}
-              {language} · submitted {new Date(submission.submittedAt).toLocaleTimeString()}
+              {t("submittedMeta", {
+                type: t(`types.${submission.type}`),
+                language,
+                time: f.date(submission.submittedAt, "time"),
+              })}
             </p>
           </section>
         )}
@@ -209,14 +214,16 @@ function Tracker({ trackingId, submission }: { trackingId: string; submission: S
         <div className="flex gap-3 border bg-card p-4 text-sm">
           <RiNotification3Line className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
           {user ? (
-            <p>We&apos;ll notify you when the report is ready, even if you leave this page.</p>
+            <p>{t("notifySignedIn")}</p>
           ) : (
             <p>
-              Keep this page open or save your tracking ID.{" "}
-              <Link href="/sign-up" className="font-medium text-primary underline-offset-4 hover:underline">
-                Create an account
-              </Link>{" "}
-              to get notified instead.
+              {t.rich("notifyGuest", {
+                link: (chunks) => (
+                  <Link href="/sign-up" className="font-medium text-primary underline-offset-4 hover:underline">
+                    {chunks}
+                  </Link>
+                ),
+              })}
             </p>
           )}
         </div>

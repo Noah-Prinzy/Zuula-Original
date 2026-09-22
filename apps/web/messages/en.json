@@ -293,6 +293,174 @@
     "sources": "Sources",
     "sourcesHint": "{count, plural, one {# source cross-referenced} other {# sources cross-referenced}}"
   },
+  "Status": {
+    "metaTitle": "Status {id}",
+    "title": "Status",
+    "descriptionValid": "Follow your check as it runs.",
+    "descriptionInvalid": "Track a submission by its ID.",
+    "notFoundTitle": "We couldn't find that tracking ID",
+    "notFoundBody": "Check the ID and try again. Tracking IDs look like ZL-7K3P-Q9.",
+    "trackingId": "Tracking ID",
+    "copyId": "Copy ID",
+    "copyLink": "Copy link",
+    "idCopied": "Tracking ID copied",
+    "linkCopied": "Link copied",
+    "copyFailed": "Couldn't copy. Select and copy it manually.",
+    "saveIdHint": "Save this ID to come back to your result from any device.",
+    "readyTitle": "Your report is ready",
+    "openingIn": "{count, plural, one {Opening it in # second…} other {Opening it in # seconds…}}",
+    "readyBody": "See the verdict, the evidence and what the community thinks.",
+    "viewReport": "View report",
+    "stay": "Stay on this page",
+    "errorTitle": "We couldn't finish this check",
+    "errorBody": "The link couldn't be opened. It may be private, removed or blocking automated access. Try again, or paste the article text instead.",
+    "tryAgain": "Try again",
+    "pasteInstead": "Paste the text instead",
+    "fetchError": "Couldn't open the link.",
+    "elapsed": "{seconds}s elapsed · usually takes {expected}",
+    "expected": {
+      "text": "about 10 seconds",
+      "media": "up to a minute"
+    },
+    "progressTitle": "Analysis progress",
+    "submittedTitle": "What you submitted",
+    "submittedMeta": "{type} · {language} · submitted {time}",
+    "types": {
+      "text": "Text",
+      "url": "Link",
+      "article": "Article",
+      "media": "Media file"
+    },
+    "notifySignedIn": "We'll notify you when the report is ready, even if you leave this page.",
+    "notifyGuest": "Keep this page open or save your tracking ID. <link>Create an account</link> to get notified instead.",
+    "progress": {
+      "complete": "Analysis complete",
+      "stopped": "Analysis stopped",
+      "active": "{step}…",
+      "srComplete": "Analysis complete.",
+      "srError": "Error: {error}",
+      "status": {
+        "done": "complete",
+        "active": "in progress",
+        "error": "failed",
+        "pending": "waiting"
+      }
+    },
+    "steps": {
+      "received": {
+        "label": "Received",
+        "detail": "Your submission is queued."
+      },
+      "scan": {
+        "label": "Scanning file",
+        "detail": "Checking the file type and scanning for malware."
+      },
+      "fetch": {
+        "label": "Fetching the article",
+        "detail": "Downloading the page and extracting its text."
+      },
+      "transcribe": {
+        "label": "Transcribing",
+        "detail": "Converting speech to text."
+      },
+      "media": {
+        "label": "Analysing media",
+        "detail": "Checking for deepfakes, edits and metadata tampering."
+      },
+      "language": {
+        "label": "Detecting language",
+        "detail": "Identifying the language and any code-switching."
+      },
+      "claims": {
+        "label": "Finding claims",
+        "detail": "Pulling out the statements that can be checked."
+      },
+      "sources": {
+        "label": "Checking sources",
+        "detail": "Cross-referencing trusted Ugandan and international sources."
+      },
+      "ai": {
+        "label": "AI-content detection",
+        "detail": "Looking for signs the content was machine-generated."
+      },
+      "report": {
+        "label": "Writing the report",
+        "detail": "Preparing the verdict, explanation and citations."
+      }
+    },
+    "lookup": {
+      "label": "Tracking ID",
+      "placeholder": "ZL-XXXX-XX",
+      "track": "Track",
+      "hint": "You got this ID when you submitted.",
+      "invalid": "Tracking IDs look like ZL-7K3P-Q9."
+    }
+  },
+  "Verify": {
+    "metaTitle": "Verify",
+    "metaDescription": "Check a message, link, image, audio or video for misinformation.",
+    "title": "Verify",
+    "description": "Check a message, link, image, audio or video before you share it.",
+    "photoCaption": "Heard it on WhatsApp? Check it here.",
+    "howTitle": "How it works",
+    "steps": {
+      "submit": {
+        "title": "Submit",
+        "body": "Paste text, share a link or upload media. You get a tracking ID."
+      },
+      "analyse": {
+        "title": "We analyse",
+        "body": "Claims are cross-checked against trusted sources and AI-detection models. Text takes about 10 seconds, media up to a minute."
+      },
+      "read": {
+        "title": "Read the report",
+        "body": "See the verdict, the evidence, and what the community thinks."
+      }
+    },
+    "whatTitle": "What you can submit",
+    "types": {
+      "text": {
+        "title": "Text",
+        "body": "WhatsApp forwards, social posts, quotes"
+      },
+      "link": {
+        "title": "Link",
+        "body": "News articles and web pages"
+      },
+      "media": {
+        "title": "Media",
+        "body": "Photos, voice notes and videos up to 50 MB"
+      },
+      "article": {
+        "title": "Article",
+        "body": "Full article text you've copied"
+      }
+    },
+    "alreadyTitle": "Already submitted?",
+    "whatsapp": "Soon: forward messages to the Zuula WhatsApp number to check them.",
+    "privacy": "Uploaded files are scanned for malware and stored securely under the Data Protection and Privacy Act, 2019."
+  },
+  "Submit": {
+    "detectLanguage": "Detect automatically",
+    "dropzone": {
+      "dragOr": "Drag a file here, or <browse>browse your device</browse>",
+      "accepts": "Images, audio or video · up to {size}",
+      "kinds": {
+        "image": "Image",
+        "audio": "Audio",
+        "video": "Video"
+      },
+      "unsupported": "Unsupported file",
+      "uploading": "Uploading {percent}%",
+      "scanning": "Scanning",
+      "remove": "Remove file",
+      "uploadProgress": "Upload progress"
+    },
+    "captcha": {
+      "on": "Protected by Cloudflare Turnstile.",
+      "off": "Human check (Cloudflare Turnstile) is off in development."
+    }
+  },
   "Community": {
     "status": {
       "verified": {

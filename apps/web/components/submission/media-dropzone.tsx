@@ -8,6 +8,7 @@ import {
   RiUploadCloud2Line,
   RiVideoLine,
 } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import {
   Attachment,
@@ -43,6 +44,7 @@ export function MediaDropzone({
   progress?: number
   disabled?: boolean
 }) {
+  const t = useTranslations("Submit.dropzone")
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = React.useState(false)
 
@@ -81,19 +83,19 @@ export function MediaDropzone({
           <AttachmentContent>
             <AttachmentTitle>{value.name}</AttachmentTitle>
             <AttachmentDescription>
-              {kind ? kind[0].toUpperCase() + kind.slice(1) : "Unsupported file"} · {formatBytes(value.size)}
-              {uploading && ` · ${progress < 100 ? `Uploading ${progress}%` : "Scanning"}`}
+              {kind ? t(`kinds.${kind}`) : t("unsupported")} · {formatBytes(value.size)}
+              {uploading && ` · ${progress < 100 ? t("uploading", { percent: progress }) : t("scanning")}`}
             </AttachmentDescription>
           </AttachmentContent>
           {!uploading && (
             <AttachmentActions>
-              <AttachmentAction aria-label="Remove file" onClick={() => onChange(null)} disabled={disabled}>
+              <AttachmentAction aria-label={t("remove")} onClick={() => onChange(null)} disabled={disabled}>
                 <RiCloseLine />
               </AttachmentAction>
             </AttachmentActions>
           )}
         </Attachment>
-        {uploading && <Progress value={progress} aria-label="Upload progress" />}
+        {uploading && <Progress value={progress} aria-label={t("uploadProgress")} />}
       </div>
     )
   }
@@ -118,18 +120,21 @@ export function MediaDropzone({
     >
       <RiUploadCloud2Line className="size-8 text-muted-foreground" aria-hidden />
       <p className="text-sm">
-        Drag a file here, or{" "}
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={disabled}
-          className="font-medium text-primary underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none"
-        >
-          browse your device
-        </button>
+        {t.rich("dragOr", {
+          browse: (chunks) => (
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              disabled={disabled}
+              className="font-medium text-primary underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none"
+            >
+              {chunks}
+            </button>
+          ),
+        })}
       </p>
       <p className="text-xs text-muted-foreground">
-        Images, audio or video · up to {formatBytes(MAX_FILE_BYTES)}
+        {t("accepts", { size: formatBytes(MAX_FILE_BYTES) })}
       </p>
       <input
         ref={inputRef}

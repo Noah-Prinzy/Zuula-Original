@@ -1,4 +1,5 @@
 import { RiCheckLine, RiCloseLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { Progress } from "@/components/ui/progress"
 import { Spinner } from "@/components/ui/spinner"
@@ -21,9 +22,11 @@ export function AnalysisProgress({
   error?: string
   className?: string
 }) {
+  const t = useTranslations("Status")
   const completed = state === "done" ? steps.length : current
   const percent = Math.round((completed / steps.length) * 100)
   const active = steps[Math.min(current, steps.length - 1)]
+  const label = (step: StepDef) => t(`steps.${step.id}.label`)
 
   return (
     <div className={cn("flex flex-col gap-4", className)}>
@@ -31,23 +34,27 @@ export function AnalysisProgress({
         <div className="flex items-baseline justify-between gap-2 text-sm">
           <span className="font-medium">
             {state === "done"
-              ? "Analysis complete"
+              ? t("progress.complete")
               : state === "error"
-                ? "Analysis stopped"
-                : `${active.label}…`}
+                ? t("progress.stopped")
+                : t("progress.active", { step: label(active) })}
           </span>
           <span className="font-mono text-xs text-muted-foreground tabular-nums">{percent}%</span>
         </div>
         <Progress
           value={percent}
-          aria-label="Analysis progress"
+          aria-label={t("progressTitle")}
           className={cn(state === "error" && "[&>div]:bg-destructive")}
         />
       </div>
 
       {/* Announce step changes to screen readers without reading the whole list. */}
       <p className="sr-only" aria-live="polite">
-        {state === "done" ? "Analysis complete." : state === "error" ? `Error: ${error}` : active.label}
+        {state === "done"
+          ? t("progress.srComplete")
+          : state === "error"
+            ? t("progress.srError", { error: error ?? "" })
+            : label(active)}
       </p>
 
       <ol className="flex flex-col">
@@ -100,14 +107,12 @@ export function AnalysisProgress({
                     status === "error" && "text-destructive"
                   )}
                 >
-                  {step.label}
-                  <span className="sr-only">
-                    {` — ${status === "done" ? "complete" : status === "active" ? "in progress" : status === "error" ? "failed" : "waiting"}`}
-                  </span>
+                  {label(step)}
+                  <span className="sr-only">{` — ${t(`progress.status.${status}`)}`}</span>
                 </span>
                 {(status === "active" || status === "error") && (
                   <span className={cn("text-xs", status === "error" ? "text-destructive" : "text-muted-foreground")}>
-                    {status === "error" ? error : step.detail}
+                    {status === "error" ? error : t(`steps.${step.id}.detail`)}
                   </span>
                 )}
               </div>

@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { RiSearchLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
@@ -12,6 +13,7 @@ import { cn } from "@/lib/utils"
 
 // Look up a submission by tracking ID (for anonymous submitters returning later).
 export function TrackingLookup({ className, defaultValue = "" }: { className?: string; defaultValue?: string }) {
+  const t = useTranslations("Status.lookup")
   const router = useRouter()
   const [value, setValue] = React.useState(defaultValue)
   const [error, setError] = React.useState<string | null>(null)
@@ -20,7 +22,7 @@ export function TrackingLookup({ className, defaultValue = "" }: { className?: s
     e.preventDefault()
     const id = normaliseTrackingId(value)
     if (!TRACKING_ID_PATTERN.test(id)) {
-      setError("Tracking IDs look like ZL-7K3P-Q9.")
+      setError(t("invalid"))
       return
     }
     setError(null)
@@ -30,7 +32,7 @@ export function TrackingLookup({ className, defaultValue = "" }: { className?: s
   return (
     <form onSubmit={onSubmit} noValidate className={cn("flex flex-col gap-2", className)}>
       <Field data-invalid={!!error}>
-        <FieldLabel htmlFor="tracking-id">Tracking ID</FieldLabel>
+        <FieldLabel htmlFor="tracking-id">{t("label")}</FieldLabel>
         <div className="flex gap-2">
           <Input
             id="tracking-id"
@@ -39,7 +41,7 @@ export function TrackingLookup({ className, defaultValue = "" }: { className?: s
               setValue(e.target.value)
               if (error) setError(null)
             }}
-            placeholder="ZL-XXXX-XX"
+            placeholder={t("placeholder")}
             autoComplete="off"
             spellCheck={false}
             aria-invalid={!!error}
@@ -47,13 +49,13 @@ export function TrackingLookup({ className, defaultValue = "" }: { className?: s
           />
           <Button type="submit" variant="outline">
             <RiSearchLine aria-hidden />
-            Track
+            {t("track")}
           </Button>
         </div>
         {error ? (
           <FieldError>{error}</FieldError>
         ) : (
-          <FieldDescription>You got this ID when you submitted.</FieldDescription>
+          <FieldDescription>{t("hint")}</FieldDescription>
         )}
       </Field>
     </form>

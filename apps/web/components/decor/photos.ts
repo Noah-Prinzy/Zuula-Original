@@ -1,17 +1,27 @@
 import type { StaticImageData } from "next/image"
 
-import crimsonTexture from "@/public/images/crimson-texture.jpg"
+import boatsSunset from "@/public/images/boats-sunset.jpg"
+import classroom from "@/public/images/classroom.jpg"
 import couplePhone from "@/public/images/couple-phone.jpg"
+import crimsonTexture from "@/public/images/crimson-texture.jpg"
 import crimsonWaves from "@/public/images/crimson-waves.jpg"
 import friendsPhone from "@/public/images/friends-phone.jpg"
 import hillRoad from "@/public/images/hill-road.jpg"
+import journalists from "@/public/images/journalists.jpg"
 import kampalaSkyline from "@/public/images/kampala-skyline.jpg"
 import kampalaStreet from "@/public/images/kampala-street.jpg"
+import kampalaSunset from "@/public/images/kampala-sunset.jpg"
+import lakeVictoria from "@/public/images/lake-victoria.jpg"
 import manTexting from "@/public/images/man-texting.jpg"
 import marketCall from "@/public/images/market-call.jpg"
+import murchisonFalls from "@/public/images/murchison-falls.jpg"
 import newspapers from "@/public/images/newspapers.jpg"
+import nightRoad from "@/public/images/night-road.jpg"
+import nileBoat from "@/public/images/nile-boat.jpg"
 import phoneOnCrimson from "@/public/images/phone-on-crimson.jpg"
+import teaRoad from "@/public/images/tea-road.jpg"
 import ugandaHills from "@/public/images/uganda-hills.jpg"
+import workshop from "@/public/images/workshop.jpg"
 
 export type Photo = {
   src: StaticImageData
@@ -116,6 +126,86 @@ export const PHOTOS = {
     credit: {
       name: "Emmanuel Ikwuegbu",
       url: "https://unsplash.com/photos/81fRHbVliQI",
+    },
+  },
+  kampalaSunset: {
+    src: kampalaSunset,
+    alt: "Kampala skyline at sunset",
+    credit: {
+      name: "Robin Kutesa",
+      url: "https://unsplash.com/photos/Q3ymlvOJGFs",
+    },
+  },
+  murchisonFalls: {
+    src: murchisonFalls,
+    alt: "The Nile forcing through the gorge at Murchison Falls",
+    credit: {
+      name: "Jonathan Göhner",
+      url: "https://unsplash.com/photos/EmsDN8-M4dk",
+    },
+  },
+  nileBoat: {
+    src: nileBoat,
+    alt: "A tour boat on the Nile near Jinja",
+    credit: {
+      name: "Derricks Nature Book",
+      url: "https://unsplash.com/photos/iSGFaRTro1Q",
+    },
+  },
+  teaRoad: {
+    src: teaRoad,
+    alt: "A red dirt road between green tea fields",
+    credit: {
+      name: "Michael Starkie",
+      url: "https://unsplash.com/photos/hDPqTAC-QJg",
+    },
+  },
+  classroom: {
+    src: classroom,
+    alt: "Students writing at wooden desks in a Ugandan classroom",
+    credit: {
+      name: "Zach Wear",
+      url: "https://unsplash.com/photos/RzPWYL3G6Pw",
+    },
+  },
+  workshop: {
+    src: workshop,
+    alt: "People working at long tables in a bright workshop hall",
+    credit: {
+      name: "Zach Wear",
+      url: "https://unsplash.com/photos/jgu6Dkd0fCM",
+    },
+  },
+  journalists: {
+    src: journalists,
+    alt: "A reporter interviewing a man outdoors, cameras rolling",
+    credit: {
+      name: "Luke Thornton",
+      url: "https://unsplash.com/photos/ugY9ZDfZq_c",
+    },
+  },
+  boatsSunset: {
+    src: boatsSunset,
+    alt: "Fishing boats on calm water at sunset on the East African coast",
+    credit: {
+      name: "Lionel Murage",
+      url: "https://unsplash.com/photos/OeEc3Qmtr-4",
+    },
+  },
+  lakeVictoria: {
+    src: lakeVictoria,
+    alt: "A canoe on Lake Victoria, in black and white",
+    credit: {
+      name: "Alexandre Barbosa",
+      url: "https://unsplash.com/photos/2fDt4MRgOCg",
+    },
+  },
+  nightRoad: {
+    src: nightRoad,
+    alt: "Cars on a Kampala road at night under streetlights",
+    credit: {
+      name: "Michael Starkie",
+      url: "https://unsplash.com/photos/zsdpVP68E8A",
     },
   },
 } satisfies Record<string, Photo>

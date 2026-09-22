@@ -77,8 +77,14 @@ function ReportSlide({
 export default async function HomePage() {
   const t = await getTranslations("Home")
   // Word lists are keyed objects ("0", "1", …) because next-intl messages can't be arrays.
-  const words = (key: "headline.line1Words" | "headline.line2Words") =>
-    Object.values(t.raw(key) as Record<string, string>)
+  // next-intl only types leaf keys, so the object key is cast for t.raw.
+  const words = (key: "line1Words" | "line2Words") =>
+    Object.values(
+      t.raw(`headline.${key}` as Parameters<typeof t.raw>[0]) as Record<
+        string,
+        string
+      >
+    )
   const carousel = {
     previous: t("carousel.previous"),
     next: t("carousel.next"),
@@ -110,7 +116,7 @@ export default async function HomePage() {
         <h1 className="max-w-4xl font-heading text-4xl font-bold tracking-tight text-balance drop-shadow-sm [--kinetic-accent:var(--chart-1)] md:text-5xl xl:text-6xl">
           <KineticText text={t("headline.line1Before")} delay={120} />{" "}
           <WordRotator
-            words={words("headline.line1Words")}
+            words={words("line1Words")}
             delay={230}
             marker
             className="em-mark-solid"
@@ -133,7 +139,7 @@ export default async function HomePage() {
           />{" "}
           {/* Rotates like the word above, without the highlighter stroke. */}
           <WordRotator
-            words={words("headline.line2Words")}
+            words={words("line2Words")}
             interval={3200}
             delay={380}
           />{" "}

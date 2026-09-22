@@ -1,0 +1,2189 @@
+openapi: 3.1.0
+info:
+  title: Zuula API
+  version: 0.1.0
+  description: |
+    Uganda Fact-Guard (Zuula). Two surfaces share this document:
+
+    - **Core API** (`/api/v1/*`) — used by the Zuula web app. Cookie session (or bearer JWT for
+      non-browser core clients). Roles: `public`, `journalist`, `expert`, `admin`, gated per
+      operation.
+    - **Partner API** (`/v1/*`, served from `api.zuula.ug` in production) — `Authorization: Bearer
+      <key>` with an API key, 100 requests/hour. This surface is documented for external partners
+      on `/developers` and this contract matches that page exactly: same base URL shape, same
+      four endpoints, same field names, same `Authorization: Bearer` header (not `X-API-Key`),
+      same page-based pagination shape. See "Deviations from the P2 brief" in the P2 contract
+      summary sent to Noah for the two places this contract intentionally differs from the
+      brief's defaults in order to match the live `/developers` page and the working frontend
+      code.
+
+    All timestamps are ISO-8601 UTC. Requirement IDs (`FR-AUTH-01`, `§9.2`, …) refer to the CIT
+    *System Development Plan & Functional Requirements Specification v1.0*.
+  contact:
+    name: Noah Prinzy
+    url: https://github.com/Noah-Prinzy/zuula
+servers:
+  - url: https://zuula.ug
+    description: Web app origin. Core API paths already include /api/v1.
+  - url: https://api.zuula.ug
+    description: Partner API origin. Partner paths (under /v1) override this list below; it's here so tooling that ignores per-path overrides still points somewhere sane.
+
+tags:
+  - name: auth
+    description: Sign-up, sign-in, 2FA, password reset (FR-AUTH-01…07).
+  - name: account
+    description: Profile, security, data export, accreditation (FR-AUTH-02, §10.1).
+  - name: submissions
+    description: Submit and track a check (FR-SUBMIT-01…07).
+  - name: fact-checks
+    description: Reports, search and the Library (FR-SEARCH-01…05, FR-DETECT, FR-EXPLAIN).
+  - name: ratings
+    description: Community ratings, CCS and comments (FR-RATE-01…10).
+  - name: review
+    description: Expert review queue and decisions (FR-REVIEW-01…06).
+  - name: notifications
+    description: In-app notifications and alert preferences (FR-NOTIFY-01…04).
+  - name: api-keys
+    description: Partner API key management (FR-API-02).
+  - name: admin
+    description: Users, moderation, sources, broadcasts, reports, audit log, settings (FR-ADMIN-01…07).
+  - name: partner
+    description: The public partner API documented on /developers (FR-API-01, 03).
+
+security:
+  - sessionAuth: []
+
+paths:
+  # ---------------------------------------------------------------------------------------
+  # Auth (FR-AUTH-01…07)
+  # ---------------------------------------------------------------------------------------
+  /api/v1/auth/sign-up:
+    post:
+      operationId: signUp
+      tags: [auth]
+      summary: Create an account (FR-AUTH-01).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, identifier, password, consent]
+              properties:
+                name: { type: string, minLength: 2 }
+                identifier: { type: string, description: "Email or Ugandan phone number." }
+                password: { type: string, minLength: 12 }
+                consent: { type: boolean }
+      responses:
+        "202":
+          description: Account created, verification code sent (FR-AUTH-03).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  maskedIdentifier: { type: string, example: "no••@example.com" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+
+  /api/v1/auth/sign-up/verify:
+    post:
+      operationId: verifySignUp
+      tags: [auth]
+      summary: Confirm the sign-up code (FR-AUTH-03).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string, pattern: "^\\d{6}$" }
+      responses:
+        "200":
+          description: Verified and signed in.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Session" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /api/v1/auth/sign-in:
+    post:
+      operationId: signIn
+      tags: [auth]
+      summary: Sign in (FR-AUTH-01).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identifier, password]
+              properties:
+                identifier: { type: string }
+                password: { type: string }
+                remember: { type: boolean, default: true }
+      responses:
+        "200":
+          description: Signed in, or a two-factor challenge for Expert/Admin (FR-AUTH-05).
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Session"
+                  - $ref: "#/components/schemas/TwoFactorChallenge"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/v1/auth/two-factor/verify:
+    post:
+      operationId: verifyTwoFactor
+      tags: [auth]
+      summary: Complete two-factor sign-in (FR-AUTH-05).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [challengeId, code]
+              properties:
+                challengeId: { type: string }
+                code: { type: string, pattern: "^\\d{6}$" }
+      responses:
+        "200":
+          description: Signed in.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Session" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /api/v1/auth/two-factor/resend:
+    post:
+      operationId: resendTwoFactor
+      tags: [auth]
+      summary: Resend the two-factor code (30 s cooldown).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [challengeId]
+              properties: { challengeId: { type: string } }
+      responses:
+        "202": { description: Code resent. }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/v1/auth/sign-out:
+    post:
+      operationId: signOut
+      tags: [auth]
+      summary: Sign out the current session.
+      responses:
+        "204": { description: Signed out. }
+
+  /api/v1/auth/forgot-password:
+    post:
+      operationId: forgotPassword
+      tags: [auth]
+      summary: Start a password reset (FR-AUTH-06).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identifier]
+              properties: { identifier: { type: string } }
+      responses:
+        "202": { description: "Reset code sent, if the identifier exists (no enumeration)." }
+
+  /api/v1/auth/reset-password:
+    post:
+      operationId: resetPassword
+      tags: [auth]
+      summary: Complete a password reset (FR-AUTH-06).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identifier, code, password]
+              properties:
+                identifier: { type: string }
+                code: { type: string, pattern: "^\\d{6}$" }
+                password: { type: string, minLength: 12 }
+      responses:
+        "200": { description: Password changed. }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /api/v1/auth/oauth/{provider}/start:
+    get:
+      operationId: startOAuth
+      tags: [auth]
+      summary: Begin Google/Facebook OAuth (FR-AUTH-01).
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema: { type: string, enum: [google, facebook] }
+        - name: next
+          in: query
+          schema: { type: string }
+      responses:
+        "302": { description: Redirect to the provider. }
+
+  /api/v1/auth/oauth/{provider}/callback:
+    get:
+      operationId: oauthCallback
+      tags: [auth]
+      summary: OAuth callback.
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema: { type: string, enum: [google, facebook] }
+      responses:
+        "302": { description: "Redirect to `next`, session cookie set." }
+
+  # ---------------------------------------------------------------------------------------
+  # Account (FR-AUTH-02, §10.1)
+  # ---------------------------------------------------------------------------------------
+  /api/v1/me:
+    get:
+      operationId: getMe
+      tags: [account]
+      summary: The signed-in user's profile.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserProfile" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    patch:
+      operationId: updateMe
+      tags: [account]
+      summary: Update profile fields.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                email: { type: string }
+                phone: { type: string }
+                preferredLanguage: { $ref: "#/components/schemas/LocaleCode" }
+                district: { type: string }
+      responses:
+        "200":
+          description: Updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserProfile" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+    delete:
+      operationId: deleteMe
+      tags: [account]
+      summary: Delete the account and personal data (§10.1, DPPA 2019).
+      responses:
+        "202": { description: Deletion scheduled. }
+
+  /api/v1/me/password:
+    post:
+      operationId: changePassword
+      tags: [account]
+      summary: Change password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: { type: string }
+                newPassword: { type: string, minLength: 12 }
+      responses:
+        "200": { description: Changed. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/v1/me/two-factor:
+    post:
+      operationId: setTwoFactor
+      tags: [account]
+      summary: Enable/disable 2FA (always on for Expert/Admin, FR-AUTH-05).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enabled]
+              properties: { enabled: { type: boolean } }
+      responses:
+        "200": { description: Updated. }
+
+  /api/v1/me/sessions:
+    get:
+      operationId: listSessions
+      tags: [account]
+      summary: Signed-in devices.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/DeviceSession" }
+
+  /api/v1/me/sessions/{id}:
+    delete:
+      operationId: revokeSession
+      tags: [account]
+      summary: Sign out one device, or all others.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, description: "A session id, or the literal `others`." }
+      responses:
+        "204": { description: Signed out. }
+
+  /api/v1/me/data-export:
+    get:
+      operationId: exportMyData
+      tags: [account]
+      summary: Download profile, submissions, ratings and comments as JSON (§10.1).
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { type: object, description: "Full export; shape is intentionally open." }
+
+  /api/v1/me/verification:
+    get:
+      operationId: getVerification
+      tags: [account]
+      summary: Accreditation application status (FR-AUTH-02, FR-RATE-06).
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccreditationStatus" }
+    post:
+      operationId: applyForVerification
+      tags: [account]
+      summary: Apply as a Verified Journalist.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [organisation, documents]
+              properties:
+                organisation: { type: string }
+                pressCardNumber: { type: string }
+                documents:
+                  type: array
+                  items: { type: string, format: binary }
+      responses:
+        "202": { description: Submitted for review. }
+
+  /api/v1/me/submissions:
+    get:
+      operationId: listMySubmissions
+      tags: [submissions]
+      summary: My submission history (FR-SUBMIT-07, Activity page).
+      parameters:
+        - { $ref: "#/components/parameters/Page" }
+        - { $ref: "#/components/parameters/PerPage" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PageMeta"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/ActivitySubmission" }
+
+  /api/v1/me/ratings:
+    get:
+      operationId: listMyRatings
+      tags: [ratings]
+      summary: Verdicts I've rated (Activity page).
+      parameters:
+        - { $ref: "#/components/parameters/Page" }
+        - { $ref: "#/components/parameters/PerPage" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PageMeta"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/ActivityRating" }
+
+  # ---------------------------------------------------------------------------------------
+  # API keys (FR-API-02) — Journalist, Admin
+  # ---------------------------------------------------------------------------------------
+  /api/v1/me/api-keys:
+    get:
+      operationId: listApiKeys
+      tags: [api-keys]
+      summary: My partner API keys.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ApiKey" }
+    post:
+      operationId: createApiKey
+      tags: [api-keys]
+      summary: Create a key. The full secret is returned once.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, scopes]
+              properties:
+                name: { type: string }
+                scopes:
+                  type: array
+                  items: { $ref: "#/components/schemas/ApiScope" }
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiKey"
+                  - type: object
+                    required: [secret]
+                    properties:
+                      secret: { type: string, description: "Shown only in this response.", example: "zl_live_4f7a9c2e1b8d4a6f9c0e2b7a1d3f5e8c" }
+
+  /api/v1/me/api-keys/{id}:
+    delete:
+      operationId: revokeApiKey
+      tags: [api-keys]
+      summary: Revoke a key.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "204": { description: Revoked. }
+
+  /api/v1/me/api-usage:
+    get:
+      operationId: getApiUsage
+      tags: [api-keys]
+      summary: Requests used this hour / last 24h, across my keys.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  usedThisHour: { type: integer }
+                  last24h: { type: integer }
+
+  # ---------------------------------------------------------------------------------------
+  # Submissions (FR-SUBMIT-01…07) — core API, used by the web Verify page
+  # ---------------------------------------------------------------------------------------
+  /api/v1/submissions:
+    post:
+      operationId: createSubmission
+      tags: [submissions]
+      summary: Submit a claim, link or media file for checking (FR-SUBMIT-01…05).
+      description: |
+        Anonymous or signed-in. Requires a Cloudflare Turnstile token when signed out
+        (FR-AUTH-07). Accepts an `Idempotency-Key` header so a retried request doesn't create
+        a duplicate submission.
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          schema: { type: string }
+        - name: Accept-Language
+          in: header
+          schema: { $ref: "#/components/schemas/LocaleCode" }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: "#/components/schemas/SubmissionInput" }
+          application/json:
+            schema: { $ref: "#/components/schemas/SubmissionInput" }
+      responses:
+        "202":
+          description: Queued.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SubmissionAccepted" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "415": { $ref: "#/components/responses/UnsupportedMedia" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+
+  /api/v1/submissions/{trackingId}:
+    get:
+      operationId: getSubmissionStatus
+      tags: [submissions]
+      summary: Submission status and, once complete, the report (FR-SUBMIT-06, FR-DETECT-07).
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/TrackingId" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SubmissionStatusResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/v1/submissions/{trackingId}/events:
+    get:
+      operationId: streamSubmissionEvents
+      tags: [submissions]
+      summary: Server-sent events for live pipeline progress (FR-DETECT-07).
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/TrackingId" }
+      responses:
+        "200":
+          description: "`text/event-stream` of `SubmissionStepEvent` frames, ending with a final `SubmissionStatusResponse` event named `done`."
+          content:
+            text/event-stream:
+              schema: { type: string }
+
+  # ---------------------------------------------------------------------------------------
+  # Fact-checks / Library / Search (FR-SEARCH-01…05, FR-DETECT, FR-EXPLAIN)
+  # ---------------------------------------------------------------------------------------
+  /api/v1/fact-checks:
+    get:
+      operationId: searchFactChecks
+      tags: [fact-checks]
+      summary: Search and filter the Library (FR-SEARCH-01…04).
+      security: []
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - name: verdict
+          in: query
+          description: Comma-separated `Verdict` values.
+          schema: { type: string }
+        - { name: category, in: query, schema: { type: string } }
+        - { name: language, in: query, schema: { type: string } }
+        - name: type
+          in: query
+          schema: { $ref: "#/components/schemas/ContentType" }
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [relevance, newest, most-rated], default: relevance }
+        - { $ref: "#/components/parameters/Page" }
+        - { name: perPage, in: query, schema: { type: integer, default: 12, minimum: 1, maximum: 50 } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PageMeta"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/FactCheckSummary" }
+
+  /api/v1/fact-checks/facets:
+    get:
+      operationId: getFactCheckFacets
+      tags: [fact-checks]
+      summary: Available categories/languages for the filter menus.
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categories: { type: array, items: { type: string } }
+                  languages: { type: array, items: { type: string } }
+
+  /api/v1/fact-checks/home-feed:
+    get:
+      operationId: getHomeFeed
+      tags: [fact-checks]
+      summary: Recent, most-debated, trending and leaderboard entries for the Home page (FR-SEARCH-05, FR-RATE-10).
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recent:
+                    type: array
+                    items: { $ref: "#/components/schemas/FactCheckSummary" }
+                  debated:
+                    type: array
+                    items: { $ref: "#/components/schemas/FactCheckSummary" }
+                  trending:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        category: { type: string }
+                        count: { type: integer }
+                  leaderboard:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        report: { $ref: "#/components/schemas/FactCheckSummary" }
+                        score: { $ref: "#/components/schemas/CommunityScore" }
+
+  /api/v1/fact-checks/{id}:
+    get:
+      operationId: getFactCheck
+      tags: [fact-checks]
+      summary: Full report (FR-DETECT, FR-EXPLAIN, FR-REVIEW-04).
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/FactCheckId" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FactCheckReport" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/v1/fact-checks/{id}/related:
+    get:
+      operationId: getRelatedFactChecks
+      tags: [fact-checks]
+      summary: Related reports by topic, source and wording overlap (FR-SEARCH-03).
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/FactCheckId" }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 3, maximum: 10 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/FactCheckSummary" }
+
+  # ---------------------------------------------------------------------------------------
+  # Ratings, CCS and comments (FR-RATE-01…10)
+  # ---------------------------------------------------------------------------------------
+  /api/v1/fact-checks/{id}/ratings:
+    post:
+      operationId: rateFactCheck
+      tags: [ratings]
+      summary: Vote accurate/inaccurate (FR-RATE-01, weighted by role in §9.1).
+      parameters:
+        - { $ref: "#/components/parameters/FactCheckId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [vote]
+              properties:
+                vote: { type: string, enum: [accurate, inaccurate] }
+      responses:
+        "200":
+          description: Updated score.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommunityScore" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      operationId: retractRating
+      tags: [ratings]
+      summary: Retract my vote.
+      parameters:
+        - { $ref: "#/components/parameters/FactCheckId" }
+      responses:
+        "200":
+          description: Updated score.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommunityScore" }
+
+  /api/v1/fact-checks/{id}/comments:
+    get:
+      operationId: listComments
+      tags: [ratings]
+      summary: Rating comments on a report.
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/FactCheckId" }
+        - { $ref: "#/components/parameters/Page" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PageMeta"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/RatingComment" }
+    post:
+      operationId: addComment
+      tags: [ratings]
+      summary: Rate with a comment.
+      parameters:
+        - { $ref: "#/components/parameters/FactCheckId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [vote, body]
+              properties:
+                vote: { type: string, enum: [accurate, inaccurate] }
+                body: { type: string, maxLength: 2000 }
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RatingComment" }
+
+  /api/v1/fact-checks/{id}/report-issue:
+    post:
+      operationId: reportFactCheckIssue
+      tags: [ratings]
+      summary: Flag a verdict or comment for moderator attention (FR-RATE-07).
+      parameters:
+        - { $ref: "#/components/parameters/FactCheckId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string }
+                commentId: { type: string, description: "Set to report a specific comment instead of the verdict." }
+      responses:
+        "202": { description: Reported. }
+
+  # ---------------------------------------------------------------------------------------
+  # Review (FR-REVIEW-01…06) — Expert, Admin
+  # ---------------------------------------------------------------------------------------
+  /api/v1/review/overview:
+    get:
+      operationId: getReviewOverview
+      tags: [review]
+      summary: SLA summary and recent decisions for the Review landing page.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  queueSize: { type: integer }
+                  overdue: { type: integer }
+                  dueSoon: { type: integer }
+                  recentDecisions:
+                    type: array
+                    items: { $ref: "#/components/schemas/ReviewDecision" }
+
+  /api/v1/review/queue:
+    get:
+      operationId: getReviewQueue
+      tags: [review]
+      summary: Flagged verdicts, most urgent first (FR-REVIEW-01, 06).
+      parameters:
+        - name: reason
+          in: query
+          schema: { $ref: "#/components/schemas/ReviewReason" }
+        - name: assignee
+          in: query
+          description: "`me`, `unassigned`, or a user id."
+          schema: { type: string }
+        - { $ref: "#/components/parameters/Page" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PageMeta"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/ReviewCase" }
+
+  /api/v1/review/cases/{id}:
+    get:
+      operationId: getReviewCase
+      tags: [review]
+      summary: A case with its full report (FR-REVIEW-02…05, FR-EXPLAIN-08).
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  case: { $ref: "#/components/schemas/ReviewCase" }
+                  report: { $ref: "#/components/schemas/FactCheckReport" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/v1/review/cases/{id}/assign:
+    post:
+      operationId: assignReviewCase
+      tags: [review]
+      summary: Assign a case to myself or another reviewer.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                assigneeId: { type: string, description: "Omit to assign to myself." }
+      responses:
+        "200":
+          description: Updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReviewCase" }
+
+  /api/v1/review/cases/{id}/decision:
+    post:
+      operationId: decideReviewCase
+      tags: [review]
+      summary: Confirm or override the verdict (FR-REVIEW-02, 03).
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [outcome, justification]
+              properties:
+                outcome: { type: string, enum: [confirmed, overridden] }
+                verdict:
+                  allOf: [{ $ref: "#/components/schemas/Verdict" }]
+                  description: Required when outcome is "overridden".
+                justification: { type: string, minLength: 10 }
+      responses:
+        "200":
+          description: Decision recorded; the report now shows "Human Verified".
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReviewDecision" }
+        "409":
+          description: Case already decided.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+
+  /api/v1/review/history:
+    get:
+      operationId: getReviewHistory
+      tags: [review]
+      summary: My past decisions (FR-REVIEW-03).
+      parameters:
+        - { $ref: "#/components/parameters/Page" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PageMeta"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/ReviewDecision" }
+
+  # ---------------------------------------------------------------------------------------
+  # Notifications (FR-NOTIFY-01…04)
+  # ---------------------------------------------------------------------------------------
+  /api/v1/notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: My notifications.
+      parameters:
+        - { $ref: "#/components/parameters/Page" }
+        - name: unreadOnly
+          in: query
+          schema: { type: boolean, default: false }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PageMeta"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/AppNotification" }
+
+  /api/v1/notifications/{id}/read:
+    post:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark one notification read.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "204": { description: OK }
+
+  /api/v1/notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark every notification read.
+      responses:
+        "204": { description: OK }
+
+  /api/v1/notifications/stream:
+    get:
+      operationId: streamNotifications
+      tags: [notifications]
+      summary: Server-sent events for new notifications.
+      responses:
+        "200":
+          description: "`text/event-stream` of `AppNotification` frames."
+          content:
+            text/event-stream:
+              schema: { type: string }
+
+  /api/v1/me/alert-settings:
+    get:
+      operationId: getAlertSettings
+      tags: [notifications]
+      summary: Followed topics and delivery channels (FR-NOTIFY-01, 04).
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AlertSettings" }
+    patch:
+      operationId: updateAlertSettings
+      tags: [notifications]
+      summary: Update followed topics and channels.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AlertSettings" }
+      responses:
+        "200":
+          description: Updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AlertSettings" }
+
+  # ---------------------------------------------------------------------------------------
+  # Admin (FR-ADMIN-01…07) — Admin only, except moderation actions which Experts may take
+  # ---------------------------------------------------------------------------------------
+  /api/v1/admin/overview:
+    get:
+      operationId: getAdminOverview
+      tags: [admin]
+      summary: Year-one KPIs, checks/day, verdict mix, system health (§13).
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  kpis: { type: array, items: { $ref: "#/components/schemas/Kpi" } }
+                  dailyChecks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date: { type: string, format: date }
+                        checks: { type: integer }
+                  verdictMix:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        verdict: { $ref: "#/components/schemas/Verdict" }
+                        count: { type: integer }
+                  systemHealth:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        label: { type: string }
+                        value: { type: string }
+                        ok: { type: boolean }
+                        note: { type: string }
+
+  /api/v1/admin/users:
+    get:
+      operationId: listAdminUsers
+      tags: [admin]
+      summary: All users (FR-ADMIN-02).
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - name: role
+          in: query
+          schema: { $ref: "#/components/schemas/Role" }
+        - name: status
+          in: query
+          schema: { type: string, enum: [active, suspended, pending] }
+        - { $ref: "#/components/parameters/Page" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PageMeta"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/AdminUser" }
+
+  /api/v1/admin/users/{id}:
+    patch:
+      operationId: updateAdminUser
+      tags: [admin]
+      summary: Change a user's role or status (FR-ADMIN-02).
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role: { $ref: "#/components/schemas/Role" }
+                status: { type: string, enum: [active, suspended, pending] }
+      responses:
+        "200":
+          description: Updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminUser" }
+
+  /api/v1/admin/moderation/reports:
+    get:
+      operationId: listContentReports
+      tags: [admin]
+      summary: Reader-reported content (FR-RATE-07).
+      parameters:
+        - { $ref: "#/components/parameters/Page" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PageMeta"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/ContentReport" }
+
+  /api/v1/admin/moderation/reports/{id}/resolve:
+    post:
+      operationId: resolveContentReport
+      tags: [admin]
+      summary: Resolve a content report (dismiss, or remove the content).
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action: { type: string, enum: [dismiss, remove] }
+                note: { type: string }
+      responses:
+        "200": { description: Resolved. }
+
+  /api/v1/admin/moderation/signals:
+    get:
+      operationId: listManipulationSignals
+      tags: [admin]
+      summary: Suspected coordinated rating manipulation.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ManipulationSignal" }
+
+  /api/v1/admin/sources:
+    get:
+      operationId: listSources
+      tags: [admin]
+      summary: Trusted sources (FR-ADMIN-03, FR-DETECT-06, target ≥50).
+      parameters:
+        - { $ref: "#/components/parameters/Page" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PageMeta"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/TrustedSource" }
+    post:
+      operationId: addSource
+      tags: [admin]
+      summary: Add a trusted source.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TrustedSourceInput" }
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TrustedSource" }
+
+  /api/v1/admin/sources/{id}:
+    patch:
+      operationId: updateSource
+      tags: [admin]
+      summary: Edit or (de)activate a source.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TrustedSourceInput" }
+      responses:
+        "200":
+          description: Updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TrustedSource" }
+    delete:
+      operationId: removeSource
+      tags: [admin]
+      summary: Remove a source.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "204": { description: Removed. }
+
+  /api/v1/admin/broadcasts:
+    get:
+      operationId: listBroadcasts
+      tags: [admin]
+      summary: Emergency alerts sent (FR-ADMIN-05).
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Broadcast" }
+    post:
+      operationId: sendBroadcast
+      tags: [admin]
+      summary: Send a high-priority alert.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, message, severity, audience, channels]
+              properties:
+                title: { type: string }
+                message: { type: string }
+                severity: { type: string, enum: [high, critical] }
+                audience: { type: string }
+                channels:
+                  type: array
+                  items: { type: string, enum: [in-app, push, email, sms] }
+      responses:
+        "202":
+          description: Sending.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Broadcast" }
+
+  /api/v1/admin/reports:
+    get:
+      operationId: listMonthlyReports
+      tags: [admin]
+      summary: Monthly misinformation trend reports (FR-ADMIN-04).
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MonthlyReport" }
+
+  /api/v1/admin/audit-log:
+    get:
+      operationId: listAuditLog
+      tags: [admin]
+      summary: Every administrative and expert action (FR-ADMIN-07, FR-REVIEW-03).
+      parameters:
+        - name: actorRole
+          in: query
+          schema: { $ref: "#/components/schemas/Role" }
+        - name: action
+          in: query
+          schema: { $ref: "#/components/schemas/AuditAction" }
+        - { $ref: "#/components/parameters/Page" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PageMeta"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/AuditEntry" }
+
+  /api/v1/admin/settings:
+    get:
+      operationId: getPlatformSettings
+      tags: [admin]
+      summary: Escalation thresholds, rating weights, review SLA, retraining (FR-ADMIN-06).
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlatformSettings" }
+    patch:
+      operationId: updatePlatformSettings
+      tags: [admin]
+      summary: Update platform settings.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PlatformSettings" }
+      responses:
+        "200":
+          description: Updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlatformSettings" }
+
+  # ---------------------------------------------------------------------------------------
+  # Partner API (FR-API-01, 03) — documented on /developers, must match that page exactly.
+  # Base URL: https://api.zuula.ug/v1 · Authorization: Bearer <key> · 100 req/hour.
+  # ---------------------------------------------------------------------------------------
+  /v1/checks:
+    servers: [{ url: https://api.zuula.ug }]
+    post:
+      operationId: partnerSubmitCheck
+      tags: [partner]
+      summary: Submit content for verification.
+      security: [{ partnerApiKey: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PartnerCheckInput" }
+          multipart/form-data:
+            schema: { $ref: "#/components/schemas/PartnerCheckInput" }
+      responses:
+        "202":
+          description: Queued.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SubmissionAccepted" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "415": { $ref: "#/components/responses/UnsupportedMedia" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /v1/checks/{trackingId}:
+    servers: [{ url: https://api.zuula.ug }]
+    get:
+      operationId: partnerGetCheckStatus
+      tags: [partner]
+      summary: Poll a check's status; `result` is present once completed.
+      security: [{ partnerApiKey: [] }]
+      parameters:
+        - { $ref: "#/components/parameters/TrackingId" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PartnerCheckStatus" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /v1/fact-checks/{id}:
+    servers: [{ url: https://api.zuula.ug }]
+    get:
+      operationId: partnerGetFactCheck
+      tags: [partner]
+      summary: A published fact-check.
+      security: [{ partnerApiKey: [] }]
+      parameters:
+        - { $ref: "#/components/parameters/FactCheckId" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FactCheckPublic" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /v1/fact-checks:
+    servers: [{ url: https://api.zuula.ug }]
+    get:
+      operationId: partnerSearchFactChecks
+      tags: [partner]
+      summary: Search published fact-checks.
+      security: [{ partnerApiKey: [] }]
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: verdict, in: query, schema: { $ref: "#/components/schemas/Verdict" } }
+        - { name: category, in: query, schema: { type: string } }
+        - { name: language, in: query, schema: { type: string } }
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - { $ref: "#/components/parameters/Page" }
+        - { name: perPage, in: query, schema: { type: integer, default: 10, maximum: 50 } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/FactCheckSearchItem" }
+                  page: { type: integer }
+                  perPage: { type: integer }
+                  total: { type: integer }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: zuula_session
+      description: "Core API. A bearer JWT (`Authorization: Bearer <jwt>`) is also accepted for non-browser core clients."
+    partnerApiKey:
+      type: http
+      scheme: bearer
+      bearerFormat: "zl_live_*"
+      description: |
+        Partner API. Matches `/developers` exactly: `Authorization: Bearer zl_live_...`
+        (deliberately not the `X-API-Key` header the P2 brief first proposed — see the
+        deviations note in `info.description`).
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    PerPage:
+      name: perPage
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    TrackingId:
+      name: trackingId
+      in: path
+      required: true
+      schema: { type: string, pattern: "^ZL-[A-Z2-9]{4}-[A-Z2-9]{2}$" }
+      example: ZL-7K3P-Q9
+    FactCheckId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+      example: fc-2026-0142
+
+  responses:
+    BadRequest:
+      description: Bad request.
+      content: { application/json: { schema: { $ref: "#/components/schemas/ErrorEnvelope" } } }
+    Unauthorized:
+      description: Missing or invalid credentials.
+      content: { application/json: { schema: { $ref: "#/components/schemas/ErrorEnvelope" } } }
+    Forbidden:
+      description: Authenticated, but not allowed to do this.
+      content: { application/json: { schema: { $ref: "#/components/schemas/ErrorEnvelope" } } }
+    NotFound:
+      description: Not found.
+      content: { application/json: { schema: { $ref: "#/components/schemas/ErrorEnvelope" } } }
+    Conflict:
+      description: Conflict.
+      content: { application/json: { schema: { $ref: "#/components/schemas/ErrorEnvelope" } } }
+    PayloadTooLarge:
+      description: File exceeds 50 MB.
+      content: { application/json: { schema: { $ref: "#/components/schemas/ErrorEnvelope" } } }
+    UnsupportedMedia:
+      description: Unsupported file type.
+      content: { application/json: { schema: { $ref: "#/components/schemas/ErrorEnvelope" } } }
+    UnprocessableEntity:
+      description: Validation failed.
+      content: { application/json: { schema: { $ref: "#/components/schemas/ErrorEnvelope" } } }
+    RateLimited:
+      description: Rate limit exceeded (100 requests/hour per key).
+      headers:
+        X-RateLimit-Limit: { schema: { type: integer }, description: "Requests allowed per window." }
+        X-RateLimit-Remaining: { schema: { type: integer } }
+        X-RateLimit-Reset: { schema: { type: integer }, description: Unix timestamp. }
+        Retry-After: { schema: { type: integer }, description: Seconds. }
+      content: { application/json: { schema: { $ref: "#/components/schemas/ErrorEnvelope" } } }
+
+  schemas:
+    # ---- Shared enums ----
+    Verdict:
+      type: string
+      enum: [authentic, likely-false, false, ai-generated, unverifiable]
+      description: FR-DETECT-01.
+    ContentType:
+      type: string
+      enum: [text, url, image, audio, video]
+    ClaimAssessment:
+      type: string
+      enum: [false, misleading, unsupported, out-of-context, supported]
+    CitationStance:
+      type: string
+      enum: [supports, contradicts, context]
+    RaterRole:
+      type: string
+      enum: [public, journalist, expert]
+    Role:
+      type: string
+      enum: [public, journalist, expert, admin]
+      description: FR-AUTH-02. Order matters — later roles inherit earlier access.
+    ApiScope:
+      type: string
+      enum: [submit, read]
+    LocaleCode:
+      type: string
+      enum: [en, lg, ach, nyn, teo]
+    ReviewReason:
+      type: string
+      enum: [community-escalation, suspended, user-reports, low-confidence]
+    AuditAction:
+      type: string
+      enum:
+        - verdict.override
+        - verdict.confirm
+        - user.role_change
+        - user.suspend
+        - source.add
+        - source.deactivate
+        - broadcast.send
+        - settings.update
+        - moderation.remove
+
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum:
+                - bad_request
+                - unauthorized
+                - forbidden
+                - not_found
+                - file_too_large
+                - unsupported_media
+                - invalid_content
+                - rate_limited
+                - server_error
+            message: { type: string }
+            retryAfter: { type: integer, description: Seconds. Present for rate_limited. }
+      example:
+        error:
+          code: rate_limited
+          message: This key has used its 100 requests for this hour.
+          retryAfter: 1260
+
+    PageMeta:
+      type: object
+      properties:
+        page: { type: integer }
+        perPage: { type: integer }
+        total: { type: integer }
+
+    # ---- Fact-check report ----
+    Claim:
+      type: object
+      required: [id, start, end, assessment, reason, citationIds]
+      properties:
+        id: { type: string }
+        start: { type: integer, description: Character offset into submittedText. }
+        end: { type: integer, description: Exclusive. }
+        assessment: { $ref: "#/components/schemas/ClaimAssessment" }
+        reason: { type: string }
+        citationIds: { type: array, items: { type: string } }
+
+    Citation:
+      type: object
+      required: [id, sourceName, title, url, publishedAt, stance, trusted]
+      properties:
+        id: { type: string }
+        sourceName: { type: string }
+        title: { type: string }
+        url: { type: string, format: uri }
+        publishedAt: { type: string, format: date }
+        stance: { $ref: "#/components/schemas/CitationStance" }
+        trusted: { type: boolean }
+        excerpt: { type: string }
+
+    AISignal:
+      type: object
+      required: [id, label, description, score, threshold, method]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        description: { type: string }
+        score: { type: number, minimum: 0, maximum: 1 }
+        threshold: { type: number, minimum: 0, maximum: 1 }
+        method: { type: string }
+
+    ExpertAnnotation:
+      type: object
+      required: [id, author, role, createdAt, body]
+      properties:
+        id: { type: string }
+        author: { type: string }
+        role: { type: string }
+        createdAt: { type: string, format: date-time }
+        body: { type: string }
+
+    HumanReview:
+      type: object
+      required: [outcome, reviewer, reviewedAt, justification]
+      properties:
+        outcome: { type: string, enum: [confirmed, overridden] }
+        reviewer: { type: string }
+        reviewedAt: { type: string, format: date-time }
+        previousVerdict: { $ref: "#/components/schemas/Verdict" }
+        justification: { type: string }
+
+    RatingCounts:
+      type: object
+      required: [public, journalist, expert]
+      properties:
+        public: { type: integer }
+        journalist: { type: integer }
+        expert: { type: integer }
+
+    RatingComment:
+      type: object
+      required: [id, author, role, vote, body, createdAt]
+      properties:
+        id: { type: string }
+        author: { type: string }
+        role: { $ref: "#/components/schemas/RaterRole" }
+        vote: { type: string, enum: [accurate, inaccurate] }
+        body: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    CommunityScore:
+      type: object
+      description: Computed server-side (§9.1 weights, §9.2 thresholds). Not stored client-side.
+      required: [ccs, weightedAccurate, weightedInaccurate, accurateCount, inaccurateCount, total, status]
+      properties:
+        ccs: { type: [number, "null"], minimum: 0, maximum: 100 }
+        weightedAccurate: { type: number }
+        weightedInaccurate: { type: number }
+        accurateCount: { type: integer }
+        inaccurateCount: { type: integer }
+        total: { type: integer }
+        status: { type: string, enum: [verified, standard, questioned, escalated, suspended] }
+
+    CommunityRating:
+      type: object
+      required: [accurate, inaccurate, comments, score]
+      properties:
+        accurate: { $ref: "#/components/schemas/RatingCounts" }
+        inaccurate: { $ref: "#/components/schemas/RatingCounts" }
+        comments:
+          type: array
+          items: { $ref: "#/components/schemas/RatingComment" }
+        score: { $ref: "#/components/schemas/CommunityScore" }
+
+    FactCheckReport:
+      description: Full report — core API only (includes submittedText, annotations and comments).
+      type: object
+      required:
+        - id, trackingId, title, contentType, language, submittedText, verdict, confidence
+        - summary, whatIsFalse, whatIsTrue, claims, citations, aiSignals, annotations
+        - community, category, checkedAt, processingSeconds
+      properties:
+        id: { type: string }
+        trackingId: { type: string }
+        title: { type: string }
+        contentType: { $ref: "#/components/schemas/ContentType" }
+        language: { type: string }
+        submittedText: { type: string }
+        sourceUrl: { type: string, format: uri }
+        verdict: { $ref: "#/components/schemas/Verdict" }
+        confidence: { type: integer, minimum: 0, maximum: 100, description: FR-DETECT-02. }
+        summary: { type: string }
+        whatIsFalse: { type: array, items: { type: string } }
+        whatIsTrue: { type: array, items: { type: string } }
+        claims: { type: array, items: { $ref: "#/components/schemas/Claim" } }
+        citations: { type: array, items: { $ref: "#/components/schemas/Citation" } }
+        aiSignals: { type: array, items: { $ref: "#/components/schemas/AISignal" } }
+        annotations: { type: array, items: { $ref: "#/components/schemas/ExpertAnnotation" } }
+        humanReview:
+          oneOf:
+            - { $ref: "#/components/schemas/HumanReview" }
+            - type: "null"
+        community: { $ref: "#/components/schemas/CommunityRating" }
+        category: { type: string }
+        checkedAt: { type: string, format: date-time }
+        processingSeconds: { type: number }
+
+    FactCheckSummary:
+      description: List-item shape for /fact-checks search, the Home feed and related reports (core API).
+      type: object
+      required: [id, trackingId, title, contentType, language, verdict, confidence, summary, category, checkedAt]
+      properties:
+        id: { type: string }
+        trackingId: { type: string }
+        title: { type: string }
+        contentType: { $ref: "#/components/schemas/ContentType" }
+        language: { type: string }
+        verdict: { $ref: "#/components/schemas/Verdict" }
+        confidence: { type: integer }
+        summary: { type: string }
+        category: { type: string }
+        checkedAt: { type: string, format: date-time }
+        score: { $ref: "#/components/schemas/CommunityScore" }
+
+    FactCheckPublic:
+      description: |
+        Partner-facing report shape (GET /v1/fact-checks/{id}). Matches the `factCheck()` helper
+        in apps/web/components/developers/examples.ts exactly: no submittedText, no annotations,
+        no rating comments — only aggregate community counts.
+      type: object
+      required:
+        - id, trackingId, url, title, contentType, language, category, verdict, confidence
+        - summary, whatIsFalse, whatIsTrue, claims, citations, aiSignals, community, humanReview
+        - checkedAt, processingSeconds
+      properties:
+        id: { type: string }
+        trackingId: { type: string }
+        url: { type: string, format: uri, example: "https://zuula.ug/fact-checks/fc-2026-0142" }
+        title: { type: string }
+        contentType: { $ref: "#/components/schemas/ContentType" }
+        language: { type: string }
+        category: { type: string }
+        verdict: { $ref: "#/components/schemas/Verdict" }
+        confidence: { type: integer }
+        summary: { type: string }
+        whatIsFalse: { type: array, items: { type: string } }
+        whatIsTrue: { type: array, items: { type: string } }
+        claims: { type: array, items: { $ref: "#/components/schemas/Claim" } }
+        citations: { type: array, items: { $ref: "#/components/schemas/Citation" } }
+        aiSignals: { type: array, items: { $ref: "#/components/schemas/AISignal" } }
+        community:
+          type: object
+          required: [accurate, inaccurate]
+          properties:
+            accurate: { $ref: "#/components/schemas/RatingCounts" }
+            inaccurate: { $ref: "#/components/schemas/RatingCounts" }
+        humanReview:
+          oneOf:
+            - { $ref: "#/components/schemas/HumanReview" }
+            - type: "null"
+        checkedAt: { type: string, format: date-time }
+        processingSeconds: { type: number }
+
+    FactCheckSearchItem:
+      description: Partner search result item (GET /v1/fact-checks) — matches SEARCH_RESPONSE in examples.ts.
+      type: object
+      required: [id, trackingId, url, title, verdict, confidence, summary, category, language, checkedAt]
+      properties:
+        id: { type: string }
+        trackingId: { type: string }
+        url: { type: string, format: uri }
+        title: { type: string }
+        verdict: { $ref: "#/components/schemas/Verdict" }
+        confidence: { type: integer }
+        summary: { type: string }
+        category: { type: string }
+        language: { type: string }
+        checkedAt: { type: string, format: date-time }
+
+    # ---- Submissions ----
+    SubmissionInput:
+      type: object
+      required: [type]
+      properties:
+        type: { type: string, enum: [text, url, media, article] }
+        content: { type: string, description: "Text (20–5,000 chars) or article body (50–20,000 chars)." }
+        url: { type: string, format: uri }
+        file: { type: string, format: binary, description: "Up to 50 MB; image/audio/video." }
+        headline: { type: string, maxLength: 200 }
+        articleUrl: { type: string, format: uri }
+        language:
+          allOf: [{ type: string }]
+          description: "A LocaleCode, or `auto` to detect."
+        captchaToken: { type: string, description: "Cloudflare Turnstile token, required when signed out (FR-AUTH-07)." }
+
+    SubmissionAccepted:
+      type: object
+      required: [trackingId, status, estimatedSeconds, statusUrl]
+      properties:
+        trackingId: { type: string, example: ZL-7K3P-Q9 }
+        status: { type: string, enum: [queued] }
+        estimatedSeconds: { type: integer, example: 10 }
+        statusUrl: { type: string, format: uri }
+
+    SubmissionStepEvent:
+      type: object
+      required: [step, status]
+      properties:
+        step:
+          type: string
+          enum: [received, scan, fetch, transcribe, media, language, claims, sources, ai, report]
+        status: { type: string, enum: [active, done] }
+        seconds: { type: number, description: Expected duration for this step. }
+
+    SubmissionStatusResponse:
+      type: object
+      required: [trackingId, status, submittedAt]
+      properties:
+        trackingId: { type: string }
+        status: { type: string, enum: [queued, processing, completed, failed] }
+        submittedAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time }
+        steps:
+          type: array
+          items: { $ref: "#/components/schemas/SubmissionStepEvent" }
+        result: { $ref: "#/components/schemas/FactCheckReport" }
+        error: { $ref: "#/components/schemas/ErrorEnvelope" }
+
+    ActivitySubmission:
+      type: object
+      required: [trackingId, type, preview, submittedAt, status]
+      properties:
+        trackingId: { type: string }
+        type: { type: string, enum: [text, url, media, article] }
+        preview: { type: string }
+        submittedAt: { type: string, format: date-time }
+        status: { type: string, enum: [processing, complete, failed] }
+        verdict: { $ref: "#/components/schemas/Verdict" }
+        reportId: { type: string }
+
+    ActivityRating:
+      type: object
+      required: [reportId, title, verdict, vote, ratedAt]
+      properties:
+        reportId: { type: string }
+        title: { type: string }
+        verdict: { $ref: "#/components/schemas/Verdict" }
+        vote: { type: string, enum: [accurate, inaccurate] }
+        comment: { type: string }
+        ratedAt: { type: string, format: date-time }
+
+    # ---- Auth / account ----
+    Session:
+      type: object
+      required: [user]
+      properties:
+        user: { $ref: "#/components/schemas/UserProfile" }
+
+    TwoFactorChallenge:
+      type: object
+      required: [challengeId, maskedIdentifier]
+      properties:
+        challengeId: { type: string }
+        maskedIdentifier: { type: string, example: "07••••••234" }
+
+    UserProfile:
+      type: object
+      required: [id, name, role, email]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+        preferredLanguage: { $ref: "#/components/schemas/LocaleCode" }
+        district: { type: string }
+        twoFactorEnabled: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+    DeviceSession:
+      type: object
+      required: [id, device, location, lastActive, current]
+      properties:
+        id: { type: string }
+        device: { type: string }
+        location: { type: string }
+        lastActive: { type: string, format: date-time }
+        current: { type: boolean }
+
+    AccreditationStatus:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [none, pending, approved, rejected] }
+        organisation: { type: string }
+        submittedAt: { type: string, format: date-time }
+        reviewedAt: { type: string, format: date-time }
+        note: { type: string }
+
+    ApiKey:
+      type: object
+      required: [id, name, prefix, scopes, createdAt, lastUsedAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        prefix: { type: string, example: zl_live_4f7a }
+        scopes: { type: array, items: { $ref: "#/components/schemas/ApiScope" } }
+        createdAt: { type: string, format: date }
+        lastUsedAt:
+          oneOf:
+            - { type: string, format: date-time }
+            - type: "null"
+
+    AppNotification:
+      type: object
+      required: [id, kind, title, body, createdAt, read]
+      properties:
+        id: { type: string }
+        kind: { type: string, enum: [verdict-ready, topic-alert, review-outcome, broadcast, accreditation] }
+        title: { type: string }
+        body: { type: string }
+        href: { type: string }
+        createdAt: { type: string, format: date-time }
+        read: { type: boolean }
+
+    AlertSettings:
+      type: object
+      properties:
+        topics: { type: array, items: { type: string } }
+        notifyOn:
+          type: object
+          properties:
+            submissionResults: { type: boolean }
+            viralMisinformation: { type: boolean }
+            expertReviews: { type: boolean }
+            emergencyBroadcasts: { type: boolean, description: Always true; not user-editable. }
+        channels:
+          type: object
+          properties:
+            inApp: { type: boolean }
+            email: { type: boolean }
+            push: { type: boolean }
+            sms: { type: boolean }
+            whatsapp: { type: boolean }
+
+    # ---- Review ----
+    ReviewCase:
+      type: object
+      required: [id, reportId, reason, flaggedAt, assignee, priority]
+      properties:
+        id: { type: string }
+        reportId: { type: string }
+        reason: { $ref: "#/components/schemas/ReviewReason" }
+        flaggedAt: { type: string, format: date-time }
+        reports: { type: integer, description: Reader report count, when reason is user-reports. }
+        assignee:
+          oneOf:
+            - { type: string }
+            - type: "null"
+        priority: { type: string, enum: [normal, high] }
+        slaDueAt: { type: string, format: date-time }
+        slaState: { type: string, enum: [overdue, due-soon, on-track] }
+
+    ReviewDecision:
+      type: object
+      required: [id, caseId, reportId, title, outcome, from, to, justification, reviewer, decidedAt, turnaroundHours]
+      properties:
+        id: { type: string }
+        caseId: { type: string }
+        reportId: { type: string }
+        title: { type: string }
+        outcome: { type: string, enum: [confirmed, overridden] }
+        from: { $ref: "#/components/schemas/Verdict" }
+        to: { $ref: "#/components/schemas/Verdict" }
+        justification: { type: string }
+        reviewer: { type: string }
+        decidedAt: { type: string, format: date-time }
+        turnaroundHours: { type: number }
+
+    # ---- Admin ----
+    Kpi:
+      type: object
+      required: [id, label, value, unit, target, direction, note]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        value: { type: number }
+        unit: { type: string, enum: ["%", s, h, "", /5] }
+        target: { type: number }
+        direction: { type: string, enum: [min, max] }
+        note: { type: string }
+
+    AdminUser:
+      type: object
+      required: [id, name, email, role, status, joined, lastActive, ratings]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+        status: { type: string, enum: [active, suspended, pending] }
+        joined: { type: string, format: date }
+        lastActive: { type: string, format: date }
+        ratings: { type: integer }
+
+    ContentReport:
+      type: object
+      required: [id, reportId, title, reason, reporters, sample, reportedAt]
+      properties:
+        id: { type: string }
+        reportId: { type: string }
+        title: { type: string }
+        reason: { type: string }
+        reporters: { type: integer }
+        sample: { type: string }
+        reportedAt: { type: string, format: date-time }
+
+    ManipulationSignal:
+      type: object
+      required: [id, reportId, title, pattern, accounts, window, direction, confidence]
+      properties:
+        id: { type: string }
+        reportId: { type: string }
+        title: { type: string }
+        pattern: { type: string }
+        accounts: { type: integer }
+        window: { type: string }
+        direction: { type: string, enum: [accurate, inaccurate] }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+
+    TrustedSource:
+      type: object
+      required: [id, name, domain, type, languages, tier, active, lastCrawled, crawlOk]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        domain: { type: string }
+        type: { type: string, enum: [media, government, fact-checker, international, academic] }
+        languages: { type: array, items: { type: string } }
+        tier: { type: integer, enum: [1, 2, 3] }
+        active: { type: boolean }
+        lastCrawled: { type: string, format: date-time }
+        crawlOk: { type: boolean }
+
+    TrustedSourceInput:
+      type: object
+      required: [name, domain, type, languages, tier]
+      properties:
+        name: { type: string }
+        domain: { type: string }
+        type: { type: string, enum: [media, government, fact-checker, international, academic] }
+        languages: { type: array, items: { type: string } }
+        tier: { type: integer, enum: [1, 2, 3] }
+        active: { type: boolean, default: true }
+
+    Broadcast:
+      type: object
+      required: [id, title, message, severity, audience, channels, sentAt, sentBy, reach, opened]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        message: { type: string }
+        severity: { type: string, enum: [high, critical] }
+        audience: { type: string }
+        channels: { type: array, items: { type: string } }
+        sentAt: { type: string, format: date-time }
+        sentBy: { type: string }
+        reach: { type: integer }
+        opened: { type: integer }
+
+    MonthlyReport:
+      type: object
+      required: [month, checks, falseShare, aiGenerated, topCategories, avgDelivery]
+      properties:
+        month: { type: string, example: "2026-09" }
+        checks: { type: integer }
+        falseShare: { type: number, description: "% False or Likely False." }
+        aiGenerated: { type: integer }
+        topCategories: { type: array, items: { type: string } }
+        avgDelivery: { type: number, description: Seconds. }
+
+    AuditEntry:
+      type: object
+      required: [id, at, actor, actorRole, action, target, detail, ip]
+      properties:
+        id: { type: string }
+        at: { type: string, format: date-time }
+        actor: { type: string }
+        actorRole: { $ref: "#/components/schemas/Role" }
+        action: { $ref: "#/components/schemas/AuditAction" }
+        target: { type: string }
+        detail: { type: string }
+        ip: { type: string, description: Partially masked. }
+
+    PlatformSettings:
+      type: object
+      required: [thresholds, weights, slaHours, apiRateLimit, retraining]
+      properties:
+        thresholds:
+          type: object
+          properties:
+            verifiedMin: { type: integer }
+            questionedMin: { type: integer }
+            questionedMax: { type: integer }
+            questionedRatings: { type: integer }
+            escalatedMax: { type: integer }
+            escalatedRatings: { type: integer }
+            suspendedMax: { type: integer }
+            suspendedRatings: { type: integer }
+        weights:
+          type: object
+          description: "§9.1. The spec is silent on admins; the app uses 1× (open question for the supervisor)."
+          properties:
+            public: { type: integer }
+            journalist: { type: integer }
+            expert: { type: integer }
+        slaHours: { type: integer, default: 48 }
+        apiRateLimit: { type: integer, default: 100 }
+        retraining:
+          type: object
+          properties:
+            cadence: { type: string, enum: [weekly, monthly] }
+            minCcs: { type: integer }
+
+    # ---- Partner API ----
+    PartnerCheckInput:
+      type: object
+      required: [type]
+      properties:
+        type: { type: string, enum: [text, url, media, article] }
+        content: { type: string }
+        url: { type: string, format: uri }
+        file: { type: string, format: binary }
+        headline: { type: string }
+        language: { type: string, description: "A LocaleCode, or `auto`." }
+
+    PartnerCheckStatus:
+      type: object
+      required: [trackingId, status, submittedAt]
+      properties:
+        trackingId: { type: string }
+        status: { type: string, enum: [queued, processing, completed, failed] }
+        submittedAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time }
+        result: { $ref: "#/components/schemas/FactCheckPublic" }
+        error: { $ref: "#/components/schemas/ErrorEnvelope" }

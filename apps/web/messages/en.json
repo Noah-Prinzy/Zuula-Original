@@ -1201,8 +1201,8 @@
       "slide": "{current} of {total}"
     },
     "feed": {
-      "eyebrow": "Live status",
-      "title": "Recent fact-checks",
+      "eyebrow": "Recent",
+      "title": "Fact-checks",
       "link": "Library",
       "tagNew": "New",
       "tagDebated": "Debated",

@@ -33,23 +33,31 @@ function CopyButton({ code }: { code: string }) {
   )
 }
 
-function Pre({ code }: { code: string }) {
+// Focusable, labelled scroll region so keyboard users can scroll long or wide samples
+// (WCAG 2.1.1; axe "scrollable-region-focusable").
+function Pre({ code, label }: { code: string; label: string }) {
   return (
-    <pre className="max-h-[28rem] overflow-auto p-4 font-mono text-[0.8125rem] leading-relaxed text-zinc-100">
+    <pre
+      tabIndex={0}
+      role="region"
+      aria-label={label}
+      className="max-h-[28rem] overflow-auto p-4 font-mono text-[0.8125rem] leading-relaxed text-zinc-100 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+    >
       <code>{code}</code>
     </pre>
   )
 }
 
 // A dark code panel with a label and a copy button. Stays dark in both themes.
-export function CodeBlock({ code, label, className }: { code: string; label?: string; className?: string }) {
+// `label` names the panel on screen and, for screen readers, its scroll region.
+export function CodeBlock({ code, label, className }: { code: string; label: string; className?: string }) {
   return (
     <div className={cn("min-w-0 border border-zinc-800 bg-zinc-950", className)}>
       <div className="flex items-center justify-between gap-2 border-b border-zinc-800 pl-4">
         <span className="truncate font-mono text-xs text-zinc-400">{label}</span>
         <CopyButton code={code} />
       </div>
-      <Pre code={code} />
+      <Pre code={code} label={label} />
     </div>
   )
 }
@@ -88,7 +96,7 @@ export function CodeSamples({ samples, className }: { samples: Samples; classNam
       </div>
       {LANGUAGES.map((l) => (
         <TabsContent key={l.value} value={l.value}>
-          <Pre code={samples[l.value]} />
+          <Pre code={samples[l.value]} label={l.label} />
         </TabsContent>
       ))}
     </Tabs>

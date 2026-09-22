@@ -1,7 +1,6 @@
-"""Celery app. P2 Step 2 scope: just enough to prove `docker compose up` runs a working
-worker process end to end. The real submit-flow pipeline (ClamAV/S3/Whisper/analysis/verdict
-stages, emitting SubmissionStepEvent-shaped progress) is P2 Step 3 — see the P2 brief, §3
-Step 3 and §4's "pipeline" agent scope (app/worker/**, app/realtime/**, app/providers/analysis*).
+"""Celery app. The real submit-flow pipeline lives in app/worker/pipeline.py (P2 Step 3);
+imported at the bottom of this module so `celery -A app.worker.celery_app worker` (see
+docker-compose.yml) registers its task without every caller needing to import it directly.
 """
 
 from celery import Celery
@@ -20,3 +19,7 @@ celery_app = Celery(
 @celery_app.task(name="zuula.ping")
 def ping() -> str:
     return "pong"
+
+
+from app.worker import pipeline  # noqa: E402,F401 — after celery_app so pipeline's own
+# `from app.worker import celery_app` resolves against this (already-populated) module.

@@ -183,10 +183,19 @@ def dump_report(model: FactCheckReport | FactCheckPublic) -> dict:
     `field?: T` (optional-absent) rather than emitting an explicit null for every one of them —
     that would need every such field marked nullable in openapi.yaml for no real benefit.
 
-    `humanReview` is the one exception: examples.ts always includes it, explicitly falling back
-    to `null` (`r.humanReview ?? null`), so the partner docs' documented shape has the key
-    always present. Restore it after exclude_none would otherwise have dropped it.
+    Two fields are the exception, both required-and-nullable in openapi.yaml (`oneOf: [T,
+    null]`) rather than optional-absent, so exclude_none must not be allowed to drop them:
+
+    - `humanReview`: examples.ts always includes it, explicitly falling back to `null`
+      (`r.humanReview ?? null`), so the partner docs' documented shape has the key always
+      present.
+    - `community.score.ccs` (FactCheckReport only — FactCheckPublic's community field is the
+      simplified PublicCommunityCounts, with no `score` at all): null until a report has its
+      first rating (community_score() in app/stubs/scoring.py), which every pre-seeded sample
+      report already has, but a freshly created one (app/worker/pipeline.py) doesn't.
     """
     data = model.model_dump(by_alias=True, mode="json", exclude_none=True)
     data.setdefault("humanReview", None)
+    if "score" in data.get("community", {}):
+        data["community"]["score"].setdefault("ccs", None)
     return data

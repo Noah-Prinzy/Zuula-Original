@@ -22,6 +22,9 @@ dev = [
   # Not declared by openapi-core itself, but required at runtime by its Starlette/FastAPI
   # contrib middleware (used in tests/contract/) — confirmed missing from a clean install.
   "aioitertools>=0.11",
+  # tests/pipeline/ — a fake Redis (sync + async) so the pipeline/realtime tests don't need
+  # a live Redis server.
+  "fakeredis>=2.26",
 ]
 
 [tool.ruff]
@@ -42,6 +45,7 @@ ignore = ["UP047"]
 # Contract test cases are one-request-per-line for readability against the endpoints they
 # exercise; wrapping each json= payload would make the test list harder to scan.
 "tests/contract/*.py" = ["E501"]
+"tests/pipeline/*.py" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

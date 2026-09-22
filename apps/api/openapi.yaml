@@ -49,6 +49,8 @@ tags:
     description: Users, moderation, sources, broadcasts, reports, audit log, settings (FR-ADMIN-01…07).
   - name: partner
     description: The public partner API documented on /developers (FR-API-01, 03).
+  - name: webhooks
+    description: Inbound integration webhooks — WhatsApp/Telegram messages create submissions (FR-SUBMIT-04).
 
 security:
   - sessionAuth: []
@@ -574,6 +576,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/SubmissionAccepted" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "415": { $ref: "#/components/responses/UnsupportedMedia" }
         "422": { $ref: "#/components/responses/UnprocessableEntity" }
@@ -1546,6 +1549,55 @@ paths:
         "429": { $ref: "#/components/responses/RateLimited" }
 
         "401": { $ref: "#/components/responses/Unauthorized" }
+
+  # ---------------------------------------------------------------------------------------
+  # Inbound integration webhooks (FR-SUBMIT-04) — Step 4. Called by WhatsApp/Telegram's own
+  # servers, not by apps/web; not part of the documented partner API either, so neither
+  # sessionAuth nor partnerApiKey applies. Real signature/secret verification is P3 — see
+  # app/adapters/{whatsapp,telegram}.py and docs/adr/0001-api-architecture.md.
+  # ---------------------------------------------------------------------------------------
+  /webhooks/whatsapp:
+    get:
+      operationId: verifyWhatsAppWebhook
+      tags: [webhooks]
+      summary: Meta's webhook subscription handshake.
+      security: []
+      parameters:
+        - { name: hub.mode, in: query, schema: { type: string } }
+        - { name: hub.verify_token, in: query, schema: { type: string } }
+        - { name: hub.challenge, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: Verified — echoes hub.challenge back.
+          content: { text/plain: { schema: { type: string } } }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      operationId: receiveWhatsAppMessage
+      tags: [webhooks]
+      summary: Inbound WhatsApp messages create submissions.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200": { description: Acknowledged. }
+
+  /webhooks/telegram:
+    post:
+      operationId: receiveTelegramMessage
+      tags: [webhooks]
+      summary: Inbound Telegram messages create submissions.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "200": { description: Acknowledged. }
+
 components:
   securitySchemes:
     sessionAuth:

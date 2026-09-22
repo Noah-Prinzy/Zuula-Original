@@ -36,6 +36,7 @@ These were agreed during planning and still need the supervisor's sign-off.
 Open questions for the supervisor:
 - FR-RATE-05 escalates at more than 100 *dislikes*; §9.2 says more than 100 *ratings*. The code follows §9.2.
 - The spec gives admins no rating weight. The code uses 1×.
+- FR-API-01 targets media organisations, but FR-AUTH-02 has no organisation role. API keys are currently limited to Verified Journalists and Admins.
 - Sending submissions to a hosted LLM outside Uganda must be checked against the Data Protection and Privacy Act 2019 (§10.1).
 
 ### Known gaps

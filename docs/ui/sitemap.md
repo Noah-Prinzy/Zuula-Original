@@ -70,14 +70,27 @@ Status: **v0.2 (approved)** — 21 Sep 2026.
 4. **Sign up:** Sign Up → Verify Account → (Two-Factor for Expert/Admin) → return to previous page.
 
 ## 4. Build status
-Updated 21 Sep 2026. All pages run on mock data (`apps/web/lib/mock`); there is no backend yet.
+Updated 22 Sep 2026. All pages run on mock data (`apps/web/lib/mock`); there is no backend yet.
 
 | Area | Built | In progress | Placeholder |
 |---|---|---|---|
-| Public | All 9 (Home, Verify, Status, Library, Report, About, API, Privacy, Terms, Offline) | — | — |
+| Public | All 10 (Home, Verify, Status, Library, Report, About, API, Privacy, Terms, Offline) | — | — |
 | Authentication | All 6 | — | — |
 | Account | All 6 | — | — |
 | Review | All 4 | — | — |
 | Admin | All 8 | — | — |
 
-Not yet done across all pages: translations for the 5 languages (the switcher only stores the chosen locale), PWA manifest and service worker, accessibility and Lighthouse pass.
+Notes:
+- Home is a single screen: hero text, the composer, and two rotating status cards (recent checks; trending and community-confirmed verdicts). "Why Zuula" moved to About.
+- Report pages list related fact-checks (FR-SEARCH-03). Matching uses topic, source and wording overlap for now; true semantic matching needs embeddings (pgvector, P3).
+- API docs (`/developers`) document the planned v1 contract; not callable until the P2 backend.
+
+Remaining Phase 1 work across the app:
+
+| Item | Status |
+|---|---|
+| Translations (next-intl, 5 languages) | In progress: shell, sign-in, library and report translated; Home, About and legal pending. Locale routes (`app/[locale]/`) being added |
+| PWA (manifest, service worker, offline fallback) | In progress |
+| Error pages (404, error boundaries) | In progress |
+| Accessibility (WCAG 2.1 AA) and Lighthouse ≥ 80 pass | Not started |
+| Tests | Not started |

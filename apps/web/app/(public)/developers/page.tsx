@@ -1,328 +1,397 @@
+import type { Metadata } from "next"
 import Link from "next/link"
-import {
-  RiErrorWarningLine,
-  RiKey2Line,
-  RiSendPlaneLine,
-  RiShieldKeyholeLine,
-  RiSpeedLine,
-  RiWebhookLine,
-} from "@remixicon/react"
+import { RiErrorWarningLine, RiKey2Line, RiMailLine, RiTimerLine, RiWebhookLine } from "@remixicon/react"
+import { getTranslations } from "next-intl/server"
 
-import { ArticleSections, type ArticleSection } from "@/components/shell/article-sections"
 import { PhotoBanner } from "@/components/decor/photo-hero"
 import { PHOTOS } from "@/components/decor/photos"
-import { PageHeader } from "@/components/shell/page-header"
+import { CodeBlock, CodeSamples } from "@/components/developers/code-block"
+import {
+  API_RATE_LIMIT,
+  BASE_URL,
+  ERROR_RESPONSE,
+  RATE_HEADERS,
+  REPORT,
+  REPORT_RESPONSE,
+  SAMPLE_REPORT_ID,
+  SEARCH,
+  SEARCH_RESPONSE,
+  STATUS,
+  STATUS_RESPONSE,
+  SUBMIT,
+  SUBMIT_RESPONSE,
+} from "@/components/developers/examples"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { LIMITS, MAX_FILE_BYTES, formatBytes } from "@/lib/submission"
 import { cn } from "@/lib/utils"
 
-export const metadata = {
-  title: "API",
-  description: "Submit content for verification and read verdicts programmatically.",
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Developers")
+  return { title: t("metaTitle"), description: t("metaDescription") }
 }
 
-function CodeBlock({ children, label }: { children: string; label?: string }) {
+const SECTIONS = [
+  "overview",
+  "authentication",
+  "rate-limits",
+  "submit",
+  "status",
+  "report",
+  "search",
+  "fact-check",
+  "webhooks",
+  "errors",
+  "access",
+] as const
+
+type Section = (typeof SECTIONS)[number]
+
+const TOC_KEYS = {
+  overview: "overview",
+  authentication: "authentication",
+  "rate-limits": "rateLimits",
+  submit: "submit",
+  status: "status",
+  report: "report",
+  search: "search",
+  "fact-check": "factCheck",
+  webhooks: "webhooks",
+  errors: "errors",
+  access: "access",
+} as const satisfies Record<Section, string>
+
+type Row = { name: string; type: string; required?: boolean; description: React.ReactNode }
+
+const code = (chunks: React.ReactNode) => (
+  <code className="bg-muted px-1 py-0.5 font-mono text-[0.85em]">{chunks}</code>
+)
+
+function inlineLink(href: string) {
+  return function InlineLink(chunks: React.ReactNode) {
+    return (
+      <Link href={href} className="font-medium text-primary underline-offset-2 hover:underline">
+        {chunks}
+      </Link>
+    )
+  }
+}
+
+async function FieldTable({ rows, caption }: { rows: Row[]; caption: string }) {
+  const t = await getTranslations("Developers.table")
   return (
-    <div className="overflow-hidden border bg-muted/40 not-first:mt-1">
-      {label && (
-        <div className="border-b bg-muted/60 px-3 py-1.5 font-mono text-[11px] text-muted-foreground">
-          {label}
-        </div>
-      )}
-      <pre className="overflow-x-auto p-3 text-xs leading-relaxed">
-        <code className="font-mono">{children}</code>
-      </pre>
-    </div>
-  )
-}
-
-function Endpoint({ method, path }: { method: "GET" | "POST"; path: string }) {
-  return (
-    <div className="flex items-center gap-2">
-      <Badge variant={method === "POST" ? "default" : "secondary"} className="font-mono">
-        {method}
-      </Badge>
-      <code className="font-mono text-sm">{path}</code>
-    </div>
-  )
-}
-
-function Scope({ children }: { children: string }) {
-  return (
-    <Badge variant="outline" className="font-mono">
-      {children}
-    </Badge>
-  )
-}
-
-const SECTIONS: ArticleSection[] = [
-  {
-    id: "overview",
-    title: "Overview",
-    content: (
-      <>
-        <p>
-          The Zuula API lets newsrooms and partner tools submit content for verification and read
-          back the verdict, evidence and community score &mdash; the same pipeline that powers{" "}
-          <Link href="/verify">Verify</Link>, callable from your own systems.
-        </p>
-        <div className="flex gap-3 border border-verdict-unverifiable/40 bg-verdict-unverifiable/5 p-4 text-foreground">
-          <RiErrorWarningLine className="mt-0.5 size-4 shrink-0 text-verdict-unverifiable" aria-hidden />
-          <p>
-            The API is being designed in Phase 2 (12&ndash;20 Oct 2026) and isn&apos;t callable
-            yet &mdash; everything below is the current design, kept in step with the mock data
-            the rest of the site runs on. It will update as the FastAPI backend ships.
-          </p>
-        </div>
-        <p>
-          All requests and responses are JSON over HTTPS, at a base URL of{" "}
-          <code>https://api.zuula.ug/v1</code>.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "auth",
-    title: "Authentication",
-    content: (
-      <>
-        <p>
-          Every request needs an API key in the <code>Authorization</code> header. Journalist and
-          Admin accounts can create one from{" "}
-          <Link href="/account/api-access">Account &rarr; API Keys</Link>. Keys are shown once, on
-          creation &mdash; store them in a secret manager, never in front-end code.
-        </p>
-        <CodeBlock>{`Authorization: Bearer zl_live_a1b2c3d4e5f6...`}</CodeBlock>
-        <p>Each key is scoped to what it&apos;s allowed to do:</p>
-        <ul>
-          <li>
-            <Scope>submit</Scope> — <code>POST /v1/checks</code>: send text, links or media for
-            verification.
-          </li>
-          <li>
-            <Scope>read</Scope> — <code>GET /v1/checks</code> and <code>GET /v1/fact-checks</code>:
-            read status, verdicts, explanations and citations.
-          </li>
-        </ul>
-      </>
-    ),
-  },
-  {
-    id: "rate-limits",
-    title: "Rate limits",
-    content: (
-      <>
-        <p>
-          Keys are limited to <strong>100 requests per hour</strong>. Current usage is on the{" "}
-          <Link href="/account/api-access">API Keys</Link> page. Over the limit, the API returns{" "}
-          <code>429 Too Many Requests</code> with a <code>Retry-After</code> header in seconds.
-          Need a higher limit for a newsroom integration? See{" "}
-          <a href="#access">Get access</a> below.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "submit",
-    title: "Submit content for checking",
-    content: (
-      <>
-        <Endpoint method="POST" path="/v1/checks" />
-        <p>
-          Send text, a link, or media (as a multipart upload). Returns immediately with a tracking
-          ID &mdash; the same one shown on the <Link href="/verify">Verify</Link> page &mdash; while
-          analysis runs in the background.
-        </p>
-        <CodeBlock label="Request">{`POST /v1/checks HTTP/1.1
-Host: api.zuula.ug
-Authorization: Bearer zl_live_...
-Content-Type: application/json
-
-{
-  "type": "text",
-  "content": "BREAKING: The Ministry of ICT has announced that every Ugandan\\nwill get free unlimited internet from January 2027...",
-  "language": "en"
-}`}</CodeBlock>
-        <CodeBlock label="202 Accepted">{`{
-  "trackingId": "ZL-7K3P-Q9",
-  "checkId": "fc-2026-0142",
-  "status": "processing"
-}`}</CodeBlock>
-        <p>
-          <code>type</code> is one of <code>text</code>, <code>url</code>, <code>image</code>,{" "}
-          <code>audio</code> or <code>video</code>. Media uploads are capped at 50&nbsp;MB and are
-          scanned for malware before analysis starts.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "status",
-    title: "Check status",
-    content: (
-      <>
-        <Endpoint method="GET" path="/v1/checks/{trackingId}" />
-        <p>
-          Poll this while a check is running, or use it to look up any tracking ID a user gives
-          you. Text finishes in about 10 seconds, media in up to a minute.
-        </p>
-        <CodeBlock label="200 OK — in progress">{`{
-  "trackingId": "ZL-7K3P-Q9",
-  "status": "processing",
-  "stage": "sources",
-  "progress": 0.7
-}`}</CodeBlock>
-        <CodeBlock label="200 OK — done">{`{
-  "trackingId": "ZL-7K3P-Q9",
-  "status": "complete",
-  "factCheckId": "fc-2026-0142"
-}`}</CodeBlock>
-      </>
-    ),
-  },
-  {
-    id: "results",
-    title: "Get a fact-check report",
-    content: (
-      <>
-        <Endpoint method="GET" path="/v1/fact-checks/{id}" />
-        <p>
-          The full report: verdict, confidence, a plain-language summary, the citations it&apos;s
-          based on, and the current community score. This is the same data behind the public{" "}
-          <Link href="/fact-checks/fc-2026-0142">report page</Link>.
-        </p>
-        <CodeBlock label="200 OK">{`{
-  "id": "fc-2026-0142",
-  "trackingId": "ZL-7K3P-Q9",
-  "verdict": "false",
-  "confidence": 92,
-  "summary": "No free national internet programme has been announced. The message matches a known phishing pattern that asks people to submit their National ID number through an unofficial link.",
-  "citations": [
-    {
-      "sourceName": "Ministry of ICT",
-      "title": "Statement on public Wi-Fi expansion",
-      "url": "https://ict.go.ug",
-      "stance": "contradicts",
-      "trusted": true
-    }
-  ],
-  "community": { "ccs": 96, "totalRatings": 812 },
-  "checkedAt": "2026-09-14T10:02:00Z"
-}`}</CodeBlock>
-        <p>
-          <code>verdict</code> is one of <code>authentic</code>, <code>likely-false</code>,{" "}
-          <code>false</code>, <code>ai-generated</code> or <code>unverifiable</code>.{" "}
-          <code>community.ccs</code> is the weighted Community Confidence Score behind the
-          verdict, 0&ndash;100.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "webhooks",
-    title: "Webhooks",
-    content: (
-      <p>
-        Planned alongside the API, so you don&apos;t have to poll: a callback when a submitted
-        check&apos;s verdict is ready. This section will be filled in once webhook delivery is
-        designed in Phase 2. In the meantime, the Zuula bots on{" "}
-        <Link href="/about#whatsapp">WhatsApp and Telegram</Link> are being built on the same
-        webhook infrastructure.
-      </p>
-    ),
-  },
-  {
-    id: "errors",
-    title: "Errors",
-    content: (
-      <table className="w-full border text-left text-xs">
-        <thead className="bg-muted/60 text-muted-foreground">
+    <div className="overflow-x-auto border">
+      <table className="w-full text-left text-sm">
+        <caption className="sr-only">{caption}</caption>
+        <thead className="bg-muted/50 text-xs text-muted-foreground">
           <tr>
-            <th className="px-3 py-2 font-medium">Status</th>
-            <th className="px-3 py-2 font-medium">Meaning</th>
+            <th scope="col" className="px-3 py-2 font-medium">{t("field")}</th>
+            <th scope="col" className="px-3 py-2 font-medium">{t("type")}</th>
+            <th scope="col" className="px-3 py-2 font-medium">{t("description")}</th>
           </tr>
         </thead>
         <tbody className="divide-y">
-          {[
-            ["400 Bad Request", "Missing or invalid field, or an unsupported content type."],
-            ["401 Unauthorized", "Missing or invalid API key."],
-            ["403 Forbidden", "The key's scope doesn't allow this request."],
-            ["404 Not Found", "No check or fact-check with that ID."],
-            ["429 Too Many Requests", "Over the hourly rate limit — see Retry-After."],
-            ["500 Internal Server Error", "Something failed on our end. Safe to retry."],
-          ].map(([code, meaning]) => (
-            <tr key={code}>
-              <td className="px-3 py-2 font-mono whitespace-nowrap">{code}</td>
-              <td className="px-3 py-2 text-muted-foreground">{meaning}</td>
+          {rows.map((r) => (
+            <tr key={r.name} className="align-top">
+              <td className="px-3 py-2.5 whitespace-nowrap">
+                <code className="font-mono text-[0.8125rem] font-medium">{r.name}</code>
+                {r.required && (
+                  <span className="ml-2 text-[0.6875rem] font-medium tracking-wide text-primary uppercase">
+                    {t("required")}
+                  </span>
+                )}
+              </td>
+              <td className="px-3 py-2.5 font-mono text-xs whitespace-nowrap text-muted-foreground">{r.type}</td>
+              <td className="px-3 py-2.5 text-muted-foreground">{r.description}</td>
             </tr>
           ))}
         </tbody>
       </table>
-    ),
-  },
-  {
-    id: "access",
-    title: "Get access",
-    content: (
-      <>
-        <p>
-          Journalist and Admin accounts can self-serve a key today from{" "}
-          <Link href="/account/api-access">Account &rarr; API Keys</Link> &mdash; it works against
-          mock data until the backend ships. For a newsroom integration or a higher rate limit,
-          email <a href="mailto:hello@zuula.ug">hello@zuula.ug</a>. Using the API also means
-          accepting the <Link href="/legal/terms#api">API terms</Link>.
-        </p>
-      </>
-    ),
-  },
-]
+    </div>
+  )
+}
 
-const QUICK_LINKS = [
-  { icon: RiKey2Line, title: "Authentication", href: "#auth" },
-  { icon: RiSpeedLine, title: "Rate limits", href: "#rate-limits" },
-  { icon: RiSendPlaneLine, title: "Submit content", href: "#submit" },
-  { icon: RiWebhookLine, title: "Webhooks", href: "#webhooks" },
-]
+function DocSection({
+  id,
+  title,
+  children,
+  className,
+}: {
+  id: Section
+  title: string
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <section id={id} data-reveal aria-labelledby={`${id}-title`} className={cn("flex scroll-mt-24 flex-col gap-4", className)}>
+      <h2 id={`${id}-title`} className="font-heading text-2xl font-bold tracking-tight">
+        {title}
+      </h2>
+      {children}
+    </section>
+  )
+}
 
-export default function DevelopersPage() {
+function Endpoint({ method, path, scope }: { method: "GET" | "POST"; path: string; scope: string }) {
+  return (
+    <div className="flex flex-wrap items-center gap-2 border bg-card px-3 py-2 font-mono text-sm">
+      <span
+        className={cn(
+          "px-1.5 py-0.5 text-xs font-bold",
+          method === "POST" ? "bg-primary text-primary-foreground" : "bg-verdict-authentic/15 text-verdict-authentic"
+        )}
+      >
+        {method}
+      </span>
+      <span className="break-all">{path}</span>
+      <Badge variant="outline" className="ml-auto font-sans">
+        {scope}
+      </Badge>
+    </div>
+  )
+}
+
+function Subheading({ children }: { children: React.ReactNode }) {
+  return <h3 className="mt-2 font-heading text-base font-bold">{children}</h3>
+}
+
+// FR-API-01/03: public documentation for the verification API. Preview until v1.
+export default async function DevelopersPage() {
+  const t = await getTranslations("Developers")
+  const scope = (s: "submit" | "read") => t("scopeBadge", { scope: s })
+
+  const submitFields: Row[] = [
+    { name: "type", type: "string", required: true, description: t.rich("submit.fields.type", { code }) },
+    {
+      name: "content",
+      type: "string",
+      description: t("submit.fields.content", { textMax: LIMITS.text.max, articleMax: LIMITS.article.max }),
+    },
+    { name: "url", type: "string", description: t("submit.fields.url") },
+    { name: "file", type: "binary", description: t("submit.fields.file", { size: formatBytes(MAX_FILE_BYTES) }) },
+    { name: "headline", type: "string", description: t("submit.fields.headline", { max: LIMITS.headline.max }) },
+    { name: "language", type: "string", description: t.rich("submit.fields.language", { code }) },
+  ]
+
+  const searchParams: Row[] = [
+    { name: "q", type: "string", description: t("search.params.q") },
+    { name: "verdict", type: "string", description: t.rich("search.params.verdict", { code }) },
+    { name: "category", type: "string", description: t("search.params.category") },
+    { name: "language", type: "string", description: t("search.params.language") },
+    { name: "from, to", type: "date", description: t("search.params.dates") },
+    { name: "page", type: "integer", description: t("search.params.page") },
+    { name: "perPage", type: "integer", description: t("search.params.perPage") },
+  ]
+
+  const factCheckFields: Row[] = [
+    { name: "id", type: "string", description: t("factCheck.fields.id") },
+    { name: "trackingId", type: "string", description: t("factCheck.fields.trackingId") },
+    { name: "verdict", type: "string", description: t.rich("factCheck.fields.verdict", { code }) },
+    { name: "confidence", type: "integer", description: t("factCheck.fields.confidence") },
+    { name: "summary", type: "string", description: t("factCheck.fields.summary") },
+    { name: "whatIsFalse, whatIsTrue", type: "string[]", description: t("factCheck.fields.findings") },
+    { name: "claims", type: "Claim[]", description: t("factCheck.fields.claims") },
+    { name: "citations", type: "Citation[]", description: t.rich("factCheck.fields.citations", { code }) },
+    { name: "aiSignals", type: "AISignal[]", description: t("factCheck.fields.aiSignals") },
+    { name: "community", type: "object", description: t("factCheck.fields.community") },
+    { name: "humanReview", type: "object | null", description: t("factCheck.fields.humanReview") },
+    { name: "checkedAt", type: "string", description: t("factCheck.fields.checkedAt") },
+  ]
+
+  const errors = [
+    ["400", "bad_request"],
+    ["401", "unauthorized"],
+    ["403", "forbidden"],
+    ["404", "not_found"],
+    ["413", "file_too_large"],
+    ["415", "unsupported_media"],
+    ["422", "invalid_content"],
+    ["429", "rate_limited"],
+    ["500", "server_error"],
+  ] as const
+
   return (
     <>
       <PhotoBanner
         photo={PHOTOS.crimsonWaves}
         position="center"
-        eyebrow="Developers"
-        title="API"
-        description="Submit content for verification and read verdicts programmatically."
+        eyebrow={t("banner.eyebrow")}
+        title={t("banner.title")}
+        description={t("banner.description")}
       />
-      <div className="page-container flex flex-col gap-10 py-10">
-        <PageHeader
-          title="API reference"
-          description="REST, JSON over HTTPS. One key, three endpoints."
-          actions={
-            <Button variant="outline" asChild>
-              <Link href="/account/api-access">
-                <RiShieldKeyholeLine aria-hidden />
-                Get an API key
-              </Link>
-            </Button>
-          }
-        />
-        <div data-reveal="stagger" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {QUICK_LINKS.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className={cn(
-                "hover-lift flex items-center gap-2.5 border bg-card p-3 text-sm font-medium",
-                "transition-colors hover:border-primary hover:text-primary"
-              )}
-            >
-              <l.icon className="size-4 shrink-0 text-primary" aria-hidden />
-              {l.title}
-            </a>
-          ))}
+
+      <div className="page-container grid gap-10 py-10 lg:grid-cols-[13rem_minmax(0,1fr)] xl:gap-14">
+        <nav aria-label={t("toc.label")} className="hidden lg:block">
+          <div className="sticky top-24 flex flex-col gap-2">
+            <p className="px-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">{t("toc.label")}</p>
+            <ul className="flex flex-col gap-0.5 border-l">
+              {SECTIONS.map((s) => (
+                <li key={s}>
+                  <a
+                    href={`#${s}`}
+                    className="-ml-px block border-l-2 border-transparent px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+                  >
+                    {t(`toc.${TOC_KEYS[s]}`)}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </nav>
+
+        <div className="flex max-w-4xl min-w-0 flex-col gap-14">
+          <Alert className="enter">
+            <RiErrorWarningLine aria-hidden />
+            <AlertTitle>{t("preview.title")}</AlertTitle>
+            <AlertDescription>{t("preview.body")}</AlertDescription>
+          </Alert>
+
+          <DocSection id="overview" title={t("overview.title")}>
+            <p className="text-muted-foreground">{t("overview.body")}</p>
+            <ol className="flex list-decimal flex-col gap-1 pl-5 text-muted-foreground marker:text-primary">
+              <li>{t.rich("overview.step1", { code })}</li>
+              <li>{t.rich("overview.step2", { code })}</li>
+              <li>{t("overview.step3")}</li>
+            </ol>
+            <dl className="grid gap-x-6 gap-y-2 border bg-card p-4 text-sm sm:grid-cols-[auto_1fr]">
+              <dt className="font-medium">{t("overview.baseUrl")}</dt>
+              <dd className="font-mono break-all">{BASE_URL}</dd>
+              <dt className="font-medium">{t("overview.formatLabel")}</dt>
+              <dd className="text-muted-foreground">{t("overview.format")}</dd>
+            </dl>
+          </DocSection>
+
+          <DocSection id="authentication" title={t("auth.title")}>
+            <p className="text-muted-foreground">
+              {t.rich("auth.body", {
+                code,
+                link: inlineLink("/account/api-access"),
+              })}
+            </p>
+            <CodeBlock label={t("auth.headerLabel")} code="Authorization: Bearer zl_live_4f7a••••••••••••••••" />
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {(["submit", "read"] as const).map((s) => (
+                <li key={s} className="flex gap-3 border bg-card p-4">
+                  <RiKey2Line className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
+                  <div className="flex flex-col gap-1">
+                    <code className="font-mono text-sm font-medium">{s}</code>
+                    <span className="text-sm text-muted-foreground">{t(`auth.scopes.${s}`)}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <Alert variant="destructive">
+              <RiErrorWarningLine aria-hidden />
+              <AlertTitle>{t("auth.serverOnlyTitle")}</AlertTitle>
+              <AlertDescription>{t("auth.serverOnly")}</AlertDescription>
+            </Alert>
+          </DocSection>
+
+          <DocSection id="rate-limits" title={t("rate.title")}>
+            <p className="flex gap-3 text-muted-foreground">
+              <RiTimerLine className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
+              <span>{t.rich("rate.body", { limit: API_RATE_LIMIT, code })}</span>
+            </p>
+            <FieldTable
+              caption={t("rate.title")}
+              rows={[
+                { name: "X-RateLimit-Limit", type: "header", description: t("rate.headers.limit") },
+                { name: "X-RateLimit-Remaining", type: "header", description: t("rate.headers.remaining") },
+                { name: "X-RateLimit-Reset", type: "header", description: t("rate.headers.reset") },
+                { name: "Retry-After", type: "header", description: t("rate.headers.retryAfter") },
+              ]}
+            />
+            <CodeBlock label={t("code.responseHeaders")} code={RATE_HEADERS} />
+          </DocSection>
+
+          <DocSection id="submit" title={t("submit.title")}>
+            <Endpoint method="POST" path="/v1/checks" scope={scope("submit")} />
+            <p className="text-muted-foreground">{t.rich("submit.body", { code })}</p>
+            <Subheading>{t("common.requestBody")}</Subheading>
+            <FieldTable caption={t("common.requestBody")} rows={submitFields} />
+            <Subheading>{t("common.example")}</Subheading>
+            <CodeSamples samples={SUBMIT} />
+            <CodeBlock label={t("code.response", { status: "202 Accepted" })} code={SUBMIT_RESPONSE} />
+          </DocSection>
+
+          <DocSection id="status" title={t("status.title")}>
+            <Endpoint method="GET" path="/v1/checks/{trackingId}" scope={scope("read")} />
+            <p className="text-muted-foreground">{t.rich("status.body", { code })}</p>
+            <FieldTable
+              caption={t("status.statesCaption")}
+              rows={(["queued", "processing", "completed", "failed"] as const).map((s) => ({
+                name: s,
+                type: "status",
+                description: t(`status.states.${s}`),
+              }))}
+            />
+            <Subheading>{t("common.example")}</Subheading>
+            <CodeSamples samples={STATUS} />
+            <CodeBlock label={t("code.response", { status: "200 OK" })} code={STATUS_RESPONSE} />
+          </DocSection>
+
+          <DocSection id="report" title={t("report.title")}>
+            <Endpoint method="GET" path="/v1/fact-checks/{id}" scope={scope("read")} />
+            <p className="text-muted-foreground">
+              {t.rich("report.body", { link: inlineLink(`/fact-checks/${SAMPLE_REPORT_ID}`) })}
+            </p>
+            <Subheading>{t("common.example")}</Subheading>
+            <CodeSamples samples={REPORT} />
+            <CodeBlock label={t("code.response", { status: "200 OK" })} code={REPORT_RESPONSE} />
+          </DocSection>
+
+          <DocSection id="search" title={t("search.title")}>
+            <Endpoint method="GET" path="/v1/fact-checks" scope={scope("read")} />
+            <p className="text-muted-foreground">{t("search.body")}</p>
+            <Subheading>{t("common.queryParameters")}</Subheading>
+            <FieldTable caption={t("common.queryParameters")} rows={searchParams} />
+            <Subheading>{t("common.example")}</Subheading>
+            <CodeSamples samples={SEARCH} />
+            <CodeBlock label={t("code.response", { status: "200 OK" })} code={SEARCH_RESPONSE} />
+          </DocSection>
+
+          <DocSection id="fact-check" title={t("factCheck.title")}>
+            <p className="text-muted-foreground">{t("factCheck.body")}</p>
+            <FieldTable caption={t("factCheck.title")} rows={factCheckFields} />
+          </DocSection>
+
+          <DocSection id="webhooks" title={t("webhooks.title")}>
+            <p className="flex gap-3 text-muted-foreground">
+              <RiWebhookLine className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
+              <span>{t.rich("webhooks.body", { link: inlineLink("/about#whatsapp") })}</span>
+            </p>
+          </DocSection>
+
+          <DocSection id="errors" title={t("errors.title")}>
+            <p className="text-muted-foreground">{t.rich("errors.body", { code })}</p>
+            <FieldTable
+              caption={t("errors.title")}
+              rows={errors.map(([status, key]) => ({
+                name: status,
+                type: key,
+                description: t(`errors.codes.${key}`),
+              }))}
+            />
+            <CodeBlock label={t("code.response", { status: "429 Too Many Requests" })} code={ERROR_RESPONSE} />
+          </DocSection>
+
+          <DocSection id="access" title={t("access.title")}>
+            <p className="flex gap-3 text-muted-foreground">
+              <RiMailLine className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
+              <span>
+                {t.rich("access.body", {
+                  keys: inlineLink("/account/api-access"),
+                  terms: inlineLink("/legal/terms#api"),
+                  email: (chunks) => (
+                    <a href="mailto:hello@zuula.ug" className="font-medium text-primary underline-offset-2 hover:underline">
+                      {chunks}
+                    </a>
+                  ),
+                })}
+              </span>
+            </p>
+          </DocSection>
         </div>
-        <ArticleSections sections={SECTIONS} className="max-w-none" />
       </div>
     </>
   )

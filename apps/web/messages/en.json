@@ -502,11 +502,14 @@
       "status": "Get a result",
       "search": "Search fact-checks",
       "factCheck": "Fact-check object",
-      "errors": "Errors"
+      "errors": "Errors",
+      "report": "Get a fact-check",
+      "webhooks": "Webhooks",
+      "access": "Get access"
     },
     "preview": {
       "title": "Preview, subject to change until v1",
-      "body": "This is an early look at the API for journalists and partners. Endpoints, fields and limits may change before version 1 is released."
+      "body": "This is an early look at the API for journalists and partners. It is not callable yet: the backend ships in Phase 2, and endpoints, fields and limits may change before version 1."
     },
     "overview": {
       "title": "Overview",
@@ -624,6 +627,18 @@
         "rate_limited": "The key has used its hourly allowance. Wait for Retry-After seconds.",
         "server_error": "Something went wrong on our side. Try again later."
       }
+    },
+    "report": {
+      "title": "Get a fact-check",
+      "body": "Returns one published fact-check by its ID: the same data behind the public <link>report page</link>, including the verdict, confidence, explanation, citations and community ratings."
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "body": "Planned alongside the API so you don't have to poll: a callback to your server when a check's verdict is ready. This section will be filled in once webhook delivery is designed in Phase 2. The Zuula bots on <link>WhatsApp and Telegram</link> are being built on the same infrastructure."
+    },
+    "access": {
+      "title": "Get access",
+      "body": "Verified journalists and administrators can create a key today in <keys>Account → API access</keys>; it works against sample data until the backend ships. For a newsroom integration or a higher rate limit, email <email>hello@zuula.ug</email>. Using the API means accepting the <terms>API terms</terms>."
     }
   },
   "Related": {

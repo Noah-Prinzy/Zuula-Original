@@ -1,0 +1,20 @@
+{
+  "name": "@zuula/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "TypeScript types generated from apps/api/openapi.yaml, plus a thin alias layer. Not yet wired into apps/web's build (P2, Step 1) — see packages/shared/README.md.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "openapi-typescript ../../apps/api/openapi.yaml -o ./src/openapi.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0",
+    "typescript": "^5.9.0"
+  }
+}

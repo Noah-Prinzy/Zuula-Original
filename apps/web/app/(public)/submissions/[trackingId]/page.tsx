@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { RiQuestionLine } from "@remixicon/react"
+import { getTranslations } from "next-intl/server"
 
 import { PageHeader } from "@/components/shell/page-header"
 import { SubmissionStatus } from "@/components/submission/submission-status"
@@ -18,8 +19,9 @@ type Props = { params: Promise<{ trackingId: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const id = normaliseTrackingId(decodeURIComponent((await params).trackingId))
+  const t = await getTranslations("Status")
   return {
-    title: `Status ${id}`,
+    title: t("metaTitle", { id }),
     // Tracking links are private to the submitter.
     robots: { index: false, follow: false },
   }
@@ -28,12 +30,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function StatusPage({ params }: Props) {
   const id = normaliseTrackingId(decodeURIComponent((await params).trackingId))
   const valid = TRACKING_ID_PATTERN.test(id)
+  const t = await getTranslations("Status")
 
   return (
     <div className="page-container flex flex-col gap-8 py-10">
       <PageHeader
-        title="Status"
-        description={valid ? "Follow your check as it runs." : "Track a submission by its ID."}
+        title={t("title")}
+        description={valid ? t("descriptionValid") : t("descriptionInvalid")}
       />
 
       {valid ? (
@@ -44,8 +47,8 @@ export default async function StatusPage({ params }: Props) {
             <EmptyMedia variant="icon">
               <RiQuestionLine aria-hidden />
             </EmptyMedia>
-            <EmptyTitle>We couldn&apos;t find that tracking ID</EmptyTitle>
-            <EmptyDescription>Check the ID and try again. Tracking IDs look like ZL-7K3P-Q9.</EmptyDescription>
+            <EmptyTitle>{t("notFoundTitle")}</EmptyTitle>
+            <EmptyDescription>{t("notFoundBody")}</EmptyDescription>
           </EmptyHeader>
           <EmptyContent className="max-w-sm">
             <TrackingLookup className="w-full text-left" />

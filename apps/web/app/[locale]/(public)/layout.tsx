@@ -1,3 +1,4 @@
+import { HideOnHome } from "@/components/home/hide-on-home"
 import { RoleSwitcher } from "@/components/shell/role-switcher"
 import { SiteFooter } from "@/components/shell/site-footer"
 import { SiteHeader } from "@/components/shell/site-header"
@@ -10,7 +11,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <main id="main" className="flex-1">
         {children}
       </main>
-      <SiteFooter />
+      <HideOnHome>
+        <SiteFooter />
+      </HideOnHome>
     </div>
   )
 }

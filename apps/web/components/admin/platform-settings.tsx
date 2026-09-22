@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { RiRestartLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { SettingsSection } from "@/components/account/settings-section"
@@ -77,13 +78,13 @@ function CcsSlider({ id, label, value, onChange, tone }: { id: string; label: st
   )
 }
 
-function validate(t: Thresholds): string | null {
-  if (!(t.suspendedMax < t.escalatedMax)) return "The suspended ceiling must be below the escalation ceiling."
-  if (!(t.escalatedMax < t.questionedMin)) return "The escalation ceiling must be below the “questioned” range."
-  if (!(t.questionedMin <= t.questionedMax)) return "The “questioned” range is inverted."
-  if (!(t.questionedMax < t.verifiedMin)) return "The “questioned” range must end below Community Verified."
-  if (!(t.questionedRatings <= t.escalatedRatings && t.escalatedRatings <= t.suspendedRatings))
-    return "Minimum ratings should increase: questioned ≤ escalated ≤ suspended."
+// Returns the Admin.settings.errors key for the first broken rule.
+function validate(t: Thresholds) {
+  if (!(t.suspendedMax < t.escalatedMax)) return "suspended" as const
+  if (!(t.escalatedMax < t.questionedMin)) return "escalated" as const
+  if (!(t.questionedMin <= t.questionedMax)) return "inverted" as const
+  if (!(t.questionedMax < t.verifiedMin)) return "verified" as const
+  if (!(t.questionedRatings <= t.escalatedRatings && t.escalatedRatings <= t.suspendedRatings)) return "ratings" as const
   return null
 }
 
@@ -92,6 +93,10 @@ export function PlatformSettingsForm() {
   const [s, setS] = React.useState<PlatformSettings>(DEFAULT_SETTINGS)
   const [saved, setSaved] = React.useState<PlatformSettings>(DEFAULT_SETTINGS)
   const [confirm, setConfirm] = React.useState(false)
+  const tr = useTranslations("Admin.settings")
+  const tRoles = useTranslations("Roles")
+  const tc = useTranslations("Common")
+  const ta = useTranslations("Admin")
   const t = s.thresholds
   const setT = (patch: Partial<Thresholds>) => setS({ ...s, thresholds: { ...t, ...patch } })
   const error = validate(t)
@@ -113,12 +118,12 @@ export function PlatformSettingsForm() {
 
   const footer = (
     <>
-      {dirty && <span className="mr-auto text-xs text-muted-foreground">{changes.length} unsaved change{changes.length === 1 ? "" : "s"}</span>}
+      {dirty && <span className="mr-auto text-xs text-muted-foreground">{tr("unsaved", { count: changes.length })}</span>}
       <Button variant="ghost" onClick={() => setS(DEFAULT_SETTINGS)} disabled={JSON.stringify(s) === JSON.stringify(DEFAULT_SETTINGS)}>
-        <RiRestartLine aria-hidden /> Spec defaults
+        <RiRestartLine aria-hidden /> {tr("specDefaults")}
       </Button>
       <Button onClick={() => setConfirm(true)} disabled={!dirty || !!error}>
-        Save settings
+        {tr("save")}
       </Button>
     </>
   )
@@ -127,60 +132,60 @@ export function PlatformSettingsForm() {
     <div data-reveal="stagger" className="grid items-start gap-6 xl:grid-cols-2">
       <SettingsSection
         id="thresholds"
-        title="Escalation thresholds"
-        description="When community ratings change a verdict's status (§9.2). Applies to new ratings immediately."
+        title={tr("thresholdsTitle")}
+        description={tr("thresholdsDescription")}
         footer={footer}
         className="xl:row-span-2"
       >
-        <CcsSlider id="t-verified" label="Community Verified at or above" value={t.verifiedMin} onChange={(v) => setT({ verifiedMin: v })} tone="text-verdict-authentic" />
+        <CcsSlider id="t-verified" label={tr("verifiedAt")} value={t.verifiedMin} onChange={(v) => setT({ verifiedMin: v })} tone="text-verdict-authentic" />
         <div className="grid gap-4 border-t pt-4 sm:grid-cols-[1fr_auto]">
           <div className="flex flex-col gap-4">
-            <CcsSlider id="t-q-min" label="“Questioned” from" value={t.questionedMin} onChange={(v) => setT({ questionedMin: v })} tone="text-verdict-likely-false" />
-            <CcsSlider id="t-q-max" label="“Questioned” up to" value={t.questionedMax} onChange={(v) => setT({ questionedMax: v })} tone="text-verdict-likely-false" />
+            <CcsSlider id="t-q-min" label={tr("questionedFrom")} value={t.questionedMin} onChange={(v) => setT({ questionedMin: v })} tone="text-verdict-likely-false" />
+            <CcsSlider id="t-q-max" label={tr("questionedTo")} value={t.questionedMax} onChange={(v) => setT({ questionedMax: v })} tone="text-verdict-likely-false" />
           </div>
-          <NumberField id="t-q-r" label="with more than" value={t.questionedRatings} onChange={(v) => setT({ questionedRatings: v })} min={0} max={10000} suffix="ratings" />
+          <NumberField id="t-q-r" label={tr("withMoreThan")} value={t.questionedRatings} onChange={(v) => setT({ questionedRatings: v })} min={0} max={10000} suffix={tr("ratings")} />
         </div>
         <div className="grid gap-4 border-t pt-4 sm:grid-cols-[1fr_auto]">
-          <CcsSlider id="t-e-max" label="Send to expert review at or below" value={t.escalatedMax} onChange={(v) => setT({ escalatedMax: v })} tone="text-verdict-false" />
-          <NumberField id="t-e-r" label="with more than" value={t.escalatedRatings} onChange={(v) => setT({ escalatedRatings: v })} min={0} max={10000} suffix="ratings" />
+          <CcsSlider id="t-e-max" label={tr("escalateAt")} value={t.escalatedMax} onChange={(v) => setT({ escalatedMax: v })} tone="text-verdict-false" />
+          <NumberField id="t-e-r" label={tr("withMoreThan")} value={t.escalatedRatings} onChange={(v) => setT({ escalatedRatings: v })} min={0} max={10000} suffix={tr("ratings")} />
         </div>
         <div className="grid gap-4 border-t pt-4 sm:grid-cols-[1fr_auto]">
-          <CcsSlider id="t-s-max" label="Suspend the verdict at or below" value={t.suspendedMax} onChange={(v) => setT({ suspendedMax: v })} tone="text-verdict-false" />
-          <NumberField id="t-s-r" label="with more than" value={t.suspendedRatings} onChange={(v) => setT({ suspendedRatings: v })} min={0} max={10000} suffix="ratings" />
+          <CcsSlider id="t-s-max" label={tr("suspendAt")} value={t.suspendedMax} onChange={(v) => setT({ suspendedMax: v })} tone="text-verdict-false" />
+          <NumberField id="t-s-r" label={tr("withMoreThan")} value={t.suspendedRatings} onChange={(v) => setT({ suspendedRatings: v })} min={0} max={10000} suffix={tr("ratings")} />
         </div>
-        {error && <FieldError>{error}</FieldError>}
+        {error && <FieldError>{tr(`errors.${error}`)}</FieldError>}
       </SettingsSection>
 
-      <SettingsSection id="weights" title="Rating weights" description="How much each role counts in the Community Confidence Score (§9.1).">
+      <SettingsSection id="weights" title={tr("weightsTitle")} description={tr("weightsDescription")}>
         <div className="grid gap-4 sm:grid-cols-3">
-          <NumberField id="w-public" label="Public User" value={s.weights.public} onChange={(v) => setS({ ...s, weights: { ...s.weights, public: v } })} min={1} max={10} suffix="×" />
-          <NumberField id="w-journalist" label="Verified Journalist" value={s.weights.journalist} onChange={(v) => setS({ ...s, weights: { ...s.weights, journalist: v } })} min={1} max={10} suffix="×" />
-          <NumberField id="w-expert" label="Expert Reviewer" value={s.weights.expert} onChange={(v) => setS({ ...s, weights: { ...s.weights, expert: v } })} min={1} max={10} suffix="×" />
+          <NumberField id="w-public" label={tRoles("public")} value={s.weights.public} onChange={(v) => setS({ ...s, weights: { ...s.weights, public: v } })} min={1} max={10} suffix="×" />
+          <NumberField id="w-journalist" label={tRoles("journalist")} value={s.weights.journalist} onChange={(v) => setS({ ...s, weights: { ...s.weights, journalist: v } })} min={1} max={10} suffix="×" />
+          <NumberField id="w-expert" label={tRoles("expert")} value={s.weights.expert} onChange={(v) => setS({ ...s, weights: { ...s.weights, expert: v } })} min={1} max={10} suffix="×" />
         </div>
       </SettingsSection>
 
-      <SettingsSection id="operations" title="Operations" description="Review deadlines, API limits and model retraining (§9.3).">
+      <SettingsSection id="operations" title={tr("operationsTitle")} description={tr("operationsDescription")}>
         <div className="grid gap-4 sm:grid-cols-2">
-          <NumberField id="sla" label="Expert review SLA" value={s.slaHours} onChange={(v) => setS({ ...s, slaHours: v })} min={1} max={168} suffix="hours" hint="Spec: 48 hours." />
-          <NumberField id="rate" label="Default API rate limit" value={s.apiRateLimit} onChange={(v) => setS({ ...s, apiRateLimit: v })} min={10} max={10000} suffix="req / hour" hint="Per key. Spec: 100." />
+          <NumberField id="sla" label={tr("sla")} value={s.slaHours} onChange={(v) => setS({ ...s, slaHours: v })} min={1} max={168} suffix={tr("hours")} hint={tr("slaHint")} />
+          <NumberField id="rate" label={tr("rateLimit")} value={s.apiRateLimit} onChange={(v) => setS({ ...s, apiRateLimit: v })} min={10} max={10000} suffix={tr("perHour")} hint={tr("rateHint")} />
           <Field>
-            <FieldLabel htmlFor="retrain">Retraining cadence</FieldLabel>
+            <FieldLabel htmlFor="retrain">{tr("retraining")}</FieldLabel>
             <NativeSelect id="retrain" className="w-full" value={s.retraining.cadence} onChange={(e) => setS({ ...s, retraining: { ...s.retraining, cadence: e.target.value as "weekly" | "monthly" } })}>
-              <NativeSelectOption value="weekly">Weekly (spec)</NativeSelectOption>
-              <NativeSelectOption value="monthly">Monthly</NativeSelectOption>
+              <NativeSelectOption value="weekly">{tr("weekly")}</NativeSelectOption>
+              <NativeSelectOption value="monthly">{tr("monthly")}</NativeSelectOption>
             </NativeSelect>
           </Field>
-          <NumberField id="min-ccs" label="Training data from CCS above" value={s.retraining.minCcs} onChange={(v) => setS({ ...s, retraining: { ...s.retraining, minCcs: v } })} min={50} max={100} suffix="%" hint="Only high-agreement verdicts become training examples. Spec: 85%." />
+          <NumberField id="min-ccs" label={tr("minCcs")} value={s.retraining.minCcs} onChange={(v) => setS({ ...s, retraining: { ...s.retraining, minCcs: v } })} min={50} max={100} suffix="%" hint={tr("minCcsHint")} />
         </div>
       </SettingsSection>
 
       <AlertDialog open={confirm} onOpenChange={setConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Save {changes.length} change{changes.length === 1 ? "" : "s"}?</AlertDialogTitle>
+            <AlertDialogTitle>{tr("confirmTitle", { count: changes.length })}</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="flex flex-col gap-2">
-                <span>These apply to the whole platform and are recorded in the audit log.</span>
+                <span>{tr("confirmBody")}</span>
                 <ul className="max-h-48 overflow-y-auto border bg-muted/40 p-2 font-mono text-xs">
                   {changes.map((c) => (
                     <li key={c}>{c}</li>
@@ -190,14 +195,14 @@ export function PlatformSettingsForm() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 setSaved(s)
-                toast.success("Settings saved", { description: "Logged in the audit trail." })
+                toast.success(tr("saved"), { description: ta("loggedInAudit") })
               }}
             >
-              Save
+              {tc("save")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

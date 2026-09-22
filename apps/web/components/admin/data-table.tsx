@@ -16,6 +16,7 @@ import {
   type SortingState,
 } from "@tanstack/react-table"
 import { RiArrowDownSLine, RiArrowUpDownLine, RiArrowUpSLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -45,8 +46,8 @@ export function DataTable<T extends RowData>({
   columns,
   initialSorting = [],
   rowClassName,
-  emptyTitle = "Nothing here",
-  emptyDescription = "No rows match these filters.",
+  emptyTitle,
+  emptyDescription,
   getRowId,
 }: {
   data: T[]
@@ -58,6 +59,7 @@ export function DataTable<T extends RowData>({
   getRowId?: (row: T) => string
 }) {
   const [sorting, setSorting] = React.useState<SortingState>(initialSorting)
+  const t = useTranslations("Admin.table")
   const table = useTable({
     features: adminTableFeatures,
     data,
@@ -71,8 +73,8 @@ export function DataTable<T extends RowData>({
     return (
       <Empty className="border">
         <EmptyHeader>
-          <EmptyTitle>{emptyTitle}</EmptyTitle>
-          <EmptyDescription>{emptyDescription}</EmptyDescription>
+          <EmptyTitle>{emptyTitle ?? t("emptyTitle")}</EmptyTitle>
+          <EmptyDescription>{emptyDescription ?? t("emptyBody")}</EmptyDescription>
         </EmptyHeader>
       </Empty>
     )

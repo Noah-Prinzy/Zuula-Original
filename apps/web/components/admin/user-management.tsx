@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { RiMore2Line, RiSearchLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { DataTable, SortableHeader, type AdminColumn } from "@/components/admin/data-table"
@@ -35,7 +36,8 @@ import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
 import { SAMPLE_USERS, type AdminUser, type UserStatus } from "@/lib/mock/admin"
-import { ROLE_LABELS, ROLES, type Role } from "@/lib/roles"
+import { ROLES, type Role } from "@/lib/roles"
+import { useFormat } from "@/lib/format"
 import { cn, initials } from "@/lib/utils"
 
 const STATUS_STYLE: Record<UserStatus, string> = {
@@ -57,6 +59,11 @@ export function UserManagement() {
   const [status, setStatus] = React.useState<UserStatus | "">("")
   const [pending, setPending] = React.useState<Pending>(null)
   const [reason, setReason] = React.useState("")
+  const t = useTranslations("Admin.users")
+  const f = useFormat()
+  const tRoles = useTranslations("Roles")
+  const tc = useTranslations("Common")
+  const ta = useTranslations("Admin")
 
   const update = React.useCallback((id: string, patch: Partial<AdminUser>) => {
     setUsers((us) => us.map((u) => (u.id === id ? { ...u, ...patch } : u)))
@@ -78,7 +85,7 @@ export function UserManagement() {
         id: "name",
         accessorFn: (u) => u.name,
         sortFn: "alphanumeric",
-        header: ({ column }) => <SortableHeader column={column} label="User" />,
+        header: ({ column }) => <SortableHeader column={column} label={t("columns.user")} />,
         cell: ({ row: { original: u } }) => (
           <div className="flex min-w-48 items-center gap-3">
             <Avatar className="size-8">
@@ -93,15 +100,15 @@ export function UserManagement() {
       },
       {
         id: "role",
-        header: "Role",
-        cell: ({ row: { original: u } }) => <Badge variant="outline">{ROLE_LABELS[u.role]}</Badge>,
+        header: () => t("columns.role"),
+        cell: ({ row: { original: u } }) => <Badge variant="outline">{tRoles(u.role)}</Badge>,
       },
       {
         id: "status",
-        header: "Status",
+        header: () => t("columns.status"),
         cell: ({ row: { original: u } }) => (
-          <span className={cn("inline-flex h-5 items-center border px-1.5 text-xs capitalize", STATUS_STYLE[u.status])}>
-            {u.status === "pending" ? "Pending accreditation" : u.status}
+          <span className={cn("inline-flex h-5 items-center border px-1.5 text-xs", STATUS_STYLE[u.status])}>
+            {t(`statuses.${u.status}`)}
           </span>
         ),
       },
@@ -109,27 +116,27 @@ export function UserManagement() {
         id: "ratings",
         accessorFn: (u) => u.ratings,
         sortFn: "basic",
-        header: ({ column }) => <SortableHeader column={column} label="Ratings" />,
+        header: ({ column }) => <SortableHeader column={column} label={t("columns.ratings")} />,
         cell: ({ row: { original: u } }) => <span className="font-mono tabular-nums">{u.ratings}</span>,
       },
       {
         id: "lastActive",
         accessorFn: (u) => u.lastActive,
         sortFn: "alphanumeric",
-        header: ({ column }) => <SortableHeader column={column} label="Last active" />,
+        header: ({ column }) => <SortableHeader column={column} label={t("columns.lastActive")} />,
         cell: ({ row: { original: u } }) => (
           <span className="text-xs whitespace-nowrap text-muted-foreground">
-            {u.lastActive} <br /> joined {u.joined}
+            {f.date(u.lastActive)} <br /> {t("joined", { date: f.date(u.joined) })}
           </span>
         ),
       },
       {
         id: "actions",
-        header: () => <span className="sr-only">Actions</span>,
+        header: () => <span className="sr-only">{t("columns.actions")}</span>,
         cell: ({ row: { original: u } }) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${u.name}`}>
+              <Button variant="ghost" size="icon-sm" aria-label={t("actionsFor", { name: u.name })}>
                 <RiMore2Line aria-hidden />
               </Button>
             </DropdownMenuTrigger>
@@ -140,14 +147,14 @@ export function UserManagement() {
                 <DropdownMenuItem
                   onSelect={() => {
                     update(u.id, { status: "active", role: "journalist" })
-                    toast.success(`${u.name} is now a Verified Journalist`)
+                    toast.success(t("approved", { name: u.name }))
                   }}
                 >
-                  Approve accreditation
+                  {t("approve")}
                 </DropdownMenuItem>
               )}
               <DropdownMenuSub>
-                <DropdownMenuSubTrigger>Change role</DropdownMenuSubTrigger>
+                <DropdownMenuSubTrigger>{t("changeRole")}</DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   <DropdownMenuRadioGroup
                     value={u.role}
@@ -155,7 +162,7 @@ export function UserManagement() {
                   >
                     {ROLES.map((r) => (
                       <DropdownMenuRadioItem key={r} value={r}>
-                        {ROLE_LABELS[r]}
+                        {tRoles(r)}
                       </DropdownMenuRadioItem>
                     ))}
                   </DropdownMenuRadioGroup>
@@ -166,14 +173,14 @@ export function UserManagement() {
                 <DropdownMenuItem
                   onSelect={() => {
                     update(u.id, { status: "active" })
-                    toast.success(`${u.name} reactivated`)
+                    toast.success(t("reactivated", { name: u.name }))
                   }}
                 >
-                  Reactivate
+                  {t("reactivate")}
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem variant="destructive" onSelect={() => setPending({ kind: "suspend", user: u })}>
-                  Suspend
+                  {t("suspend")}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -181,17 +188,17 @@ export function UserManagement() {
         ),
       },
     ],
-    [update]
+    [update, t, tRoles, f]
   )
 
   function confirmPending() {
     if (!pending) return
     if (pending.kind === "role") {
       update(pending.user.id, { role: pending.role })
-      toast.success(`${pending.user.name} is now ${ROLE_LABELS[pending.role]}`, { description: "Logged in the audit trail." })
+      toast.success(t("roleChanged", { name: pending.user.name, role: tRoles(pending.role) }), { description: ta("loggedInAudit") })
     } else {
       update(pending.user.id, { status: "suspended" })
-      toast.success(`${pending.user.name} suspended`, { description: "Their ratings no longer count. Logged in the audit trail." })
+      toast.success(t("suspendedToast", { name: pending.user.name }), { description: t("suspendedBody") })
     }
     setPending(null)
     setReason("")
@@ -208,25 +215,25 @@ export function UserManagement() {
       <div className="flex flex-col gap-3 md:flex-row md:items-center">
         <div className="relative flex-1">
           <RiSearchLine className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-          <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by name or email…" aria-label="Search users" className="pl-9" />
+          <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} className="pl-9" />
         </div>
-        <label htmlFor="users-role" className="sr-only">Role</label>
+        <label htmlFor="users-role" className="sr-only">{t("role")}</label>
         <NativeSelect id="users-role" value={role} onChange={(e) => setRole(e.target.value as Role | "")}>
-          <NativeSelectOption value="">All roles</NativeSelectOption>
+          <NativeSelectOption value="">{t("allRoles")}</NativeSelectOption>
           {ROLES.map((r) => (
-            <NativeSelectOption key={r} value={r}>{ROLE_LABELS[r]}</NativeSelectOption>
+            <NativeSelectOption key={r} value={r}>{tRoles(r)}</NativeSelectOption>
           ))}
         </NativeSelect>
-        <label htmlFor="users-status" className="sr-only">Status</label>
+        <label htmlFor="users-status" className="sr-only">{t("status")}</label>
         <NativeSelect id="users-status" value={status} onChange={(e) => setStatus(e.target.value as UserStatus | "")}>
-          <NativeSelectOption value="">All statuses</NativeSelectOption>
-          <NativeSelectOption value="active">Active</NativeSelectOption>
-          <NativeSelectOption value="pending">Pending accreditation</NativeSelectOption>
-          <NativeSelectOption value="suspended">Suspended</NativeSelectOption>
+          <NativeSelectOption value="">{t("allStatuses")}</NativeSelectOption>
+          <NativeSelectOption value="active">{t("statuses.active")}</NativeSelectOption>
+          <NativeSelectOption value="pending">{t("statuses.pending")}</NativeSelectOption>
+          <NativeSelectOption value="suspended">{t("statuses.suspended")}</NativeSelectOption>
         </NativeSelect>
       </div>
       <p className="text-sm text-muted-foreground" aria-live="polite">
-        {rows.length} of {counts.total} users · {counts.pending} pending accreditation · {counts.suspended} suspended
+        {t("summary", { shown: rows.length, total: counts.total, pending: counts.pending, suspended: counts.suspended })}
       </p>
 
       <DataTable data={rows} columns={columns} getRowId={(u) => u.id} initialSorting={[{ id: "name", desc: false }]} />
@@ -236,26 +243,26 @@ export function UserManagement() {
           <AlertDialogHeader>
             <AlertDialogTitle>
               {pending?.kind === "role"
-                ? `Make ${pending.user.name} ${ROLE_LABELS[pending.role]}?`
-                : `Suspend ${pending?.user.name}?`}
+                ? t("roleTitle", { name: pending.user.name, role: tRoles(pending.role) })
+                : t("suspendTitle", { name: pending?.user.name ?? "" })}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {pending?.kind === "role"
                 ? pending.role === "expert" || pending.role === "admin"
-                  ? "They'll need to set up two-factor authentication at next sign-in."
-                  : "Their access changes immediately."
-                : "They can't sign in, and their ratings stop counting towards scores."}
+                  ? t("roleTfa")
+                  : t("roleNow")
+                : t("suspendBody")}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason (recorded in the audit log)" aria-label="Reason" rows={3} />
+          <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("reasonPlaceholder")} aria-label={t("reason")} rows={3} />
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               disabled={reason.trim().length < 5}
               onClick={confirmPending}
               className={pending?.kind === "suspend" ? "bg-destructive text-white hover:bg-destructive/90" : undefined}
             >
-              Confirm
+              {tc("confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

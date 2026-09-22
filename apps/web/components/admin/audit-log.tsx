@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { RiDownload2Line, RiSearchLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { DataTable, SortableHeader, type AdminColumn } from "@/components/admin/data-table"
@@ -10,8 +11,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { useFormat } from "@/lib/format"
 import { AUDIT_ACTION_LABELS, SAMPLE_AUDIT, type AuditAction, type AuditEntry } from "@/lib/mock/admin"
-import { ROLE_LABELS } from "@/lib/roles"
 import { initials } from "@/lib/utils"
 
 function exportCsv(rows: AuditEntry[]) {
@@ -33,6 +34,11 @@ export function AuditLog() {
   const [query, setQuery] = React.useState("")
   const [actor, setActor] = React.useState("")
   const [action, setAction] = React.useState<AuditAction | "">("")
+  const t = useTranslations("Admin.audit")
+  const tRoles = useTranslations("Roles")
+  const f = useFormat()
+  // Action ids contain a dot ("verdict.override"), which next-intl reads as a nested path.
+  const actionLabel = React.useCallback((a: AuditAction) => t(`actions.${a}`), [t])
 
   const actors = [...new Set(SAMPLE_AUDIT.map((a) => a.actor))].sort()
   const q = query.trim().toLowerCase()
@@ -49,16 +55,16 @@ export function AuditLog() {
         id: "at",
         accessorFn: (e) => e.at,
         sortFn: "alphanumeric",
-        header: ({ column }) => <SortableHeader column={column} label="Time" />,
+        header: ({ column }) => <SortableHeader column={column} label={t("columns.time")} />,
         cell: ({ row: { original: e } }) => (
           <time dateTime={e.at} className="font-mono text-xs whitespace-nowrap">
-            {new Date(e.at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}
+            {f.dateTime(e.at)}
           </time>
         ),
       },
       {
         id: "actor",
-        header: "Actor",
+        header: () => t("columns.actor"),
         cell: ({ row: { original: e } }) => (
           <div className="flex items-center gap-2 whitespace-nowrap">
             <Avatar className="size-6">
@@ -66,19 +72,19 @@ export function AuditLog() {
             </Avatar>
             <div className="flex flex-col">
               <span className="text-sm">{e.actor}</span>
-              <span className="text-[11px] text-muted-foreground">{ROLE_LABELS[e.actorRole]}</span>
+              <span className="text-[11px] text-muted-foreground">{tRoles(e.actorRole)}</span>
             </div>
           </div>
         ),
       },
       {
         id: "action",
-        header: "Action",
-        cell: ({ row: { original: e } }) => <Badge variant="outline" className="whitespace-nowrap">{AUDIT_ACTION_LABELS[e.action]}</Badge>,
+        header: () => t("columns.action"),
+        cell: ({ row: { original: e } }) => <Badge variant="outline" className="whitespace-nowrap">{actionLabel(e.action)}</Badge>,
       },
       {
         id: "target",
-        header: "Target and detail",
+        header: () => t("columns.target"),
         cell: ({ row: { original: e } }) => (
           <div className="flex min-w-64 flex-col">
             <span className="text-sm font-medium">{e.target}</span>
@@ -88,11 +94,11 @@ export function AuditLog() {
       },
       {
         id: "ip",
-        header: "IP",
+        header: () => t("columns.ip"),
         cell: ({ row: { original: e } }) => <span className="font-mono text-xs text-muted-foreground">{e.ip}</span>,
       },
     ],
-    []
+    [t, tRoles, f, actionLabel]
   )
 
   return (
@@ -100,34 +106,34 @@ export function AuditLog() {
       <div className="flex flex-col gap-3 md:flex-row md:items-center">
         <div className="relative flex-1">
           <RiSearchLine className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-          <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search targets and details…" aria-label="Search the audit log" className="pl-9" />
+          <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} className="pl-9" />
         </div>
-        <label htmlFor="audit-actor" className="sr-only">Actor</label>
+        <label htmlFor="audit-actor" className="sr-only">{t("actor")}</label>
         <NativeSelect id="audit-actor" value={actor} onChange={(e) => setActor(e.target.value)}>
-          <NativeSelectOption value="">Everyone</NativeSelectOption>
+          <NativeSelectOption value="">{t("everyone")}</NativeSelectOption>
           {actors.map((a) => <NativeSelectOption key={a} value={a}>{a}</NativeSelectOption>)}
         </NativeSelect>
-        <label htmlFor="audit-action" className="sr-only">Action</label>
+        <label htmlFor="audit-action" className="sr-only">{t("action")}</label>
         <NativeSelect id="audit-action" value={action} onChange={(e) => setAction(e.target.value as AuditAction | "")}>
-          <NativeSelectOption value="">All actions</NativeSelectOption>
+          <NativeSelectOption value="">{t("allActions")}</NativeSelectOption>
           {(Object.keys(AUDIT_ACTION_LABELS) as AuditAction[]).map((a) => (
-            <NativeSelectOption key={a} value={a}>{AUDIT_ACTION_LABELS[a]}</NativeSelectOption>
+            <NativeSelectOption key={a} value={a}>{actionLabel(a)}</NativeSelectOption>
           ))}
         </NativeSelect>
         <Button
           variant="outline"
           onClick={() => {
             exportCsv(rows)
-            toast.success(`Exported ${rows.length} entries`)
+            toast.success(t("exported", { count: rows.length }))
           }}
         >
-          <RiDownload2Line aria-hidden /> Export CSV
+          <RiDownload2Line aria-hidden /> {t("exportCsv")}
         </Button>
       </div>
       <p className="text-sm text-muted-foreground" aria-live="polite">
-        {rows.length} entries. The log is append-only: entries can&apos;t be edited or deleted, including by administrators.
+        {t("summary", { count: rows.length })}
       </p>
-      <DataTable data={rows} columns={columns} getRowId={(e) => e.id} initialSorting={[{ id: "at", desc: true }]} emptyTitle="No entries" />
+      <DataTable data={rows} columns={columns} getRowId={(e) => e.id} initialSorting={[{ id: "at", desc: true }]} emptyTitle={t("emptyTitle")} />
     </div>
   )
 }

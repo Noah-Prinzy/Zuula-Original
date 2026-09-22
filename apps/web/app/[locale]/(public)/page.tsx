@@ -81,9 +81,9 @@ export default function HomePage() {
 
   return (
     <PhotoHero
-      photo={PHOTOS.newspapers}
+      photo={PHOTOS.kampalaSkyline}
       priority
-      position="75% 45%"
+      position="center 40%"
       // In development the "Demo: view as" bar (#role-switcher) sits above the header; leave room for it.
       className="flex min-h-[calc(100svh-var(--header-h))] flex-col [html:has(#role-switcher)_&]:min-h-[calc(100svh-var(--header-h)-2.3125rem)]"
     >

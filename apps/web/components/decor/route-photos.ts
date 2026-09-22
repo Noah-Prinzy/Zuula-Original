@@ -10,28 +10,25 @@ const ROUTES: [prefix: string, entry: RoutePhoto][] = [
   // Public
   ["/about", { photo: PHOTOS.ugandaHills, position: "center 60%" }],
   ["/fact-checks/", { photo: PHOTOS.kampalaSunset }],
-  ["/fact-checks", { photo: PHOTOS.journalists }],
-  ["/verify", { photo: PHOTOS.marketCall, position: "center 30%" }],
+  ["/fact-checks", { photo: PHOTOS.newspapers }],
+  ["/verify", { photo: PHOTOS.crimsonTexture }],
   ["/developers", { photo: PHOTOS.crimsonWaves }],
   ["/offline", { photo: PHOTOS.hillRoad }],
   ["/legal/privacy", { photo: PHOTOS.lakeVictoria }],
   ["/legal/terms", { photo: PHOTOS.nileBoat }],
   ["/submissions", { photo: PHOTOS.teaRoad }],
   // Auth
-  [
-    "/sign-in/two-factor",
-    { photo: PHOTOS.phoneOnCrimson, position: "30% center" },
-  ],
-  ["/sign-in", { photo: PHOTOS.friendsPhone }],
-  ["/sign-up/verify", { photo: PHOTOS.manTexting, position: "center 25%" }],
-  ["/sign-up", { photo: PHOTOS.couplePhone }],
+  ["/sign-in/two-factor", { photo: PHOTOS.crimsonWaves }],
+  ["/sign-in", { photo: PHOTOS.teaRoad }],
+  ["/sign-up/verify", { photo: PHOTOS.lakeVictoria }],
+  ["/sign-up", { photo: PHOTOS.boatsSunset }],
   ["/forgot-password", { photo: PHOTOS.kampalaStreet }],
   ["/reset-password", { photo: PHOTOS.nightRoad }],
   // Signed-in app
   ["/account/activity", { photo: PHOTOS.murchisonFalls }],
   ["/account", { photo: PHOTOS.boatsSunset }],
-  ["/admin/sources", { photo: PHOTOS.classroom }],
-  ["/admin", { photo: PHOTOS.workshop }],
+  ["/admin/sources", { photo: PHOTOS.nightRoad }],
+  ["/admin", { photo: PHOTOS.kampalaStreet }],
 ]
 
 const FALLBACK: RoutePhoto = { photo: PHOTOS.kampalaSkyline }

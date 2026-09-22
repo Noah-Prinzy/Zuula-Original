@@ -1,9 +1,15 @@
 import type { MetadataRoute } from "next"
+import { cookies } from "next/headers"
 import { getTranslations } from "next-intl/server"
+
+import { DEFAULT_LOCALE, isLocale, LOCALE_COOKIE } from "@/i18n/config"
 
 // Installable PWA (spec §3, §7.3). Icons are CREST's, in public/brand.
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
-  const t = await getTranslations("Pwa")
+  // Served outside app/[locale] (and skipped by proxy.ts), so read the language cookie
+  // directly: the installed app's name follows the language the user picked.
+  const value = (await cookies()).get(LOCALE_COOKIE)?.value
+  const t = await getTranslations({ locale: isLocale(value) ? value : DEFAULT_LOCALE, namespace: "Pwa" })
 
   return {
     id: "/",

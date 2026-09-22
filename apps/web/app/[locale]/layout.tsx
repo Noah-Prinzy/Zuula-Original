@@ -1,9 +1,11 @@
 import { Suspense } from "react"
 import type { Metadata } from "next"
-import { getLocale, getMessages } from "next-intl/server"
+import { notFound } from "next/navigation"
+import { locale as rootLocale } from "next/root-params"
+import { getMessages } from "next-intl/server"
 import { Geist, Geist_Mono, Lora, Raleway } from "next/font/google"
 
-import "./globals.css"
+import "../globals.css"
 import { MOTION_INIT_SCRIPT } from "@/components/motion/motion-init"
 import { RevealObserver } from "@/components/motion/reveal-observer"
 import { IntlProvider } from "@/components/providers/intl-provider"
@@ -13,6 +15,7 @@ import { RouteProgress } from "@/components/shell/route-progress"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { isLocale, LOCALES } from "@/i18n/config"
 import { cn } from "@/lib/utils"
 
 // latin-ext is required for ŋ (Luganda, Acholi).
@@ -47,9 +50,11 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // The UI language comes from the NEXT_LOCALE cookie (i18n/request.ts); switching it
-  // refreshes the page, so <html lang> and every message update together.
-  const locale = await getLocale()
+  // URLs carry no language: proxy.ts reads the NEXT_LOCALE cookie and rewrites /x to
+  // /<locale>/x, so each language's pages are prerendered and served from the CDN.
+  // Switching language sets the cookie and refreshes (i18n/actions.ts).
+  const locale = await rootLocale()
+  if (!isLocale(locale)) notFound()
   const messages = await getMessages()
 
   return (
@@ -94,3 +99,9 @@ export default async function RootLayout({
     </html>
   )
 }
+
+// One prerendered copy of every page per language; anything else is a 404.
+export function generateStaticParams() {
+  return LOCALES.map((l) => ({ locale: l.code }))
+}
+export const dynamicParams = false

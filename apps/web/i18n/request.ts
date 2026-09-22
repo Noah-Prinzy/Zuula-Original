@@ -1,12 +1,21 @@
-import { cookies } from "next/headers"
+import { locale as rootLocale } from "next/root-params"
 import { getRequestConfig } from "next-intl/server"
 
-import { DEFAULT_LOCALE, isLocale, LOCALE_COOKIE, TIME_ZONE } from "./config"
+import { DEFAULT_LOCALE, isLocale, TIME_ZONE } from "./config"
 import { deepMerge, type Messages } from "./merge"
 import type en from "../messages/en.json"
 
-export default getRequestConfig(async () => {
-  const value = (await cookies()).get(LOCALE_COOKIE)?.value
+export default getRequestConfig(async (params) => {
+  // The [locale] segment (set by proxy.ts from the cookie). Reading it as a root param,
+  // not from headers or cookies, keeps every page statically renderable. Root params don't
+  // exist in server actions and route handlers; those fall back to the proxy's header.
+  // Don't destructure `requestLocale`: it's a getter that reads headers() when touched.
+  let value: string | undefined
+  try {
+    value = await rootLocale()
+  } catch {
+    value = await params.requestLocale
+  }
   const locale = isLocale(value) ? value : DEFAULT_LOCALE
 
   // Translations are drafts: any key missing from the active language falls back to English.

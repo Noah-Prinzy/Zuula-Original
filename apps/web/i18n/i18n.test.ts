@@ -10,6 +10,15 @@ vi.mock("next/headers", () => ({
 }))
 vi.mock("next-intl/server", () => ({ getRequestConfig: (fn: unknown) => fn }))
 
+// The [locale] root param; `undefined` simulates a server action, where root params throw.
+const root = vi.hoisted(() => ({ locale: "en" as string | undefined }))
+vi.mock("next/root-params", () => ({
+  locale: async () => {
+    if (root.locale === undefined) throw new Error("root params are not available here")
+    return root.locale
+  },
+}))
+
 vi.mock("../messages/en.json", () => ({
   default: { Common: { save: "Save", cancel: "Cancel" }, Nav: { home: "Home" } },
 }))
@@ -21,9 +30,14 @@ import { deepMerge } from "./merge"
 import getConfig from "./request"
 
 type Config = { locale: string; messages: Record<string, unknown>; timeZone: string; getMessageFallback: (info: { namespace?: string; key: string }) => string }
-const load = () => (getConfig as unknown as () => Promise<Config>)()
+type Params = { requestLocale: Promise<string | undefined> }
+const load = (params: Params = { requestLocale: Promise.resolve(undefined) }) =>
+  (getConfig as unknown as (p: Params) => Promise<Config>)(params)
 
-beforeEach(() => jar.clear())
+beforeEach(() => {
+  jar.clear()
+  root.locale = "en"
+})
 
 describe("deepMerge", () => {
   it("overrides leaves and keeps keys missing from the override", () => {
@@ -45,20 +59,35 @@ describe("isLocale", () => {
 })
 
 describe("request config", () => {
-  it("defaults to English without a cookie, in Kampala time", async () => {
+  it("uses English for the en segment, in Kampala time", async () => {
     const c = await load()
     expect(c.locale).toBe("en")
     expect(c.timeZone).toBe(TIME_ZONE)
     expect(c.messages).toEqual({ Common: { save: "Save", cancel: "Cancel" }, Nav: { home: "Home" } })
   })
 
-  it("ignores an unknown cookie value", async () => {
-    jar.set(LOCALE_COOKIE, "fr")
+  it("falls back to English for an unknown segment", async () => {
+    root.locale = "fr"
     expect((await load()).locale).toBe("en")
   })
 
-  it("uses the cookie's language and falls back to English per key", async () => {
-    jar.set(LOCALE_COOKIE, "lg")
+  it("reads the [locale] segment without touching request headers (keeps pages static)", async () => {
+    root.locale = "lg"
+    const params = {
+      get requestLocale(): Promise<string | undefined> {
+        throw new Error("requestLocale reads headers() and must not be accessed")
+      },
+    }
+    expect((await load(params)).locale).toBe("lg")
+  })
+
+  it("falls back to the proxy's locale header where root params don't exist", async () => {
+    root.locale = undefined
+    expect((await load({ requestLocale: Promise.resolve("teo") })).locale).toBe("teo")
+  })
+
+  it("uses the segment's language and falls back to English per key", async () => {
+    root.locale = "lg"
     const c = await load()
     expect(c.locale).toBe("lg")
     expect(c.messages).toEqual({ Common: { save: "Tereka", cancel: "Cancel" }, Nav: { home: "Home" } })

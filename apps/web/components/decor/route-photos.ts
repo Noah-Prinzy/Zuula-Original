@@ -28,7 +28,6 @@ const ROUTES: [prefix: string, entry: RoutePhoto][] = [
   // Signed-in app
   ["/account/activity", { photo: PHOTOS.murchisonFalls }],
   ["/account", { photo: PHOTOS.boatsSunset }],
-  ["/review", { photo: PHOTOS.journalists }],
   ["/admin/sources", { photo: PHOTOS.classroom }],
   ["/admin", { photo: PHOTOS.workshop }],
 ]

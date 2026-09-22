@@ -131,8 +131,8 @@ export default function HomePage() {
         <div className="grid w-full max-w-7xl gap-4 lg:grid-cols-2 [@media(max-height:52rem)]:-mt-2">
           <RotatingCard
             id="feed-title"
-            eyebrow="Trending"
-            title="Recent fact-checks"
+            eyebrow="Recent"
+            title="Fact-checks"
             live
             href="/fact-checks"
             linkLabel="Library"

@@ -1,8 +1,11 @@
 # ADR 0001: API architecture (P2)
 
-**Status:** Accepted (P2 Step 1 contract merged in [PR #1](../../apps/api/openapi.yaml);
-Step 2 skeleton is this ADR's subject). Several decisions here are explicitly P2-only and
-are expected to be superseded in P3 — each says so.
+**Status:** Accepted. Step 1 (the contract, [PR #1](../../apps/api/openapi.yaml)) and Step 2
+(the FastAPI skeleton, [PR #2](https://github.com/Noah-Prinzy/zuula/pull/2)) are merged;
+Step 3 (the real submission pipeline and realtime delivery) is this revision's addition —
+see the Queue and Realtime sections below, both rewritten from Step 2's forward-looking
+placeholders to describe what's actually built. Several decisions here are explicitly
+P2-only and are expected to be superseded in P3 — each says so.
 
 ## Context
 
@@ -44,24 +47,55 @@ presence check passes and our app's own auth logic actually runs and is what get
 ## Queue
 
 **Decision:** Celery (`app/worker/`), broker and result backend both Redis, run as a
-separate Compose service (`worker`) from the API process. P2 scope is intentionally minimal —
-a `zuula.ping` task, just enough to prove `docker compose up` runs a working worker process
-end to end. The real submission pipeline (ClamAV scan → S3 upload → Whisper transcription →
-analysis provider → verdict), and the `SubmissionStepEvent`-shaped progress it should emit,
-is P2 Step 3.
+separate Compose service (`worker`) from the API process. `POST /api/v1/submissions`
+(`app/api/v1/submissions.py`) writes an initial state record then calls
+`run_submission_pipeline.delay(...)` (`app/worker/pipeline.py`), which runs the submission
+through ClamAV scan → storage → transcription → analysis → verdict as a sequence of named
+steps, sleeping for each step's documented duration and publishing progress as it goes.
+ClamAV scanning, storage and transcription are still stand-ins (the real integrations are
+Step 4's adapters — this task's job is the pipeline's *shape*, not real external calls); the
+one real interface boundary is the AI step, which goes through
+`app.providers.analysis.AnalysisProvider` (see below).
+
+Step sequencing and per-step timing are not invented — `PIPELINES`/`STEP_SECONDS` in
+`app/worker/pipeline.py` are transcribed field-for-field from
+`apps/web/lib/analysis.ts`'s `PIPELINES`/`STEPS`, including that the step sequence differs
+by submission type (a `media` submission scans and transcribes; a `text` submission doesn't;
+only `url` fetches). This is deliberate: P3's frontend integration should be able to point
+the existing Status page at this API with no change to what it renders, only where its data
+comes from.
 
 **Why Celery/Redis and not something else:** it's the combination the brief's Step 3/4 scope
 already names (`app/worker/**`, `app/providers/analysis*`), it's a well-understood default
 for Python job queues, and Redis is already a dependency for the partner rate limiter's real
 (non-stub) implementation, so it isn't an extra moving part.
 
+**State lives in Redis, not Postgres — even though Postgres is already in Compose.** The API
+process and the worker process are separate OS processes (`docker-compose.yml`'s `api` and
+`worker` services) with no shared memory, so submission progress has to live somewhere both
+can reach. Postgres is P2's explicit placeholder-only service (nothing reads `DATABASE_URL`
+yet); building real persistence for one table ahead of P3's actual schema work would be
+throwaway effort. `app/realtime/submissions.py` stores each submission's state as a JSON
+blob under a TTL'd Redis key (`STATE_TTL_SECONDS`, one hour) — enough to demo the full flow,
+not a durable record. P3's job is to replace this with a real `submissions` table; the
+functions' signatures (`load_state`/`save_state`, taking a redis client and a tracking id)
+are intentionally the whole interface, so that swap doesn't ripple into the pipeline task or
+the API routes.
+
 ## Realtime
 
 **Decision:** Server-Sent Events (SSE), not WebSockets, for both places the contract needs a
 live stream: `GET /api/v1/submissions/{trackingId}/events` (pipeline progress for one
-submission) and `GET /api/v1/notifications/stream`. Both are implemented today as
-`StreamingResponse(..., media_type="text/event-stream")` generators over the same fixed stub
-data the non-streaming endpoints use.
+submission) and `GET /api/v1/notifications/stream`. The submissions stream is real, backed
+by Redis pub/sub (`app/realtime/submissions.py`'s `publish_step`/`publish_done`/
+`publish_failed`/`subscribe`): the worker publishes as each step transitions, and
+`app/api/v1/submissions.py`'s SSE endpoint replays whatever's already recorded in the
+submission's state (so a client that connects mid-pipeline, or after it's finished, still
+gets the full picture) and then forwards live pub/sub messages until a `done` or `failed`
+event closes the stream. The notifications stream is still a fixed-data stub (nothing in P2
+yet produces notification events to publish — that arrives with the features that create
+them: review decisions, admin broadcasts) but goes through the same
+`StreamingResponse(..., media_type="text/event-stream")` shape.
 
 **Why SSE:** both streams are strictly server-to-client (the client never needs to send
 messages over the same connection — actions like "mark read" or "retry submission" are
@@ -71,22 +105,50 @@ publishing progress is naturally a stream of discrete named events, which is exa
 `event: <name>\ndata: <payload>` shape). Nothing here rules out WebSockets later if a
 bidirectional need shows up, but nothing in the current contract needs one.
 
+**A known, accepted gap:** there's a small race window in the submissions SSE endpoint
+between reading a submission's already-recorded steps (for replay) and subscribing to its
+pub/sub channel (for what's still to come) — a step that completes in exactly that window
+could be missed by that one connection. The final `done`/`failed` event and a plain
+`GET /api/v1/submissions/{trackingId}` poll both always reflect the true end state
+regardless, so the visible effect is at most one skipped intermediate progress tick, not
+stale or wrong data. Closing this fully would mean Redis Streams (replay-from-offset)
+instead of pub/sub (fire-and-forget) — reasonable if it ever proves to matter in practice,
+disproportionate for a P2 stub demo today.
+
+## AnalysisProvider
+
+**Decision:** the AI/verdict step of the pipeline goes through one interface,
+`app.providers.analysis.AnalysisProvider` (a `Protocol`: one `analyze(content_type, text,
+language) -> AnalysisResult` method), selected at runtime by `ANALYSIS_PROVIDER` via
+`get_analysis_provider()`. P2 ships exactly one implementation, `StubAnalysisProvider`,
+which deterministically maps its input to one of the existing sample reports' analysis (by
+a stable hash, not Python's randomized string hash, since the mapping has to agree across
+the worker process and anything else that might call it) — shaped like a real provider's
+output, without doing any real analysis.
+
+**Why this needs to be swappable at all:** sending submissions to a hosted LLM outside
+Uganda is an open §10.1 data-protection question the spec doesn't resolve. `ANALYSIS_PROVIDER`
+and `ANALYSIS_PROVIDER_REGION` (`app/core/config.py`'s `AnalysisSettings`,
+`.env.example`) exist so that whichever answer P4 lands on — a regional deployment, an
+on-Uganda-soil model, a provider allow-list — is a config change behind this interface, not
+a rewrite of the pipeline that calls it.
+
 ## Adapters (external integrations)
 
-**Decision:** every external integration the contract implies — ClamAV, S3-compatible
-storage, Whisper (or equivalent) transcription, the pluggable "analysis provider" for
-verdict generation, Africa's Talking (SMS/USSD), Cloudflare Turnstile, WhatsApp/Telegram
-bot channels, outbound email — is P2-out-of-scope and represented only as placeholder
-settings in `app/core/config.py`/`.env.example`. No adapter code exists yet; stub data in
-`app/stubs/` stands in for all of their outputs.
+**Decision:** every external integration the contract implies other than the analysis
+provider (which has its own section above, added in Step 3) — ClamAV, S3-compatible
+storage, Whisper (or equivalent) transcription, Africa's Talking (SMS/USSD), Cloudflare
+Turnstile, WhatsApp/Telegram bot channels, OAuth, outbound email — is still out of scope and
+represented only as placeholder settings in `app/core/config.py`/`.env.example`. No adapter
+code exists yet; the pipeline's ClamAV/storage/transcription steps (`app/worker/pipeline.py`)
+are named stages with a simulated duration, not calls to anything.
 
-**Why defer instead of stubbing each with a fake client now:** Step 2's job was proving the
-contract is servable end-to-end with realistic shaped data, which the static stub data
-already does without needing fake network clients for a dozen services. Building each
-adapter behind a real interface belongs with the feature that first needs it (Step 3 for the
-pipeline adapters — ClamAV/S3/Whisper/analysis; Step 4 for the messaging/notification
-adapters), so the abstraction boundary is informed by an actual caller instead of guessed
-in advance.
+**Why defer instead of stubbing each with a fake client now:** these adapters' job is purely
+external I/O (call a real service, get a real result) with no meaningful shape decision left
+to make ahead of time the way the analysis provider had (P2's central design question there
+was the swappable-interface/§10.1 one, not the stub's content). Building each adapter behind
+a real interface belongs with the feature that first needs it — Step 4 — so the abstraction
+boundary is informed by an actual caller instead of guessed in advance.
 
 ## Pagination
 
@@ -104,9 +166,13 @@ scale.
 `field?: T` convention — omitted from the JSON entirely when unset, enforced by default via
 `app.core.router.APIRouter` (see `apps/api/README.md`). A small, explicit set of fields are
 instead required-and-nullable (`ApiKey.lastUsedAt`, `ReviewCase.assignee`,
-`FactCheckPublic.humanReview`), matching frontend types that are `T | null` rather than
-`T | undefined`, and openapi.yaml schemas typed `oneOf: [T, null]` with the field in
-`required`. Those go through small per-schema `dump_*()` helpers instead of automatic
-`response_model` serialization. This split was found by, and is enforced by, the contract
-test suite — a field modeled the wrong way fails a real response-schema validation, not a
-guess.
+`FactCheckPublic.humanReview`, `CommunityScore.ccs`), matching frontend types that are
+`T | null` rather than `T | undefined`, and openapi.yaml schemas typed `oneOf: [T, null]`
+with the field in `required`. Those go through small per-schema `dump_*()` helpers instead
+of automatic `response_model` serialization. This split was found by, and is enforced by,
+the contract test suite — a field modeled the wrong way fails a real response-schema
+validation, not a guess. `ccs` (null until a report has its first rating —
+`community_score()` in `app/stubs/scoring.py`) is a good example of why this matters beyond
+Step 2's original three: every pre-seeded sample report already has ratings, so the bug was
+invisible until Step 3's pipeline created the first-ever zero-rating report and the contract
+test suite caught it immediately.

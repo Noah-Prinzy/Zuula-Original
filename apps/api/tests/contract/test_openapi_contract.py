@@ -9,7 +9,9 @@ from pathlib import Path
 
 import pytest
 from openapi_core import OpenAPI
+from openapi_core.configurations import Config
 from openapi_core.contrib.fastapi.middlewares import FastAPIOpenAPIMiddleware
+from openapi_core.deserializing.media_types.util import plain_loads
 from starlette.testclient import TestClient
 
 from app.main import app as _app
@@ -23,7 +25,13 @@ def validated_app():
     # module-level app singleton in place, which would also affect
     # test_health_endpoints_not_in_contract_but_still_ok's supposedly-unvalidated plain client
     # below (import order/fixture caching would make that test order-dependent otherwise).
-    spec = OpenAPI.from_file_path(str(SPEC_PATH))
+    #
+    # openapi-core ships no default deserializer for text/event-stream (the two SSE
+    # endpoints' media type) — it falls back to binary_loads, handing schema validation raw
+    # bytes against a `type: string` schema, which always fails. plain_loads (its own
+    # text/plain deserializer) is exactly what SSE frames need: decode bytes to str.
+    config = Config(extra_media_type_deserializers={"text/event-stream": plain_loads})
+    spec = OpenAPI.from_file_path(str(SPEC_PATH), config=config)
     return FastAPIOpenAPIMiddleware(_app, openapi=spec)
 
 
@@ -211,15 +219,40 @@ class TestSubmissions:
     def test_create(self, core_client):
         r = core_client.post("/api/v1/submissions", json={"type": "text", "content": "x" * 30})
         assert r.status_code == 202
+        assert r.json()["trackingId"]
 
     def test_status(self, core_client):
-        r = core_client.get("/api/v1/submissions/ZL-7K3P-Q9")
-        assert r.status_code == 200
+        # Celery runs eagerly in tests (tests/conftest.py) with pipeline_step_scale=0, so by
+        # the time create_submission() returns, the pipeline has already run to completion.
+        created = core_client.post(
+            "/api/v1/submissions", json={"type": "text", "content": "x" * 30}
+        ).json()
+        r = core_client.get(f"/api/v1/submissions/{created['trackingId']}")
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert body["status"] == "completed"
+        assert body["result"]["trackingId"] == created["trackingId"]
 
     def test_status_not_found(self, core_client):
-        # Valid TrackingId shape (^ZL-[A-Z2-9]{4}-[A-Z2-9]{2}$ excludes 0/1/O/I to avoid
-        # ambiguous characters) but a tracking id that doesn't exist.
+        # Valid TrackingId shape (^ZL-[A-Z2-9]{4}-[A-Z2-9]{2}$, excludes only 0/1) but a
+        # tracking id nothing ever submitted.
         assert core_client.get("/api/v1/submissions/ZL-9999-99").status_code == 404
+
+    def test_events_replays_to_done(self, core_client):
+        created = core_client.post(
+            "/api/v1/submissions", json={"type": "text", "content": "x" * 30}
+        ).json()
+        r = core_client.get(f"/api/v1/submissions/{created['trackingId']}/events")
+        assert r.status_code == 200
+        assert "event: done" in r.text
+        assert r.text.count("event: step") == 6  # text pipeline: received/language/claims/sources/ai/report
+
+    def test_url_with_fail_in_it_fails(self, core_client):
+        created = core_client.post(
+            "/api/v1/submissions", json={"type": "url", "url": "https://example.com/fail-demo"}
+        ).json()
+        r = core_client.get(f"/api/v1/submissions/{created['trackingId']}")
+        assert r.json()["status"] == "failed"
 
 
 class TestRatings:
@@ -311,6 +344,11 @@ class TestNotifications:
             "/api/v1/me/alert-settings", json={"topics": ["Health"]}, headers=PUBLIC
         )
         assert r.status_code == 200
+
+    def test_stream(self, core_client):
+        r = core_client.get("/api/v1/notifications/stream", headers=PUBLIC)
+        assert r.status_code == 200
+        assert "event: notification" in r.text
 
 
 class TestAdmin:

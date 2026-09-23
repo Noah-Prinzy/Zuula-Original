@@ -2,6 +2,8 @@ from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.core.rules import PARTNER_RATE_LIMIT_PER_HOUR
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="ZUULA_", env_file=".env", extra="ignore")
@@ -12,7 +14,10 @@ class Settings(BaseSettings):
     session_cookie_name: str = "zuula_session"
     cors_origins: str = "http://localhost:3000"
 
-    partner_rate_limit_per_hour: int = 100
+    # Independently overridable via ZUULA_PARTNER_RATE_LIMIT_PER_HOUR — see
+    # app/core/rules.py's PARTNER_RATE_LIMIT_PER_HOUR for why this defaults to it rather
+    # than hardcoding its own copy of the same number.
+    partner_rate_limit_per_hour: int = PARTNER_RATE_LIMIT_PER_HOUR
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -40,6 +40,7 @@ Open questions for the supervisor:
 - The spec gives admins no rating weight. The code uses 1×.
 - FR-API-01 targets media organisations, but FR-AUTH-02 has no organisation role. API keys are currently limited to Verified Journalists and Admins.
 - Sending submissions to a hosted LLM outside Uganda must be checked against the Data Protection and Privacy Act 2019 (§10.1).
+- FR-RATE-10 asks for a homepage leaderboard of the most accurately rated stories. Nothing in the plan or the frontend builds this yet — it needs a phase and an owner.
 
 ### Known gaps
 

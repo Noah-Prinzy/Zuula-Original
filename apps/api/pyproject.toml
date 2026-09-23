@@ -13,7 +13,7 @@ dependencies = [
   # P3 persistence (ADR 0002 §1): async SQLAlchemy on asyncpg, Alembic migrations, pgvector.
   "sqlalchemy[asyncio]>=2.0.36",
   "asyncpg>=0.30",
-  "alembic>=1.14",
+  "alembic>=1.16",  # alembic.ini uses path_separator (1.16+)
   "pgvector>=0.3.6",
 ]
 

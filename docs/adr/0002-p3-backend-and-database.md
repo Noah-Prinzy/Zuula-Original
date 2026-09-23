@@ -1,8 +1,9 @@
 # ADR 0002: Backend and database (P3)
 
-**Status:** Proposed, with Noah's answers to the open questions folded in (23 Sep 2026; see §10).
-This is the design plan from step 1 of the P3 brief. Nothing described here is implemented yet. Once it's approved
-and built, this file gets rewritten as the record of what was actually decided (brief §3 step 5).
+**Status:** Approved by Noah (23 Sep 2026; decisions in §10). Being built in the PR sequence
+of §9. PR 1 (database foundation) is implemented; the rest describes what's still to come.
+Once all six PRs have landed, this file becomes the record of what was actually decided
+(brief §3 step 5).
 
 **Inputs:** the P3 row of `apps/web/README.md`'s phase table, [ADR 0001](0001-api-architecture.md),
 `apps/api/README.md`, `apps/api/openapi.yaml`, `app/core/security.py`, `app/core/config.py`,
@@ -140,8 +141,14 @@ yet. Nothing in the contract uses them, and they're easy to add in P4.
   Every new case gets `sla_due_at = flagged_at + sla_hours` from settings. Relevant experts get a
   notification.
 - **Weight changes.** If an admin changes weights or thresholds, a Celery task recomputes every
-  report's score and status in batches and writes one audit entry for the whole run. It doesn't
-  open cases retroactively (open question 6).
+  report's score and status in batches. Reports that newly cross a threshold **do** get review
+  cases, exactly as if a vote had moved them (decision 6b): a suspended report is hidden, so
+  without a case nobody would ever review it. The one audit entry for the settings change
+  records how many cases the recompute opened.
+- **Which role a vote counts as** (decision 6a): the rater's role *when they voted*, stored on
+  the rating as `rater_role`. A promotion doesn't re-weight past votes. When an admin suspends
+  a user or revokes their accreditation, they can drop that user's past ratings from every
+  score (`ratings.excluded_at`, an audited action) without deleting the evidence.
 - **Vote-brigading detector** (feeds `manipulation_signals`): a Celery beat job flags bursts where
   N or more accounts created in the last X days vote the same direction on one report within a
   window. P3 ships the table and this simple heuristic. P4 can replace the heuristic.
@@ -174,7 +181,7 @@ yet. Nothing in the contract uses them, and they're easy to add in P4.
   number, email for an email address), matching what the frontend already shows. The code is
   stored HMAC'd in `auth_challenges`, is single-use, expires after 10 min, allows 5 attempts, and
   has a 30 s resend cooldown. `challengeId` is the random challenge row id, so it can't be guessed.
-  TOTP would be stronger, but the spec and UI describe SMS or email codes (open question 5).
+  TOTP was considered and not adopted (decision 5).
 - **Sign-up verification.** The contract's `POST /auth/sign-up/verify` body only has `code`, which
   can't be tied to an account safely on its own. Sign-up therefore also sets a short-lived HttpOnly
   `zuula_signup` cookie that points at the challenge. The JSON shape doesn't change.
@@ -254,7 +261,7 @@ calls a real service in CI.
 5. **Real adapters**, one commit each, plus webhook signatures and multipart upload.
 6. **Docs:** this ADR rewritten as Accepted, `apps/api/README.md`, and deleting `app/stubs/`.
 
-## 10. Decisions and remaining questions
+## 10. Decisions
 
 Answered by Noah on 23 Sep 2026:
 
@@ -262,15 +269,25 @@ Answered by Noah on 23 Sep 2026:
 |---|---|---|
 | 1 | Sessions vs JWT | Opaque server-side sessions. `sessionAuth` description text updated. |
 | 2 | `429` on sign-in lockout | Yes. Added to `signIn`. |
+| 3 | `app/core/rules.py` | Created in PR 1 (it wasn't on any branch). |
 | 4 | Embedding dimension | Fixed in P4. P3 ships an untyped `vector` column with no index (§3). |
 | 5 | 2FA channel | SMS or email OTP only. No TOTP. |
+| 6a | Which role weights a vote | The role at vote time (`ratings.rater_role`), plus admin exclusion of a suspended or de-accredited user's past votes (§4). |
+| 6b | Cases after a weight/threshold change | Yes, opened like any other threshold crossing (§4). |
 | 7 | Suspended report after review | Stays hidden while `suspended`. Only a score recovery relists it (§4). |
 | 8 | Branch | PRs come from `p3/backend-db`. |
 | 9 | Hosting | API on `api.zuula.ug`. Cookie `Domain=zuula.ug`, `SameSite=Lax`. |
 
-Still open:
+## 11. Found while building
 
-- **3. `app/core/rules.py`** isn't on `main` or any branch. Should I wait for P2 Step 5, or create
-  it in PR 1?
-- **6. Which role a rating is weighted by** (explanation requested). See the reply in the P3
-  thread. It decides whether `ratings` stores a `rater_role` column.
+- **Sample data tracking-id collision.** `apps/web/lib/mock/quick-reports.ts` (and its P2
+  transliteration) derive tracking ids with `n.replace(/[01]/g, "7")`, which maps both
+  `fc-2026-0160` and `fc-2026-0161` to `ZL-7767-QK`. Tracking ids are unique in the database,
+  so the seed gives `fc-2026-0161` `ZL-7868-QK`. The frontend mock still has the collision;
+  it goes away for the frontend once it reads reports from the API.
+- **Decided sample cases.** The sample review decisions point at cases (`rc-0412`, …) the
+  sample queue doesn't list. The seed creates them as decided `community-escalation` cases,
+  since their original reason isn't recorded anywhere.
+- **Audit log IPs are stored already truncated** (`196.43.x.x`), as text rather than `inet`:
+  that's the only form the contract and admin screen use, and not keeping the full address is
+  the §10.1 data-minimisation choice.

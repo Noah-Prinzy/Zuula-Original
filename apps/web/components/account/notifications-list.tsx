@@ -94,7 +94,11 @@ export function NotificationsList() {
                 <p className="text-sm text-muted-foreground">{n.body}</p>
               </div>
               <div className="relative z-10 flex items-start gap-2">
-                {!n.read && <span className="mt-2 size-2 bg-primary" aria-label={t("unreadDot")} />}
+                {!n.read && (
+                  <span className="mt-2 size-2 bg-primary">
+                    <span className="sr-only">{t("unreadDot")}</span>
+                  </span>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon-sm" aria-label={t("options", { title: n.title })}>

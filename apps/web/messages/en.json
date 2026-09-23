@@ -90,6 +90,7 @@
     "admin": "Administrator"
   },
   "Demo": {
+    "barLabel": "Role preview",
     "viewAs": "Demo: view as",
     "signedOut": "Signed out",
     "previewAs": "Preview as",
@@ -1012,7 +1013,8 @@
     "emptyDescription": "Open a fact-check while you're online and it will be saved here for later.",
     "browseLibrary": "Browse the Library",
     "banner": "You're offline",
-    "bannerAction": "Open saved reports"
+    "bannerAction": "Open saved reports",
+    "bannerBack": "Back online"
   },
   "Errors": {
     "eyebrow": "Something went wrong",

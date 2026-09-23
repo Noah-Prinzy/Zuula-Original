@@ -188,13 +188,13 @@ export default function AboutPage() {
             <Badge variant="outline" className="w-fit">
               Victoria University CIT
             </Badge>
-            <h1
+            <h2
               id="mission-title"
               className="max-w-3xl font-heading text-2xl font-bold text-balance md:text-3xl"
             >
               Uganda sees a flood of forwarded claims every day. Zuula checks
               them before you share.
-            </h1>
+            </h2>
             <p className="max-w-2xl text-base text-muted-foreground">
               Zuula (branded from Uganda Fact-Guard) is an AI-assisted
               fact-checking platform built for how news actually travels here —

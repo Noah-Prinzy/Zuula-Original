@@ -62,7 +62,7 @@ export function MediaDropzone({
       type="button"
       onClick={() => inputRef.current?.click()}
       disabled={disabled}
-      className="press font-medium text-primary underline-offset-4 [--press-tint:transparent] hover:underline focus-visible:underline focus-visible:outline-none"
+      className="press font-medium text-primary underline underline-offset-4 [--press-tint:transparent]"
     >
       {chunks}
     </button>
@@ -125,6 +125,8 @@ export function MediaDropzone({
       }}
       className={cn(
         "flex flex-col items-center justify-center gap-2 border border-dashed bg-muted/30 px-4 py-10 text-center transition-colors",
+        // The file input is visually hidden but focusable; show its focus on the whole zone.
+        "has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-ring",
         dragging && "border-primary bg-primary/5",
         invalid && "border-destructive"
       )}

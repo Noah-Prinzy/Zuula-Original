@@ -273,7 +273,7 @@ export function CaseReview({ reviewCase, report }: { reviewCase: ReviewCase; rep
 
       <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="flex min-w-0 flex-col gap-8">
-          <VerdictSummary report={report} className="enter [--d:1]" />
+          <VerdictSummary report={report} headingLevel={2} className="enter [--d:1]" />
           <CommunityStatusBanner status={score.status} className="enter [--d:2]" />
           <Section id="checked" title="What was checked">
             <div className="border bg-card p-4">

@@ -2,7 +2,7 @@
 
 import { Children, useEffect, useState } from "react"
 import Link from "next/link"
-import { RiArrowLeftSLine, RiArrowRightLine, RiArrowRightSLine } from "@remixicon/react"
+import { RiArrowLeftSLine, RiArrowRightLine, RiArrowRightSLine, RiPauseLine, RiPlayLine } from "@remixicon/react"
 
 import { ScrambleText } from "@/components/motion/text/scramble-text"
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
@@ -37,6 +37,8 @@ export function RotatingCard({
   const [api, setApi] = useState<CarouselApi>()
   const [current, setCurrent] = useState(0)
   const [paused, setPaused] = useState(false)
+  // WCAG 2.2.2: auto-rotating content needs a control to stop it; using prev/next stops it too.
+  const [stopped, setStopped] = useState(false)
 
   useEffect(() => {
     if (!api) return
@@ -49,13 +51,13 @@ export function RotatingCard({
   }, [api])
 
   useEffect(() => {
-    if (!api || paused || slides.length < 2) return
+    if (!api || paused || stopped || slides.length < 2) return
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
     const timer = window.setInterval(() => {
       if (!document.hidden) api.scrollNext()
     }, interval)
     return () => window.clearInterval(timer)
-  }, [api, paused, interval, slides.length])
+  }, [api, paused, stopped, interval, slides.length])
 
   return (
     <section
@@ -90,22 +92,36 @@ export function RotatingCard({
         <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
-            onClick={() => api?.scrollPrev()}
-            aria-label="Previous"
+            onClick={() => setStopped((s) => !s)}
+            aria-label={stopped ? "Start rotating slides" : "Stop rotating slides"}
+            className="press grid size-6 place-items-center text-muted-foreground [--press-scale:0.85] hover:text-foreground"
+          >
+            {stopped ? <RiPlayLine className="size-3.5" aria-hidden /> : <RiPauseLine className="size-3.5" aria-hidden />}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setStopped(true)
+              api?.scrollPrev()
+            }}
+            aria-label="Previous slide"
             className="press grid size-6 place-items-center text-muted-foreground [--press-scale:0.85] hover:text-foreground"
           >
             <RiArrowLeftSLine className="size-4" aria-hidden />
           </button>
           <span className="w-8 text-center text-xs text-muted-foreground tabular-nums"
             // Announce only user-driven changes, not every automatic rotation.
-            aria-live={paused ? "polite" : "off"}
+            aria-live={paused || stopped ? "polite" : "off"}
           >
             {current + 1}/{slides.length}
           </span>
           <button
             type="button"
-            onClick={() => api?.scrollNext()}
-            aria-label="Next"
+            onClick={() => {
+              setStopped(true)
+              api?.scrollNext()
+            }}
+            aria-label="Next slide"
             className="press grid size-6 place-items-center text-muted-foreground [--press-scale:0.85] hover:text-foreground"
           >
             <RiArrowRightSLine className="size-4" aria-hidden />
@@ -119,7 +135,7 @@ export function RotatingCard({
         </div>
       </div>
 
-      <Carousel setApi={setApi} opts={{ loop: true }} className="overflow-hidden">
+      <Carousel setApi={setApi} opts={{ loop: true }} aria-label={`${title}: slides`} className="overflow-hidden">
         <CarouselContent className="ml-0">
           {slides.map((slide, i) => (
             <CarouselItem

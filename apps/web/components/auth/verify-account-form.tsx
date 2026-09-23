@@ -120,7 +120,7 @@ export function VerifyAccountForm() {
       <div className="flex flex-col gap-1">
         <p className="text-sm text-muted-foreground">
           {t("verify.wrongAddress")}{" "}
-          <Link href="/sign-up" className="text-primary underline-offset-4 hover:underline">
+          <Link href="/sign-up" className="text-primary underline underline-offset-4">
             {t("verify.goBack")}
           </Link>
         </p>

@@ -30,9 +30,12 @@ const CONTENT_TYPE_ICON = {
 export function VerdictSummary({
   report,
   className,
+  headingLevel = 1,
 }: {
   report: FactCheckReport
   className?: string
+  /** 1 where the report is the page's subject (fact-check page); 2 inside another page (case review). */
+  headingLevel?: 1 | 2
 }) {
   const meta = VERDICT_META[report.verdict]
   const TypeIcon = CONTENT_TYPE_ICON[report.contentType]
@@ -41,6 +44,7 @@ export function VerdictSummary({
   const labels = useContentLabels()
   const f = useFormat()
 
+  const Heading = headingLevel === 1 ? "h1" : "h2"
   return (
     <section
       aria-labelledby="verdict-title"
@@ -52,9 +56,9 @@ export function VerdictSummary({
           <VerdictBadge verdict={report.verdict} size="lg" />
           {report.humanReview && <HumanVerifiedBadge review={report.humanReview} />}
         </div>
-        <h1 id="verdict-title" className="font-heading text-2xl font-bold tracking-tight text-balance md:text-3xl">
+        <Heading id="verdict-title" className="font-heading text-2xl font-bold tracking-tight text-balance md:text-3xl">
           {report.title}
-        </h1>
+        </Heading>
         <p className="text-base text-muted-foreground">{report.summary}</p>
         <dl className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">

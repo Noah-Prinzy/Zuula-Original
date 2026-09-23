@@ -40,7 +40,8 @@ const fontMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Zuula — Uganda Fact-Guard",
+  // Page titles name the site too (WCAG 2.4.2), e.g. "Verify · Zuula".
+  title: { default: "Zuula — Uganda Fact-Guard", template: "%s · Zuula" },
   description:
     "AI-powered fake news and misinformation detection for Uganda. Developed by Victoria University CIT.",
 }

@@ -71,7 +71,7 @@ export function PhotoHero({
         className={cn(
           "absolute inset-0 -z-10",
           scrim === "dark" &&
-            "bg-linear-to-b from-black/60 via-black/40 to-black/75",
+            "bg-linear-to-b from-black/60 via-black/55 to-black/75",
           scrim === "crimson" &&
             "bg-linear-to-br from-primary/95 via-primary/80 to-black/70 dark:from-primary/90"
         )}

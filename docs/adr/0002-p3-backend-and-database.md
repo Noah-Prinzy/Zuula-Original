@@ -1,7 +1,7 @@
 # ADR 0002: Backend and database (P3)
 
-**Status:** Proposed. This is the design plan from step 1 of the P3 brief, written for Noah to review before
-any migrations or models are built. Nothing described here is implemented yet. Once it's approved
+**Status:** Proposed, with Noah's answers to the open questions folded in (23 Sep 2026; see §10).
+This is the design plan from step 1 of the P3 brief. Nothing described here is implemented yet. Once it's approved
 and built, this file gets rewritten as the record of what was actually decided (brief §3 step 5).
 
 **Inputs:** the P3 row of `apps/web/README.md`'s phase table, [ADR 0001](0001-api-architecture.md),
@@ -62,7 +62,7 @@ human-readable. The seed data keeps the current stub ids, so every hard-coded id
   claims/citations/ai_signals `jsonb` (written once by the pipeline and always read whole, so I'm
   not normalizing them), category, checked_at, processing_seconds, human_review `jsonb`, plus
   **denormalized community columns** (six rating counts, ccs, community_status, status_changed_at)
-  and `search_tsv` (a generated column) and `embedding vector(768)`.
+  and `search_tsv` (a generated column) and `embedding vector` (no fixed dimension yet, see §3).
 - `expert_annotations`: report_id, author_id, body, created_at.
 - `ratings`: PK (report_id, user_id), vote, rater_role, created_at, updated_at.
 - `rating_comments`: id, report_id, user_id, vote, body, created_at, removed_at.
@@ -108,10 +108,11 @@ scores related reports by topic, word overlap, source, language and verdict. Her
 - Computing the embeddings is AI-engine work (P4). P3 adds an `EmbeddingProvider` Protocol next to
   `AnalysisProvider`, plus a stub, and a pipeline step that stores whatever the provider returns.
   Like the analysis provider, it has to stay swappable for §10.1 data-protection reasons.
-- **The dimension is fixed in the migration.** I'm proposing 768, which fits LaBSE and
-  multilingual-e5-base, both reasonable candidates for Ugandan languages. Changing it later means a
-  migration plus re-embedding every report. That's cheap while the table only holds seed data, but
-  it's still worth deciding on purpose.
+- **The dimension is decided in P4, not here** (Noah, 23 Sep). P3 enables the extension and adds
+  the column as an untyped `vector`, which pgvector allows. An HNSW index needs a fixed dimension,
+  so P3 adds no index. P4's migration narrows the column to `vector(N)` once it picks a model and
+  creates the index then. Until that happens, similarity queries do an exact scan, which is fine
+  at seed-data scale. The lexical fallback covers reports with no embedding.
 
 I'm deliberately not adding embeddings on submissions ("has this claim already been checked?")
 yet. Nothing in the contract uses them, and they're easy to add in P4.
@@ -130,7 +131,10 @@ yet. Nothing in the contract uses them, and they're easy to add in P4.
   - entering `escalated` → open a `community-escalation` case (normal priority);
   - entering `suspended` → open a `suspended` case (high priority), and the report disappears from
     search, facets, home feed, related reports and partner search (every `_is_listed` call site
-    becomes one SQL predicate);
+    becomes one SQL predicate). **A review decision does not bring it back** (Noah, 23 Sep): the
+    report stays hidden for as long as its status is `suspended`. It's listed again only if new
+    ratings lift its score out of the suspended band. The report page itself stays reachable by
+    direct link, which is how the page already behaves;
   - enough `content_flags` → a `user-reports` case;
   - pipeline confidence below the `rules.py` low-confidence threshold → a `low-confidence` case.
   Every new case gets `sla_due_at = flagged_at + sla_hours` from settings. Relevant experts get a
@@ -151,9 +155,11 @@ yet. Nothing in the contract uses them, and they're easy to add in P4.
   denylist in addition to the tokens, which gives you both halves of the complexity.
 - On sign-in we issue 256 random bits, set them as the `zuula_session` cookie (HttpOnly, Secure,
   SameSite=Lax, 30 days with `remember`, otherwise 12 h), and store only the SHA-256 in `sessions`.
-  Non-browser core clients send the same token as `Authorization: Bearer …`. The token isn't
-  literally a JWT, though, so `openapi.yaml`'s `sessionAuth` description needs a one-word text fix
-  (open question 1). The schema itself doesn't change.
+  Non-browser core clients send the same token as `Authorization: Bearer …`. `openapi.yaml`'s
+  `sessionAuth` description changes from "bearer JWT" to "bearer session token" (approved by Noah,
+  23 Sep). This is a text-only change.
+- **Cookie scope:** the API lives on `api.zuula.ug` and the web app on `zuula.ug`. They're
+  same-site, so `SameSite=Lax` works, and the cookie is set with `Domain=zuula.ug`.
 - **CSRF:** SameSite=Lax, plus an `Origin` check against `ZUULA_CORS_ORIGINS` on every
   cookie-authenticated request that isn't GET/HEAD.
 - **`security.py` keeps its public API.** `get_current_user`, `require_roles(*roles)`,
@@ -175,7 +181,8 @@ yet. Nothing in the contract uses them, and they're easy to add in P4.
 - **Password reset** uses the same challenge table, and completing it revokes every session.
   `forgot-password` always returns 202, so it doesn't reveal which identifiers have accounts.
 - **Brute force:** a Redis counter per identifier and per IP allows 5 failed sign-ins per 15 min.
-  The contract's `signIn` has no `429` response, so that's a gap (open question 2).
+  After that, sign-in returns `429` with `Retry-After`. `openapi.yaml` gains `"429": RateLimited` on
+  `signIn` (approved by Noah, 23 Sep). This is the only contract response addition.
 - **OAuth:** a real authorization-code flow with a signed `state` cookie (CSRF plus `next`),
   matched to `oauth_identities`, and a new account for a new identity. OAuth accounts whose role
   needs 2FA still have to pass it.
@@ -247,25 +254,23 @@ calls a real service in CI.
 5. **Real adapters**, one commit each, plus webhook signatures and multipart upload.
 6. **Docs:** this ADR rewritten as Accepted, `apps/api/README.md`, and deleting `app/stubs/`.
 
-## 10. Open questions for Noah
+## 10. Decisions and remaining questions
 
-1. **Opaque sessions instead of JWTs** (§5). OK to change `sessionAuth`'s description text from
-   "bearer JWT" to "bearer session token"? This is a description-only change. Related gap: `Session`
-   responses carry no token, so a non-browser client has to read it from `Set-Cookie`. I'd leave
-   that as it is unless a non-browser core client actually exists.
-2. **Contract gap:** add `429` to `signIn` for lockout? (The same response already exists on
-   `resendTwoFactor`.)
-3. **`app/core/rules.py` isn't on `main`**, and no other branch has it. Should I wait for P2
-   Step 5, or create it in PR 1 with the constants and spec citations and have the P2 session
-   rebase onto it?
-4. **Embedding dimension 768** (§3): fix it now, or do you want P4's model choice made first?
-5. **2FA channel:** SMS or email OTP per the spec and UI, or add TOTP as well?
-6. **Rating weight:** use the rater's role *at vote time* (a snapshot, which I'd recommend because
-   it's auditable and stable) or their current role? And when admins change weights or thresholds,
-   should reports that newly cross a threshold open cases retroactively? I'd recommend no.
-7. **Un-suspending:** after a review decision on a `suspended` case, the report is listed again even
-   while CCS stays under 20, since the spec says "hidden until reviewed". Is that correct?
-8. **Branch:** the brief says `p3/backend-db`, and this session was started on
-   `claude/happy-hamilton-0v3via`. Which should the PRs come from?
-9. **Hosting-dependent settings:** cookie domain and SameSite depend on whether the API lives on a
-   subdomain of the web app (`api.zuula.ug` vs `zuula.ug`). I've assumed it does.
+Answered by Noah on 23 Sep 2026:
+
+| # | Question | Decision |
+|---|---|---|
+| 1 | Sessions vs JWT | Opaque server-side sessions. `sessionAuth` description text updated. |
+| 2 | `429` on sign-in lockout | Yes. Added to `signIn`. |
+| 4 | Embedding dimension | Fixed in P4. P3 ships an untyped `vector` column with no index (§3). |
+| 5 | 2FA channel | SMS or email OTP only. No TOTP. |
+| 7 | Suspended report after review | Stays hidden while `suspended`. Only a score recovery relists it (§4). |
+| 8 | Branch | PRs come from `p3/backend-db`. |
+| 9 | Hosting | API on `api.zuula.ug`. Cookie `Domain=zuula.ug`, `SameSite=Lax`. |
+
+Still open:
+
+- **3. `app/core/rules.py`** isn't on `main` or any branch. Should I wait for P2 Step 5, or create
+  it in PR 1?
+- **6. Which role a rating is weighted by** (explanation requested). See the reply in the P3
+  thread. It decides whether `ratings` stores a `rater_role` column.

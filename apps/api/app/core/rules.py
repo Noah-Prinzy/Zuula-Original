@@ -90,3 +90,58 @@ MAX_MEDIA_BYTES = 50 * 1024 * 1024
 # ZUULA_PARTNER_RATE_LIMIT_PER_HOUR, since it's the kind of number an operator may
 # legitimately want to tune per environment without a code change.
 PARTNER_RATE_LIMIT_PER_HOUR = 100
+
+# =======================================================================================
+# P3 additions (docs/adr/0002-p3-backend-and-database.md). Values the spec or frontend sets
+# cite them; values the spec leaves open are marked "ADR 0002" — P3's choice, approved by
+# Noah on 23 Sep 2026. Admins can change weights, thresholds, SLA and rate limit at runtime
+# (FR-ADMIN-06): the constants above are the defaults the `platform_settings` row is seeded
+# from, not the live values.
+# =======================================================================================
+
+# §9.1 / the open question above: admins rate at the public weight. Ratings also store the
+# role they were cast with and keep it — a later promotion doesn't re-weight old votes
+# (ADR 0002 §4, decision 6a).
+ADMIN_RATER_ROLE = "public"
+
+# ---- Expert review (FR-REVIEW; apps/web/lib/mock/review.ts) ----
+
+# A case is "due soon" within this many hours of its SLA deadline (review.ts's slaState()).
+REVIEW_DUE_SOON_HOURS = 12
+# Pipeline verdicts below this confidence open a `low-confidence` review case (review.ts
+# REASON_META: "The AI was less than 60% confident").
+LOW_CONFIDENCE_THRESHOLD = 60
+# A review decision needs a justification at least this long (FR-REVIEW-03; openapi.yaml's
+# decideCase body, minLength 10).
+REVIEW_JUSTIFICATION_MIN = 10
+# Open user reports on one verdict that open a `user-reports` case. ADR 0002.
+USER_REPORTS_CASE_THRESHOLD = 5
+
+# ---- Auth (FR-AUTH; apps/web/lib/auth.ts) ----
+
+BCRYPT_ROUNDS = 12  # ADR 0002
+TWO_FACTOR_ROLES = frozenset({"expert", "admin"})  # FR-AUTH-05: always on for these
+
+OTP_LENGTH = 6  # openapi.yaml: codes match ^\d{6}$
+OTP_TTL_SECONDS = 10 * 60  # ADR 0002
+OTP_MAX_ATTEMPTS = 5  # ADR 0002
+OTP_RESEND_COOLDOWN_SECONDS = 30  # openapi.yaml resendTwoFactor: "30 s cooldown"
+
+# Failed sign-ins per identifier (and per IP) before a 429 (ADR 0002, decision 2).
+SIGN_IN_MAX_FAILURES = 5
+SIGN_IN_LOCKOUT_WINDOW_SECONDS = 15 * 60
+
+SESSION_TTL_REMEMBER_SECONDS = 30 * 24 * 3600  # ADR 0002
+SESSION_TTL_SECONDS = 12 * 3600  # ADR 0002, `remember: false`
+
+# ---- Submissions (FR-SUBMIT; openapi.yaml SubmissionInput) ----
+
+TEXT_MIN_CHARS = 20
+TEXT_MAX_CHARS = 5_000
+ARTICLE_MIN_CHARS = 50
+ARTICLE_MAX_CHARS = 20_000
+HEADLINE_MAX_CHARS = 200
+
+# ---- Partner API (FR-API-02) ----
+
+API_KEY_ROLES = frozenset({"journalist", "admin"})

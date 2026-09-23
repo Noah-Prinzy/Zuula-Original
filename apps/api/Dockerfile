@@ -2,9 +2,10 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# No compiled dependencies yet (P3 adds psycopg/asyncpg, which may need build-essential/libpq-dev).
-COPY pyproject.toml ./
+# asyncpg and pgvector ship manylinux wheels, so no compiler or libpq is needed.
+COPY pyproject.toml alembic.ini ./
 COPY app ./app
+COPY migrations ./migrations
 
 RUN pip install --no-cache-dir .
 

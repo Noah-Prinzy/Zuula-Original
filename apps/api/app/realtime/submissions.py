@@ -1,53 +1,18 @@
-"""Shared submission-progress state: written by the Celery worker (app/worker/pipeline.py)
-as it runs a submission through the pipeline, read by the API process
-(app/api/v1/submissions.py) to answer GET /api/v1/submissions/{trackingId} and stream
-GET .../events. The two run as separate processes (docker-compose.yml's api vs worker
-services), so this can't be an in-memory dict — Redis is the only thing both sides share,
-and doubles as pub/sub so the SSE endpoint doesn't have to poll.
+"""Live submission progress over Redis pub/sub: the Celery worker (app/worker/pipeline.py)
+publishes each step as it runs, and the API's SSE endpoint
+(GET /api/v1/submissions/{trackingId}/events) forwards them to the browser.
 
-Every function here takes its redis client as a parameter rather than resolving one itself
-(see app/realtime/redis_client.py for that), so tests can pass a fakeredis client without
-needing a live Redis server.
+Submission *state* lives in PostgreSQL since P3 (the `submissions` table; ADR 0002 §6) —
+Redis carries only the live events, so nothing here expires or needs to be durable. Every
+function takes its redis client as a parameter, so tests can pass a fakeredis client.
 """
 
 import json
-from datetime import UTC, datetime
 from typing import Any
-
-# No DB yet (P3 adds one) — state disappears after an hour. Fine for a demo; a real
-# submission's row would simply outlive this cache.
-STATE_TTL_SECONDS = 3600
-
-
-def _state_key(tracking_id: str) -> str:
-    return f"zuula:submission:{tracking_id}:state"
 
 
 def _channel(tracking_id: str) -> str:
     return f"zuula:submission:{tracking_id}:events"
-
-
-def new_state(tracking_id: str, *, content_type: str, language: str) -> dict[str, Any]:
-    return {
-        "trackingId": tracking_id,
-        "status": "queued",
-        "contentType": content_type,
-        "language": language,
-        "submittedAt": datetime.now(UTC).isoformat(),
-        "completedAt": None,
-        "steps": [],
-        "result": None,
-        "error": None,
-    }
-
-
-def save_state(redis_client, tracking_id: str, state: dict[str, Any]) -> None:
-    redis_client.set(_state_key(tracking_id), json.dumps(state), ex=STATE_TTL_SECONDS)
-
-
-def load_state(redis_client, tracking_id: str) -> dict[str, Any] | None:
-    raw = redis_client.get(_state_key(tracking_id))
-    return json.loads(raw) if raw else None
 
 
 def publish_step(redis_client, tracking_id: str, step: dict[str, Any]) -> None:

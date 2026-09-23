@@ -33,6 +33,8 @@ from app.db.seed import SAMPLE_PASSWORD
 from app.db.session import get_db
 from app.main import app as _app
 from app.services.auth import token_hash
+from app.worker import dispatch
+from app.worker.pipeline import run_pipeline
 
 SPEC_PATH = Path(__file__).parent.parent.parent / "openapi.yaml"
 
@@ -122,6 +124,14 @@ def _bound_client(app, db_url: str, *, base_url: str):
         finally:
             await session.close()
 
+    async def inline_dispatch(tracking_id: str) -> None:
+        # In place of the Celery worker: run the pipeline right away, on this test's
+        # connection, so the submission is complete when the POST returns.
+        async with AsyncSession(
+            bind=state["conn"], join_transaction_mode="create_savepoint", expire_on_commit=False
+        ) as session:
+            await run_pipeline(session, tracking_id)
+
     async def run_db(fn):
         async with AsyncSession(
             bind=state["conn"], join_transaction_mode="create_savepoint", expire_on_commit=False
@@ -136,9 +146,11 @@ def _bound_client(app, db_url: str, *, base_url: str):
         # transaction (on the client's loop), for setup the API itself can't do.
         client.run_db = lambda fn: client.portal.call(run_db, fn)
         _app.dependency_overrides[get_db] = override_get_db
+        real_dispatch, dispatch.dispatch_pipeline = dispatch.dispatch_pipeline, inline_dispatch
         try:
             yield client
         finally:
+            dispatch.dispatch_pipeline = real_dispatch
             _app.dependency_overrides.pop(get_db, None)
             client.portal.call(close_transaction)
 

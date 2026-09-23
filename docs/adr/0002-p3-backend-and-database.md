@@ -310,6 +310,13 @@ Answered by Noah on 23 Sep 2026:
 - **Real vs. stub** is decided per adapter by `app/adapters/readiness.py`. Production is
   guarded as planned, and the guard also rejects the Africa's Talking `sandbox` username
   and the development `ZUULA_SECRET_KEY`.
+- **Follow-up: `ZUULA_ALLOW_STUB_ADAPTERS`.** The Render guide (#21) deploys with
+  `ZUULA_ENV=production` and no integration credentials, which the all-or-nothing guard
+  refused. A deployment may now list adapters to run without (production only, with a
+  startup warning). The unsafe stubs are off even then: stub OAuth would sign anyone in as its
+  demo account, so an unconfigured provider redirects to `/sign-in?error=oauth-unavailable`,
+  and stub webhooks would accept unsigned calls, so they refuse every call. The secret key
+  check has no exception.
 - **`CLAMAV_HOST` now defaults to empty** (it was `clamav`), since "set" is what switches the
   scanner on. Compose sets it for the worker and adds a `clamav` service. clamd's
   `StreamMaxLength` defaults to 25 MB, below our 50 MB limit, so it has to be raised in

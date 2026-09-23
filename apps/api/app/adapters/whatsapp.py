@@ -16,6 +16,7 @@ from typing import Protocol
 import httpx
 
 from app.adapters.oauth import FACEBOOK_GRAPH_VERSION
+from app.adapters.readiness import is_production
 from app.core.config import get_adapters_settings
 
 logger = logging.getLogger("zuula.adapters.whatsapp")
@@ -45,9 +46,12 @@ class WhatsAppAdapter(Protocol):
 
 
 class StubWhatsAppAdapter:
-    def __init__(self, verify_token: str, app_secret: str = ""):
+    def __init__(self, verify_token: str, app_secret: str = "", *, allow_unsigned: bool = True):
         self._verify_token = verify_token
         self._app_secret = app_secret
+        # Without an app secret there's nothing to check against: accepted in local dev,
+        # refused in production.
+        self._allow_unsigned = allow_unsigned
 
     def verify_webhook(self, *, mode: str, token: str, challenge: str) -> str | None:
         # An empty verify token would accept an empty `hub.verify_token`.
@@ -56,10 +60,9 @@ class StubWhatsAppAdapter:
         return None
 
     def verify_signature(self, body: bytes, header: str | None) -> bool:
-        """`X-Hub-Signature-256: sha256=<hex HMAC of the raw body>`. Without an app secret
-        (local dev only; production requires one) there's nothing to check against."""
+        """`X-Hub-Signature-256: sha256=<hex HMAC of the raw body>`."""
         if not self._app_secret:
-            return True
+            return self._allow_unsigned
         expected = hmac.new(self._app_secret.encode(), body, hashlib.sha256).hexdigest()
         return hmac.compare_digest(header or "", f"sha256={expected}")
 
@@ -90,8 +93,9 @@ class CloudWhatsAppAdapter(StubWhatsAppAdapter):
         access_token: str,
         phone_number_id: str,
         timeout: float = 10.0,
+        allow_unsigned: bool = True,
     ):
-        super().__init__(verify_token, app_secret)
+        super().__init__(verify_token, app_secret, allow_unsigned=allow_unsigned)
         self._access_token = access_token
         self._timeout = timeout
         self.url = f"https://graph.facebook.com/{FACEBOOK_GRAPH_VERSION}/{phone_number_id}/messages"
@@ -120,5 +124,10 @@ def get_whatsapp_adapter() -> WhatsAppAdapter:
             app_secret=settings.whatsapp_app_secret,
             access_token=settings.whatsapp_access_token,
             phone_number_id=settings.whatsapp_phone_number_id,
+            allow_unsigned=not is_production(),
         )
-    return StubWhatsAppAdapter(settings.whatsapp_verify_token, settings.whatsapp_app_secret)
+    return StubWhatsAppAdapter(
+        settings.whatsapp_verify_token,
+        settings.whatsapp_app_secret,
+        allow_unsigned=not is_production(),
+    )

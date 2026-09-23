@@ -67,7 +67,7 @@ class AfricasTalkingSmsSender:
 
 
 def get_sms_sender() -> SmsSender:
-    if configured("SMS (Africa's Talking)"):
+    if configured("sms"):
         settings = get_adapters_settings()
         return AfricasTalkingSmsSender(
             username=settings.africastalking_username, api_key=settings.africastalking_api_key

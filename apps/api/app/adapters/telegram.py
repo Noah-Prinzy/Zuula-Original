@@ -14,6 +14,7 @@ from typing import Protocol
 
 import httpx
 
+from app.adapters.readiness import is_production
 from app.core.config import get_adapters_settings
 
 logger = logging.getLogger("zuula.adapters.telegram")
@@ -36,13 +37,15 @@ class TelegramAdapter(Protocol):
 
 
 class StubTelegramAdapter:
-    def __init__(self, webhook_secret: str = ""):
+    def __init__(self, webhook_secret: str = "", *, allow_unsigned: bool = True):
         self._webhook_secret = webhook_secret
+        # Without a secret there's nothing to check: accepted in local dev, refused in
+        # production.
+        self._allow_unsigned = allow_unsigned
 
     def verify_secret(self, header: str | None) -> bool:
-        # Without a secret (local dev only; production requires one) there's nothing to check.
         if not self._webhook_secret:
-            return True
+            return self._allow_unsigned
         return hmac.compare_digest(header or "", self._webhook_secret)
 
     def parse_inbound(self, payload: dict) -> InboundMessage | None:
@@ -59,8 +62,10 @@ class StubTelegramAdapter:
 
 
 class BotApiTelegramAdapter(StubTelegramAdapter):
-    def __init__(self, *, bot_token: str, webhook_secret: str, timeout: float = 10.0):
-        super().__init__(webhook_secret)
+    def __init__(
+        self, *, bot_token: str, webhook_secret: str, timeout: float = 10.0, allow_unsigned=True
+    ):
+        super().__init__(webhook_secret, allow_unsigned=allow_unsigned)
         self._url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         self._timeout = timeout
 
@@ -78,5 +83,6 @@ def get_telegram_adapter() -> TelegramAdapter:
         return BotApiTelegramAdapter(
             bot_token=settings.telegram_bot_token,
             webhook_secret=settings.telegram_webhook_secret,
+            allow_unsigned=not is_production(),
         )
-    return StubTelegramAdapter(settings.telegram_webhook_secret)
+    return StubTelegramAdapter(settings.telegram_webhook_secret, allow_unsigned=not is_production())

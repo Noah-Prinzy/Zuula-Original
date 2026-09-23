@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="ZUULA_", env_file=".env", extra="ignore")
 
     env: str = "development"
+    # Production only: adapters it may run without (comma-separated ids, e.g.
+    # "whatsapp,telegram"). See app/adapters/readiness.py.
+    allow_stub_adapters: str = ""
     debug: bool = True
     secret_key: str = "change-me-dev-only"
     session_cookie_name: str = "zuula_session"

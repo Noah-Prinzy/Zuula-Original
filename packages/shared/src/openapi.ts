@@ -1107,7 +1107,7 @@ export interface components {
         /** @enum {string} */
         ReviewReason: "community-escalation" | "suspended" | "user-reports" | "low-confidence";
         /** @enum {string} */
-        AuditAction: "verdict.override" | "verdict.confirm" | "user.role_change" | "user.suspend" | "user.reinstate" | "source.add" | "source.deactivate" | "broadcast.send" | "settings.update" | "moderation.remove";
+        AuditAction: "verdict.override" | "verdict.confirm" | "user.role_change" | "user.suspend" | "user.reinstate" | "ratings.exclude" | "source.add" | "source.deactivate" | "broadcast.send" | "settings.update" | "moderation.remove";
         /**
          * @example {
          *       "error": {
@@ -1535,7 +1535,10 @@ export interface components {
             /** @enum {integer} */
             tier: 1 | 2 | 3;
             active: boolean;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description Last crawl. Until a source's first crawl, the time it was added.
+             */
             lastCrawled: string;
             crawlOk: boolean;
         };
@@ -3163,6 +3166,8 @@ export interface operations {
                     role?: components["schemas"]["Role"];
                     /** @enum {string} */
                     status?: "active" | "suspended" | "pending";
+                    /** @description Drop (true) or restore (false) this user's past ratings from every community score, e.g. after suspending them for coordinated rating (§9.1). Recorded in the audit log. */
+                    excludeRatings?: boolean;
                 };
             };
         };
@@ -3234,8 +3239,10 @@ export interface operations {
                 };
                 content?: never;
             };
+            400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     listManipulationSignals: {
@@ -3310,6 +3317,7 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
         };
     };
     removeSource: {
@@ -3332,6 +3340,7 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     updateSource: {
@@ -3361,6 +3370,7 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
         };
     };
     listBroadcasts: {
@@ -3414,6 +3424,7 @@ export interface operations {
                     "application/json": components["schemas"]["Broadcast"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
         };
@@ -3512,6 +3523,7 @@ export interface operations {
                     "application/json": components["schemas"]["PlatformSettings"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
         };

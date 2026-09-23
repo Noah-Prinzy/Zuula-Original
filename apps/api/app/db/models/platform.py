@@ -118,6 +118,7 @@ AUDIT_ACTIONS = (
     "user.role_change",
     "user.suspend",
     "user.reinstate",  # lifting a suspension (P3 PR 2; no P2 action covered it)
+    "ratings.exclude",  # dropping/restoring a user's past ratings (P3 PR 4, decision 6a)
     "source.add",
     "source.deactivate",
     "broadcast.send",

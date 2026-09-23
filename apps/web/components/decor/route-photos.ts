@@ -2,7 +2,20 @@ import { LOCALES } from "@/lib/locales"
 
 import { PHOTOS, type Photo } from "./photos"
 
-export type RoutePhoto = { photo: Photo; position?: string }
+export type RoutePhoto = {
+  photo: Photo
+  position?: string
+  /** A muted loop played over the photo where conditions allow (RouteBackdrop). Files live in
+   *  public/videos; the photo stays as the poster and the fallback. */
+  video?: string
+}
+
+// Sign-in and sign-up each get a looping background clip, a pair from the newsroom: pages
+// turning for returning readers, the printing press for new sign-ups. Their follow-on steps
+// (two-factor, verify) and the other auth pages keep a still photo.
+const SIGN_IN_VIDEO = "/videos/pages-turning.mp4"
+const SIGN_UP_VIDEO = "/videos/printing-press.mp4"
+export const ROUTE_VIDEOS = [SIGN_IN_VIDEO, SIGN_UP_VIDEO]
 
 // One background photo per page (RouteBackdrop). The most specific prefix wins, so list
 // longer paths first.
@@ -15,9 +28,9 @@ const ROUTES: [prefix: string, entry: RoutePhoto][] = [
   ["/developers", { photo: PHOTOS.worldWire }],
   // Auth
   ["/sign-in/two-factor", { photo: PHOTOS.crimsonWaves }],
-  ["/sign-in", { photo: PHOTOS.teaRoad }],
+  ["/sign-in", { photo: PHOTOS.teaRoad, video: SIGN_IN_VIDEO }],
   ["/sign-up/verify", { photo: PHOTOS.lakeVictoria }],
-  ["/sign-up", { photo: PHOTOS.boatsSunset }],
+  ["/sign-up", { photo: PHOTOS.boatsSunset, video: SIGN_UP_VIDEO }],
   ["/forgot-password", { photo: PHOTOS.kampalaStreet }],
   ["/reset-password", { photo: PHOTOS.nightRoad }],
 ]

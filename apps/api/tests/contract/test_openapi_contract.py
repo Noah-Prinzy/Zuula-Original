@@ -568,6 +568,5 @@ class TestPartnerApi:
 
 def test_health_endpoints_not_in_contract_but_still_ok():
     # /healthz and /readyz are infra endpoints, deliberately not part of the OpenAPI contract.
-    plain_client = TestClient(_app)
-    assert plain_client.get("/healthz").status_code == 200
-    assert plain_client.get("/readyz").status_code == 200
+    # /readyz's dependency checks are tested in tests/db/test_readyz.py.
+    assert TestClient(_app).get("/healthz").status_code == 200

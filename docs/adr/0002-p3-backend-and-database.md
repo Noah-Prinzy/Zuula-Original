@@ -1,8 +1,8 @@
 # ADR 0002: Backend and database (P3)
 
 **Status:** Approved by Noah (23 Sep 2026; decisions in §10). Being built in the PR sequence
-of §9. PR 1 (database foundation, #5) is merged and PR 2 (auth and roles) is implemented; the
-rest describes what's still to come.
+of §9. PR 1 (database foundation, #5) and PR 2 (auth and roles, #8) are merged; the rest
+describes what's still to come.
 Once all six PRs have landed, this file becomes the record of what was actually decided
 (brief §3 step 5).
 

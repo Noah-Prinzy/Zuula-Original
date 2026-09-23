@@ -25,7 +25,11 @@ services:
     command: celery -A app.worker.celery_app worker --loglevel=INFO
     env_file:
       - .env
+    environment:
+      CLAMAV_HOST: clamav
     depends_on:
+      clamav:
+        condition: service_started
       redis:
         condition: service_started
       migrate:
@@ -51,6 +55,14 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+
+  # Malware scanning for media uploads (app/adapters/clamav.py). The first start downloads
+  # the virus database, which takes a few minutes. Raise clamd's StreamMaxLength to at least
+  # 50M (MAX_MEDIA_BYTES) for real use; its 25M default fails the scan of bigger files.
+  clamav:
+    image: clamav/clamav:stable
+    ports:
+      - "3310:3310"
 
   redis:
     image: redis:7-alpine

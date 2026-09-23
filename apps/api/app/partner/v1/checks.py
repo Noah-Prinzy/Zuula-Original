@@ -1,7 +1,7 @@
 """Partner API: submit a check and follow it (FR-API-01). Same submission path as the
 website, attributed to the partner's key."""
 
-from fastapi import Body, Depends, Header, Response
+from fastapi import Depends, Header, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.submissions import enqueue_submission
@@ -20,14 +20,17 @@ PARTNER_BASE_URL = "https://api.zuula.ug"
 
 @router.post("/checks", response_model=SubmissionAccepted, status_code=202)
 async def partner_submit_check(
+    request: Request,
     response: Response,
-    body: dict = Body(default={}),  # noqa: B008
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     principal: PartnerPrincipal = Depends(require_partner_key),  # noqa: B008
     db: AsyncSession = Depends(get_db),  # noqa: B008
 ):
     response.headers.update(principal.rate_limit_headers)
+    body, upload = await svc.read_input(request)
     fields = svc.validate_input(body)
+    if fields["type"] == "media":
+        fields |= await svc.store_upload(upload)
     submission = await enqueue_submission(
         db,
         fields=fields,

@@ -1582,8 +1582,9 @@ paths:
   # ---------------------------------------------------------------------------------------
   # Inbound integration webhooks (FR-SUBMIT-04) — Step 4. Called by WhatsApp/Telegram's own
   # servers, not by apps/web; not part of the documented partner API either, so neither
-  # sessionAuth nor partnerApiKey applies. Real signature/secret verification is P3 — see
-  # app/adapters/{whatsapp,telegram}.py and docs/adr/0001-api-architecture.md.
+  # sessionAuth nor partnerApiKey applies. Instead each call is verified: WhatsApp's
+  # X-Hub-Signature-256 (HMAC of the body with the app secret) and Telegram's
+  # X-Telegram-Bot-Api-Secret-Token — see app/adapters/{whatsapp,telegram}.py.
   # ---------------------------------------------------------------------------------------
   /webhooks/whatsapp:
     get:
@@ -1605,6 +1606,11 @@ paths:
       tags: [webhooks]
       summary: Inbound WhatsApp messages create submissions.
       security: []
+      parameters:
+        - name: X-Hub-Signature-256
+          in: header
+          description: "`sha256=` + the hex HMAC-SHA256 of the raw body, keyed with the Meta app secret."
+          schema: { type: string }
       requestBody:
         required: true
         content:
@@ -1612,6 +1618,8 @@ paths:
             schema: { type: object }
       responses:
         "200": { description: Acknowledged. }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
 
   /webhooks/telegram:
     post:
@@ -1619,6 +1627,11 @@ paths:
       tags: [webhooks]
       summary: Inbound Telegram messages create submissions.
       security: []
+      parameters:
+        - name: X-Telegram-Bot-Api-Secret-Token
+          in: header
+          description: The `secret_token` given to setWebhook, which Telegram sends back on every call.
+          schema: { type: string }
       requestBody:
         required: true
         content:
@@ -1626,6 +1639,7 @@ paths:
             schema: { type: object }
       responses:
         "200": { description: Acknowledged. }
+        "403": { $ref: "#/components/responses/Forbidden" }
 
 components:
   securitySchemes:

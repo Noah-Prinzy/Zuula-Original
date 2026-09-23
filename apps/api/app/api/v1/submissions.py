@@ -5,7 +5,7 @@ runs in the Celery worker and streams progress over Redis."""
 import asyncio
 import json
 
-from fastapi import Body, Depends, Header
+from fastapi import Depends, Header, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -55,15 +55,21 @@ async def enqueue_submission(
 
 @router.post("", response_model=SubmissionAccepted, status_code=202)
 async def create_submission(
-    body: dict = Body(...),  # noqa: B008 — validated by svc.validate_input (SubmissionInput)
+    request: Request,
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     user: UserProfile | None = Depends(get_current_user),  # noqa: B008
     db: AsyncSession = Depends(get_db),  # noqa: B008
 ):
+    # SubmissionInput, as JSON or multipart (a media file); validated by svc.validate_input.
+    body, upload = await svc.read_input(request)
     fields = svc.validate_input(body)
     # FR-AUTH-07: anonymous submissions need a Turnstile token; signed-in ones don't.
-    if user is None and not get_turnstile_verifier().verify(body.get("captchaToken")):
+    if user is None and not await get_turnstile_verifier().verify(
+        body.get("captchaToken"), remote_ip=request.client.host if request.client else None
+    ):
         raise ApiError("bad_request", "Complete the captcha to submit while signed out.")
+    if fields["type"] == "media":
+        fields |= await svc.store_upload(upload)
 
     submission = await enqueue_submission(
         db,

@@ -7,11 +7,12 @@ over Redis for the SSE endpoint), and on success writes the `fact_check_reports`
 low-confidence review case if needed, and tells the submitter. The Celery task
 `run_submission_pipeline` is a thin wrapper running it on the worker's own connection.
 
-ClamAV, storage and transcription are still adapter stand-ins until P3 PR 5 (real adapters,
-multipart uploads); the AI step goes through app.providers.analysis.AnalysisProvider (P4).
+A media upload is read back from object storage and scanned by ClamAV in the "scan" step;
+transcription and the AI step go through app.providers.analysis.AnalysisProvider (P4).
 """
 
 import asyncio
+import logging
 import time
 from datetime import UTC, datetime
 
@@ -35,19 +36,22 @@ from app.services.platform_settings import get_platform_settings
 from app.services.submissions import status_of
 from app.worker import celery_app
 
+logger = logging.getLogger("zuula.worker.pipeline")
+
 __all__ = ["PIPELINES", "STEP_SECONDS", "run_pipeline", "run_submission_pipeline"]
 
 # apps/web/lib/submission.ts's SubmissionType ("text"/"url"/"media"/"article", what the form
 # bucketed the input as) isn't the same vocabulary as FactCheckReport.contentType
 # ("text"/"url"/"image"/"audio"/"video", what the content actually *is*). An article is
-# text; a media upload's real kind needs file inspection (P3 PR 5's upload handling) —
-# "image" is the placeholder until then.
-_REPORT_CONTENT_TYPE: dict[str, str] = {
-    "text": "text",
-    "url": "url",
-    "article": "text",
-    "media": "image",
-}
+# text; a media upload's kind comes from its (already validated) content type.
+_REPORT_CONTENT_TYPE: dict[str, str] = {"text": "text", "url": "url", "article": "text"}
+
+
+def _report_content_type(s: Submission) -> str:
+    if s.type == "media":
+        kind = (s.media_content_type or "").partition("/")[0]
+        return kind if kind in ("image", "audio", "video") else "image"
+    return _REPORT_CONTENT_TYPE[s.type]
 
 
 def _analysis_text(s: Submission) -> str:
@@ -75,23 +79,21 @@ async def run_pipeline(db: AsyncSession, tracking_id: str) -> None:
         publish_step(r, tracking_id, {"step": step, "status": "active", "seconds": seconds})
         await asyncio.sleep(seconds * scale)
 
-        # No multipart upload yet (P3 PR 5): these exercise the adapter interfaces the real
-        # upload flow will call with the actual file bytes.
-        if step == "scan":
-            get_clamav_scanner().scan(b"")
-        elif step == "media":
-            get_object_storage().put(
-                key=f"{tracking_id}/media", data=b"", content_type="application/octet-stream"
-            )
+        failure = None
+        if step == "scan" and s.media_object_key:
+            failure = await _scan_upload(s)
+        elif step == fail_at:
+            failure = ("invalid_content", "Couldn't fetch that link.")
 
-        if step == fail_at:
+        if failure is not None:
+            code, message = failure
             s.status = "failed"
             s.completed_at = datetime.now(UTC)
             # SubmissionStatusResponse.error embeds the whole ErrorEnvelope.
-            s.error = {"error": {"code": "invalid_content", "message": "Couldn't fetch that link."}}
+            s.error = {"error": {"code": code, "message": message}}
             await db.commit()
             publish_failed(r, tracking_id, await status_of(db, s))
-            await _reply_on_channel(s, "We couldn't check that link. Please try again.")
+            await _reply_on_channel(s, f"We couldn't check that. {message}")
             return
 
         # Reassign rather than append: JSONB mutation isn't tracked in place.
@@ -99,7 +101,7 @@ async def run_pipeline(db: AsyncSession, tracking_id: str) -> None:
         await db.commit()
         publish_step(r, tracking_id, {"step": step, "status": "done", "seconds": seconds})
 
-    report_content_type = _REPORT_CONTENT_TYPE[s.type]
+    report_content_type = _report_content_type(s)
     text = _analysis_text(s)
     analysis = get_analysis_provider().analyze(
         content_type=report_content_type, text=text, language=s.language
@@ -158,14 +160,36 @@ async def run_pipeline(db: AsyncSession, tracking_id: str) -> None:
     )
 
 
+async def _scan_upload(s: Submission) -> tuple[str, str] | None:
+    """The "scan" step: ClamAV over the uploaded bytes. Fails closed — a file that can't be
+    scanned isn't analysed. An infected file is deleted straight away."""
+    storage = get_object_storage()
+    try:
+        data = await storage.get(key=s.media_object_key)
+        result = await get_clamav_scanner().scan(data)
+    except Exception:  # noqa: BLE001 — storage or scanner down: fail closed
+        logger.exception("Malware scan failed for %s", s.tracking_id)
+        return ("server_error", "We couldn't scan that file for malware. Please try again.")
+    if result.clean:
+        return None
+    logger.warning("Upload %s failed the malware scan: %s", s.tracking_id, result.signature)
+    await storage.delete(key=s.media_object_key)
+    s.media_object_key = None
+    return ("invalid_content", "That file failed our malware scan, so we didn't check it.")
+
+
 async def _reply_on_channel(s: Submission, text: str) -> None:
-    """FR-SUBMIT-04: a chat submission gets its answer back in the same chat."""
+    """FR-SUBMIT-04: a chat submission gets its answer back in the same chat. Best effort:
+    the verdict is already saved, so a failed reply is logged, not retried."""
     if not s.channel_ref:
         return
-    if s.channel == "whatsapp":
-        get_whatsapp_adapter().send_reply(to=s.channel_ref, text=text)
-    elif s.channel == "telegram":
-        get_telegram_adapter().send_reply(chat_id=s.channel_ref, text=text)
+    try:
+        if s.channel == "whatsapp":
+            await get_whatsapp_adapter().send_reply(to=s.channel_ref, text=text)
+        elif s.channel == "telegram":
+            await get_telegram_adapter().send_reply(chat_id=s.channel_ref, text=text)
+    except Exception:  # noqa: BLE001
+        logger.warning("Couldn't send the verdict back on %s", s.channel, exc_info=True)
 
 
 async def _run_in_worker(tracking_id: str) -> None:

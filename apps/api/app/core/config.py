@@ -75,11 +75,11 @@ class AnalysisSettings(BaseSettings):
 
 
 class AdaptersSettings(BaseSettings):
-    """Config for every Step 4 integration adapter (app/adapters/**) — one class since
-    they're all equally inert in P2 (every adapter is a stub; these values are read by
-    exactly nothing yet, only documented in .env.example for what P3's real
-    implementations will need). Field names match .env.example's var names, no ZUULA_
-    prefix — same convention as CelerySettings/AnalysisSettings."""
+    """Config for every integration adapter (app/adapters/**). Each adapter uses its real
+    implementation when its credentials are set and the logging stub otherwise; in
+    production, missing credentials stop startup instead (app/adapters/readiness.py). Field
+    names match .env.example's var names, no ZUULA_ prefix — same convention as
+    CelerySettings/AnalysisSettings."""
 
     model_config = SettingsConfigDict(extra="ignore")
 
@@ -94,7 +94,8 @@ class AdaptersSettings(BaseSettings):
     turnstile_site_key: str = ""
     turnstile_secret_key: str = ""
 
-    clamav_host: str = "clamav"
+    # Empty = no scanner (the stub reports every file clean). docker-compose.yml sets it.
+    clamav_host: str = ""
     clamav_port: int = 3310
 
     s3_endpoint_url: str = ""
@@ -113,7 +114,12 @@ class AdaptersSettings(BaseSettings):
     whatsapp_verify_token: str = ""
     whatsapp_access_token: str = ""
     whatsapp_phone_number_id: str = ""
+    # Signs every inbound webhook call (X-Hub-Signature-256): the Meta app's App Secret.
+    whatsapp_app_secret: str = ""
     telegram_bot_token: str = ""
+    # Sent back on every inbound call (X-Telegram-Bot-Api-Secret-Token): the `secret_token`
+    # you pass to setWebhook.
+    telegram_webhook_secret: str = ""
 
 
 @lru_cache

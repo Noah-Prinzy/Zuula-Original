@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.adapters.readiness import assert_production_ready
 from app.api.v1 import router as api_v1_router
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
@@ -8,6 +9,8 @@ from app.partner.v1 import router as partner_v1_router
 from app.webhooks import router as webhooks_router
 
 settings = get_settings()
+# In production, missing adapter credentials stop startup rather than fall back to stubs.
+assert_production_ready()
 
 app = FastAPI(
     title="Zuula API",

@@ -296,16 +296,24 @@ class TestWebhooks:
     # rather than working around the test tool; only these two tests can't use the contract-
     # validating client. The request/response shape is still declared in openapi.yaml and
     # still worth getting right — it just can't be checked by this particular library today.
-    def test_whatsapp_verify_matching_token(self):
-        # AdaptersSettings.whatsapp_verify_token defaults to "" (no .env override in tests),
-        # so an empty token here is the one that matches.
+    def test_whatsapp_verify_matching_token(self, adapter_env):
+        adapter_env(WHATSAPP_VERIFY_TOKEN="verify-me")
+        client = TestClient(_app, base_url="https://zuula.ug")
+        r = client.get(
+            "/webhooks/whatsapp",
+            params={"hub.mode": "subscribe", "hub.verify_token": "verify-me", "hub.challenge": "c123"},
+        )
+        assert r.status_code == 200
+        assert r.text == "c123"
+
+    def test_whatsapp_verify_needs_a_configured_token(self):
+        # With no WHATSAPP_VERIFY_TOKEN set, an empty token must not match.
         client = TestClient(_app, base_url="https://zuula.ug")
         r = client.get(
             "/webhooks/whatsapp",
             params={"hub.mode": "subscribe", "hub.verify_token": "", "hub.challenge": "c123"},
         )
-        assert r.status_code == 200
-        assert r.text == "c123"
+        assert r.status_code == 403
 
     def test_whatsapp_verify_wrong_token(self):
         client = TestClient(_app, base_url="https://zuula.ug")

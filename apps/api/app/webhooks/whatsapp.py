@@ -4,7 +4,10 @@ enqueue_submission() the website's POST /api/v1/submissions uses. The verdict go
 the sender when the pipeline finishes (app/worker/pipeline.py).
 """
 
-from fastapi import Body, Depends, Query
+import json
+import logging
+
+from fastapi import Depends, Query, Request
 from fastapi.responses import PlainTextResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,6 +19,7 @@ from app.db.session import get_db
 from app.services.submissions import chat_fields
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
+logger = logging.getLogger("zuula.webhooks.whatsapp")
 
 
 @router.get("/whatsapp")
@@ -34,16 +38,28 @@ def verify_whatsapp_webhook(
 
 @router.post("/whatsapp", status_code=200)
 async def receive_whatsapp_message(
-    payload: dict = Body(...),  # noqa: B008
+    request: Request,
     db: AsyncSession = Depends(get_db),  # noqa: B008
 ):
     adapter = get_whatsapp_adapter()
-    for message in adapter.parse_inbound(payload):
+    # The signature covers the exact bytes Meta sent, so check it before parsing.
+    body = await request.body()
+    if not adapter.verify_signature(body, request.headers.get("X-Hub-Signature-256")):
+        raise ApiError("forbidden", "Invalid webhook signature.")
+    try:
+        payload = json.loads(body)
+    except ValueError as exc:
+        raise ApiError("invalid_content", "The body must be JSON.") from exc
+    for message in adapter.parse_inbound(payload if isinstance(payload, dict) else {}):
         submission = await enqueue_submission(
             db, fields=chat_fields(message.text), channel="whatsapp", channel_ref=message.sender
         )
-        adapter.send_reply(
-            to=message.sender,
-            text=f"Got it — tracking id {submission.tracking_id}. We'll text you the verdict.",
-        )
+        try:
+            await adapter.send_reply(
+                to=message.sender,
+                text=f"Got it — tracking id {submission.tracking_id}. We'll text you the verdict.",
+            )
+        except Exception:  # noqa: BLE001 — the submission is in; a failed "got it" isn't fatal
+            # An error here would make Meta redeliver the message and submit it twice.
+            logger.warning("WhatsApp acknowledgement failed", exc_info=True)
     return {}

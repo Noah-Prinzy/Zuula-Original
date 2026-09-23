@@ -1,8 +1,9 @@
 # ADR 0002: Backend and database (P3)
 
 **Status:** Approved by Noah (23 Sep 2026; decisions in §10). Being built in the PR sequence
-of §9. PR 1 (database foundation, #5), PR 2 (auth and roles, #8) and PR 3 (content, #18) are
-merged, and PR 4 (admin) is implemented; the rest describes what's still to come.
+of §9. PR 1 (database foundation, #5), PR 2 (auth and roles, #8), PR 3 (content, #18) and
+PR 4 (admin, #20) are merged, and PR 5 (real adapters) is implemented; PR 6 (docs) is still
+to come.
 Once all six PRs have landed, this file becomes the record of what was actually decided
 (brief §3 step 5).
 
@@ -295,6 +296,48 @@ Answered by Noah on 23 Sep 2026:
 | 9 | Hosting | API on `api.zuula.ug`. Cookie `Domain=zuula.ug`, `SameSite=Lax`. |
 
 ## 11. Found while building
+
+**PR 5 (real adapters):**
+
+- **Every adapter Protocol became async**, apart from pure helpers (OAuth's `authorize_url`,
+  WhatsApp/Telegram parsing and signature checks). The real implementations do network I/O,
+  and the callers are all async already. boto3 is synchronous, so the S3 class runs each
+  call in a thread.
+- **SMS goes out from the worker too**, not only email: a new `zuula.send_message` task
+  (`app/worker/messaging.py`, retried with backoff), dispatched like the pipeline. So a slow
+  or failing provider can't fail a sign-in request. Broadcasts send one task per recipient,
+  so one bad number is retried on its own.
+- **Real vs. stub** is decided per adapter by `app/adapters/readiness.py`. Production is
+  guarded as planned, and the guard also rejects the Africa's Talking `sandbox` username
+  and the development `ZUULA_SECRET_KEY`.
+- **`CLAMAV_HOST` now defaults to empty** (it was `clamav`), since "set" is what switches the
+  scanner on. Compose sets it for the worker and adds a `clamav` service. clamd's
+  `StreamMaxLength` defaults to 25 MB, below our 50 MB limit, so it has to be raised in
+  production, or bigger files fail the scan.
+- **Scanning fails closed.** If clamd is unreachable or refuses the file, the submission fails
+  (`server_error`, "couldn't scan") rather than being analysed unscanned. An infected file
+  fails the submission (`invalid_content`) and is deleted from storage.
+- **Media uploads:** `createSubmission` and `partnerSubmitCheck` accept `multipart/form-data`
+  with `file` (types from `apps/web/lib/submission.ts`, 50 MB). A declared `Content-Length`
+  over the limit is refused before the body is read. `type: media` without a file is 422.
+  The report's `contentType` now comes from the file (image/audio/video).
+- **Accreditation documents** are all validated before any is stored (before, a bad second
+  file left the first one behind). They aren't virus-scanned yet; that's worth adding before
+  admins can download them.
+- **OAuth** only passes on an email the provider has verified (Google's `email_verified`;
+  Facebook returns confirmed addresses only), because the callback links accounts by email.
+- **Webhooks:** each checks its signature or secret before parsing. A failed "got it" reply
+  is logged instead of failing the request, since an error would make Meta or Telegram
+  redeliver and create a duplicate submission. The WhatsApp handshake no longer accepts an
+  empty verify token when none is configured. The contract test that relied on that now
+  configures a token.
+- **Contract additions** (additive): `403` on `receiveWhatsAppMessage` and
+  `receiveTelegramMessage`, `422` on `receiveWhatsAppMessage` (a body that isn't JSON), and
+  the two signature headers declared as parameters.
+- **Test tooling:** openapi-core hands multipart file parts to the validator as bytes, which
+  fail `type: string, format: binary`. The contract conftest decodes them for validation only.
+- **Not done:** push notifications (no adapter), media sent over WhatsApp/Telegram (only text
+  messages become submissions), and de-duplicating Meta/Telegram redeliveries by message id.
 
 **PR 4 (admin):**
 

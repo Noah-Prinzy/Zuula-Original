@@ -425,7 +425,7 @@ async def oauth_callback(
     next_path = _safe_next(base64.urlsafe_b64decode(next_b64.encode()).decode())
 
     try:
-        profile = get_oauth_provider(provider).exchange_code(
+        profile = await get_oauth_provider(provider).exchange_code(
             code=code, redirect_uri=_callback_url(request, provider)
         )
     except Exception:  # noqa: BLE001 — any provider failure is the same "try again" to the user

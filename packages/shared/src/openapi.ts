@@ -3678,7 +3678,10 @@ export interface operations {
     receiveWhatsAppMessage: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description `sha256=` + the hex HMAC-SHA256 of the raw body, keyed with the Meta app secret. */
+                "X-Hub-Signature-256"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -3695,12 +3698,17 @@ export interface operations {
                 };
                 content?: never;
             };
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     receiveTelegramMessage: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The `secret_token` given to setWebhook, which Telegram sends back on every call. */
+                "X-Telegram-Bot-Api-Secret-Token"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -3717,6 +3725,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            403: components["responses"]["Forbidden"];
         };
     };
 }

@@ -22,6 +22,7 @@ AuditAction = Literal[
     "verdict.confirm",
     "user.role_change",
     "user.suspend",
+    "user.reinstate",
     "source.add",
     "source.deactivate",
     "broadcast.send",

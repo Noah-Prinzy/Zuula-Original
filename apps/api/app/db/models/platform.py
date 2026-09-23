@@ -117,6 +117,7 @@ AUDIT_ACTIONS = (
     "verdict.confirm",
     "user.role_change",
     "user.suspend",
+    "user.reinstate",  # lifting a suspension (P3 PR 2; no P2 action covered it)
     "source.add",
     "source.deactivate",
     "broadcast.send",

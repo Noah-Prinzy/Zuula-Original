@@ -4,7 +4,7 @@ import { KineticText } from "@/components/motion/text/kinetic-text"
 import { cn } from "@/lib/utils"
 
 import { PhotoCredit } from "./photo-hero"
-import { useRoutePhoto } from "./route-backdrop"
+import { useBackdropVideoAllowed, useRoutePhoto } from "./route-backdrop"
 
 // Page title set straight on the route's background photo (RouteBackdrop), in white.
 export function PageHero({
@@ -69,12 +69,29 @@ export function PageSheet({
   )
 }
 
-// Credit line for the current route's background photo.
+// Credit line for the current route's background: the video's while one plays, else the photo's.
 export function RoutePhotoCredit({
   className,
   ...props
 }: React.ComponentProps<"a">) {
   const entry = useRoutePhoto()
+  const videoAllowed = useBackdropVideoAllowed()
   if (!entry) return null
+  if (entry.video && videoAllowed) {
+    return (
+      <a
+        {...props}
+        href={entry.video.credit.url}
+        target="_blank"
+        rel="noreferrer"
+        className={cn(
+          "text-[0.6875rem] text-white/70 underline-offset-2 hover:text-white hover:underline",
+          className
+        )}
+      >
+        Video: {entry.video.credit.label}
+      </a>
+    )
+  }
   return <PhotoCredit photo={entry.photo} className={className} {...props} />
 }

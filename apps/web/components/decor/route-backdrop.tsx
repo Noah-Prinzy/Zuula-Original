@@ -35,7 +35,7 @@ export function RouteBackdrop() {
         className="object-cover"
         style={{ objectPosition: entry.position ?? "center" }}
       />
-      <BackdropVideos src={entry.video} />
+      <BackdropVideos src={entry.video?.src} />
       <div className="absolute inset-0 bg-black/60" />
     </div>
   )
@@ -69,6 +69,11 @@ function subscribe(onChange: () => void) {
   }
 }
 
+// Whether this viewer gets background video at all (the credit line follows it too).
+export function useBackdropVideoAllowed() {
+  return useSyncExternalStore(subscribe, canPlayVideo, () => false)
+}
+
 function canPlayVideo() {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches)
     return false
@@ -89,7 +94,7 @@ type Layer = { src: string; playing: boolean; leaving: boolean }
 // and inline, so browsers allow autoplay, and greyscale, so the pair reads as one set.
 // The layout that renders this persists across auth pages, so the state survives navigation.
 function BackdropVideos({ src }: { src?: string }) {
-  const allowed = useSyncExternalStore(subscribe, canPlayVideo, () => false)
+  const allowed = useBackdropVideoAllowed()
   const wanted = allowed ? src : undefined
   const [layers, setLayers] = useState<Layer[]>([])
   const [seen, setSeen] = useState<string | undefined>(undefined)
@@ -129,7 +134,6 @@ function BackdropVideos({ src }: { src?: string }) {
         return (
           <video
             key={l.src}
-            src={l.src}
             autoPlay
             muted
             loop
@@ -150,20 +154,28 @@ function BackdropVideos({ src }: { src?: string }) {
               "absolute inset-0 size-full object-cover opacity-0 grayscale transition-opacity",
               visible && "opacity-100"
             )}
-          />
+          >
+            <VideoSources src={l.src} />
+          </video>
         )
       })}
       {/* Warm the cache for the other clips once this one plays, so the switch is instant. */}
       {topReady &&
         ALL_VIDEOS.filter((v) => !layers.some((l) => l.src === v)).map((v) => (
-          <video
-            key={`preload:${v}`}
-            src={v}
-            muted
-            preload="auto"
-            className="hidden"
-          />
+          <video key={`preload:${v}`} muted preload="auto" className="hidden">
+            <VideoSources src={v} />
+          </video>
         ))}
+    </>
+  )
+}
+
+// VP9 WebM first (smaller, and plays in browsers without H.264), then H.264 MP4.
+function VideoSources({ src }: { src: string }) {
+  return (
+    <>
+      <source src={`${src}.webm`} type="video/webm" />
+      <source src={`${src}.mp4`} type="video/mp4" />
     </>
   )
 }

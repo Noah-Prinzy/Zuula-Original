@@ -5,17 +5,36 @@ import { PHOTOS, type Photo } from "./photos"
 export type RoutePhoto = {
   photo: Photo
   position?: string
-  /** A muted loop played over the photo where conditions allow (RouteBackdrop). Files live in
-   *  public/videos; the photo stays as the poster and the fallback. */
-  video?: string
+  /** A muted loop played over the photo where conditions allow (RouteBackdrop). The photo
+   *  stays as the poster and the fallback. */
+  video?: RouteVideo
+}
+
+export type RouteVideo = {
+  /** Path without extension: `${src}.webm` (VP9) and `${src}.mp4` (H.264) in public/videos,
+   *  made with scripts/make-video-loop.sh. */
+  src: string
+  credit: { label: string; url: string }
 }
 
 // Sign-in and sign-up each get a looping background clip, a pair from the newsroom: pages
 // turning for returning readers, the printing press for new sign-ups. Their follow-on steps
 // (two-factor, verify) and the other auth pages keep a still photo.
-const SIGN_IN_VIDEO = "/videos/pages-turning.mp4"
-const SIGN_UP_VIDEO = "/videos/printing-press.mp4"
-export const ROUTE_VIDEOS = [SIGN_IN_VIDEO, SIGN_UP_VIDEO]
+const SIGN_IN_VIDEO: RouteVideo = {
+  src: "/videos/pages-turning",
+  credit: {
+    label: "Mixkit",
+    url: "https://mixkit.co/free-stock-video/book-pages-turning-close-up-17386/",
+  },
+}
+const SIGN_UP_VIDEO: RouteVideo = {
+  src: "/videos/printing-press",
+  credit: {
+    label: "Everett Bumstead / Pexels",
+    url: "https://www.pexels.com/video/industrial-printing-press-operating-in-slow-motion-29906414/",
+  },
+}
+export const ROUTE_VIDEOS = [SIGN_IN_VIDEO.src, SIGN_UP_VIDEO.src]
 
 // One background photo per page (RouteBackdrop). The most specific prefix wins, so list
 // longer paths first.

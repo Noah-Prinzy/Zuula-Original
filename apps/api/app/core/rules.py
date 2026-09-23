@@ -71,11 +71,8 @@ PASSWORD_MIN_LENGTH = 12
 # Submissions
 # ---------------------------------------------------------------------------------------
 
-# FR-SUBMIT-05: media upload size cap. Declared today at the contract level (openapi.yaml's
-# SubmissionInput.file description) and on the frontend (apps/web/lib/submission.ts's
-# MAX_FILE_BYTES), but not enforced by app code — P2's create_submission takes a JSON body,
-# not a multipart file upload, so there's no file to size-check yet. Real enforcement is
-# P3's job, alongside real multipart upload handling.
+# FR-SUBMIT-05: media upload size cap — openapi.yaml's SubmissionInput.file and
+# apps/web/lib/submission.ts's MAX_FILE_BYTES. Enforced on multipart uploads (413).
 MAX_MEDIA_BYTES = 50 * 1024 * 1024
 
 # ---------------------------------------------------------------------------------------
@@ -145,6 +142,15 @@ TEXT_MAX_CHARS = 5_000
 ARTICLE_MIN_CHARS = 50
 ARTICLE_MAX_CHARS = 20_000
 HEADLINE_MAX_CHARS = 200
+# FR-SUBMIT-05: what a media submission may be (415 otherwise) — apps/web/lib/submission.ts's
+# ACCEPTED_MEDIA, which the upload form offers.
+ACCEPTED_MEDIA_TYPES = frozenset(
+    {
+        *("image/jpeg", "image/png", "image/webp", "image/gif"),
+        *("audio/mpeg", "audio/mp4", "audio/wav", "audio/ogg", "audio/x-m4a", "audio/aac"),
+        *("video/mp4", "video/quicktime", "video/webm", "video/3gpp"),
+    }
+)
 
 # ---- Partner API (FR-API-02) ----
 

@@ -6,10 +6,16 @@ same way: a `submissions` row committed first, then the pipeline dispatched
 """
 
 import secrets
+import uuid
 
+from fastapi import Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+# What request.form() returns (fastapi.UploadFile is a subclass of it).
+from starlette.datastructures import UploadFile
+
+from app.adapters.storage import get_object_storage
 from app.core import rules
 from app.core.errors import ApiError
 from app.db.models import FactCheckReport, Submission
@@ -77,6 +83,52 @@ def validate_input(body: dict) -> dict:
         "language": body.get("language") or "auto",
         "preview": preview,
     }
+
+
+_TOO_LARGE = "Files must be 50 MB or smaller."
+# Room for the form's other fields and the multipart framing around the file.
+_FORM_OVERHEAD_BYTES = 1024 * 1024
+
+
+async def read_input(request: Request) -> tuple[dict, UploadFile | None]:
+    """SubmissionInput as JSON or as multipart/form-data (the only way to send a file)."""
+    content_type = request.headers.get("content-type", "")
+    if not content_type.startswith("multipart/form-data"):
+        try:
+            body = await request.json()
+        except ValueError as exc:
+            raise ApiError(
+                "invalid_content", "The body must be JSON or multipart/form-data."
+            ) from exc
+        if not isinstance(body, dict):
+            raise ApiError("invalid_content", "The body must be a JSON object.")
+        return body, None
+    # Refuse an oversized upload before reading it, when the client says how big it is.
+    declared = request.headers.get("content-length", "")
+    if declared.isdigit() and int(declared) > rules.MAX_MEDIA_BYTES + _FORM_OVERHEAD_BYTES:
+        raise ApiError("file_too_large", _TOO_LARGE)
+    form = await request.form()
+    upload = form.get("file")
+    fields = {k: v for k, v in form.items() if isinstance(v, str)}
+    return fields, upload if isinstance(upload, UploadFile) else None
+
+
+async def store_upload(upload: UploadFile | None) -> dict:
+    """A media submission's file: checked (415/413), then put in object storage. The worker
+    scans it with ClamAV before anything else reads it."""
+    if upload is None:
+        raise ApiError("invalid_content", "Choose an image, audio or video file.")
+    content_type = (upload.content_type or "").split(";")[0].strip().lower()
+    if content_type not in rules.ACCEPTED_MEDIA_TYPES:
+        raise ApiError("unsupported_media", "This file type isn't supported.")
+    data = await upload.read(rules.MAX_MEDIA_BYTES + 1)
+    if len(data) > rules.MAX_MEDIA_BYTES:
+        raise ApiError("file_too_large", _TOO_LARGE)
+    if not data:
+        raise ApiError("invalid_content", "That file is empty.")
+    key = f"submissions/{uuid.uuid4().hex}/original"
+    await get_object_storage().put(key=key, data=data, content_type=content_type)
+    return {"media_object_key": key, "media_content_type": content_type}
 
 
 def chat_fields(text: str) -> dict:

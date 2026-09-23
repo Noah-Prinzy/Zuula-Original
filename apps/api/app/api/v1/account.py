@@ -308,18 +308,23 @@ async def apply_for_verification(
     if not organisation.strip() or not documents:
         raise ApiError("bad_request", "Organisation and at least one document are required.")
 
-    app_id = new_id("acc")
-    storage = get_object_storage()
-    keys = []
-    for i, doc in enumerate(documents):
-        data = await doc.read()
+    # Check every document before storing any, so a bad second file leaves nothing behind.
+    files = []
+    for doc in documents:
         content_type = doc.content_type or "application/octet-stream"
         if content_type not in _DOCUMENT_TYPES:
             raise ApiError("unsupported_media", "Upload a photo (JPEG, PNG, WebP) or a PDF.")
+        data = await doc.read(rules.MAX_MEDIA_BYTES + 1)
         if len(data) > rules.MAX_MEDIA_BYTES:
             raise ApiError("file_too_large", "Each document must be under 50 MB.")
+        files.append((data, content_type))
+
+    app_id = new_id("acc")
+    storage = get_object_storage()
+    keys = []
+    for i, (data, content_type) in enumerate(files):
         key = f"accreditation/{user.id}/{app_id}/{i}"
-        storage.put(key=key, data=data, content_type=content_type)
+        await storage.put(key=key, data=data, content_type=content_type)
         keys.append(key)
 
     db.add(

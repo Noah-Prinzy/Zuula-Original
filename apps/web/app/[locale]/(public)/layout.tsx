@@ -1,4 +1,5 @@
 import { RouteBackdrop } from "@/components/decor/route-backdrop"
+import { BottomNav } from "@/components/shell/bottom-nav"
 import { RoleSwitcher } from "@/components/shell/role-switcher"
 import { ShowOnAbout } from "@/components/shell/show-on-about"
 import { SiteFooter } from "@/components/shell/site-footer"
@@ -21,6 +22,7 @@ export default function PublicLayout({
       <ShowOnAbout>
         <SiteFooter />
       </ShowOnAbout>
+      <BottomNav />
     </div>
   )
 }

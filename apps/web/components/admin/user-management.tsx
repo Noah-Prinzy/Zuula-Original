@@ -79,6 +79,7 @@ export function UserManagement() {
         accessorFn: (u) => u.name,
         sortFn: "alphanumeric",
         header: ({ column }) => <SortableHeader column={column} label="User" />,
+        meta: { label: "User" },
         cell: ({ row: { original: u } }) => (
           <div className="flex min-w-48 items-center gap-3">
             <Avatar className="size-8">
@@ -110,6 +111,7 @@ export function UserManagement() {
         accessorFn: (u) => u.ratings,
         sortFn: "basic",
         header: ({ column }) => <SortableHeader column={column} label="Ratings" />,
+        meta: { label: "Ratings" },
         cell: ({ row: { original: u } }) => <span className="font-mono tabular-nums">{u.ratings}</span>,
       },
       {
@@ -117,6 +119,7 @@ export function UserManagement() {
         accessorFn: (u) => u.lastActive,
         sortFn: "alphanumeric",
         header: ({ column }) => <SortableHeader column={column} label="Last active" />,
+        meta: { label: "Last active" },
         cell: ({ row: { original: u } }) => (
           <span className="text-xs whitespace-nowrap text-muted-foreground">
             {u.lastActive} <br /> joined {u.joined}

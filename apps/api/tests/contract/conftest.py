@@ -23,10 +23,11 @@ import pytest
 from openapi_core import OpenAPI
 from openapi_core.configurations import Config
 from openapi_core.contrib.fastapi.middlewares import FastAPIOpenAPIMiddleware
-from openapi_core.deserializing.media_types.util import plain_loads
+from openapi_core.deserializing.media_types.util import data_form_loads, plain_loads
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.pool import NullPool
 from starlette.testclient import TestClient
+from werkzeug.datastructures import MultiDict
 
 from app.db import models as m
 from app.db.seed import SAMPLE_PASSWORD
@@ -36,6 +37,7 @@ from app.services.auth import token_hash
 from app.services.broadcasts import deliver_channels
 from app.services.recompute import recompute_reports
 from app.worker import dispatch
+from app.worker.messaging import deliver_message
 from app.worker.pipeline import run_pipeline
 
 SPEC_PATH = Path(__file__).parent.parent.parent / "openapi.yaml"
@@ -55,6 +57,10 @@ PARTNER_KEY = {"Authorization": f"Bearer {PARTNER_SECRET}"}
 __all__ = ["ADMIN", "EXPERT", "JOURNALIST", "PARTNER_KEY", "PUBLIC", "SAMPLE_PASSWORD"]
 
 
+def _text_form_loads(value: bytes, **parameters: str):
+    return MultiDict([(k, plain_loads(v)) for k, v in data_form_loads(value, **parameters).items(multi=True)])
+
+
 @pytest.fixture(scope="session")
 def validated_app():
     # Wrap _app instead of calling _app.add_middleware(...): that would mutate the shared
@@ -65,7 +71,17 @@ def validated_app():
     # endpoints' media type) — it falls back to binary_loads, handing schema validation raw
     # bytes against a `type: string` schema, which always fails. plain_loads (its own
     # text/plain deserializer) is exactly what SSE frames need: decode bytes to str.
-    config = Config(extra_media_type_deserializers={"text/event-stream": plain_loads})
+    #
+    # The same gap for multipart: its data_form_loads keeps every part as bytes, so a
+    # `format: binary` file part (SubmissionInput.file) fails `type: string` too. Decoding each
+    # part the way plain_loads does lets the file validate as the string OAS 3.0 says it is.
+    # This only affects validation; the app still reads the raw upload.
+    config = Config(
+        extra_media_type_deserializers={
+            "text/event-stream": plain_loads,
+            "multipart/form-data": _text_form_loads,
+        }
+    )
     spec = OpenAPI.from_file_path(str(SPEC_PATH), config=config)
     return FastAPIOpenAPIMiddleware(_app, openapi=spec)
 
@@ -146,6 +162,9 @@ def _bound_client(app, db_url: str, *, base_url: str):
         ) as session:
             await deliver_channels(session, broadcast_id)
 
+    async def inline_message(channel, to, body, subject=None) -> None:
+        await deliver_message(channel, to, body, subject)
+
     async def run_db(fn):
         async with AsyncSession(
             bind=state["conn"], join_transaction_mode="create_savepoint", expire_on_commit=False
@@ -164,6 +183,7 @@ def _bound_client(app, db_url: str, *, base_url: str):
             "dispatch_pipeline": inline_dispatch,
             "dispatch_recompute": inline_recompute,
             "dispatch_broadcast": inline_broadcast,
+            "dispatch_message": inline_message,
         }
         real = {name: getattr(dispatch, name) for name in inline}
         for name, fn in inline.items():

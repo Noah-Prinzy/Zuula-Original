@@ -25,8 +25,6 @@ from fastapi import Request, Response
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.email import get_email_sender
-from app.adapters.sms import get_sms_sender
 from app.core import rules
 from app.core.config import get_settings
 from app.core.errors import ApiError
@@ -34,6 +32,7 @@ from app.db.base import new_id
 from app.db.models import AuthChallenge, Session, User
 from app.realtime import redis_client
 from app.schemas.account import UserProfile
+from app.worker import dispatch
 
 # ---- Passwords ----
 
@@ -256,13 +255,10 @@ _MESSAGES = {
 }
 
 
-def deliver_code(channel: str, destination: str, purpose: str, code: str) -> None:
+async def deliver_code(channel: str, destination: str, purpose: str, code: str) -> None:
     subject, template = _MESSAGES[purpose]
     body = template.format(code=code) + f" It expires in {rules.OTP_TTL_SECONDS // 60} minutes."
-    if channel == "sms":
-        get_sms_sender().send(to=destination, message=body)
-    else:
-        get_email_sender().send(to=destination, subject=subject, body=body)
+    await dispatch.dispatch_message(channel, destination, body, subject)
 
 
 async def create_challenge(
@@ -291,7 +287,7 @@ async def create_challenge(
         expires_at=now + timedelta(seconds=rules.OTP_TTL_SECONDS),
     )
     db.add(challenge)
-    deliver_code(challenge.channel, ident.value, purpose, code)
+    await deliver_code(challenge.channel, ident.value, purpose, code)
     return challenge
 
 
@@ -309,7 +305,7 @@ async def resend_challenge(challenge: AuthChallenge) -> None:
     challenge.code_hash = _code_hash(challenge.id, code)
     challenge.last_sent_at = now
     challenge.expires_at = now + timedelta(seconds=rules.OTP_TTL_SECONDS)
-    deliver_code(challenge.channel, challenge.destination, challenge.purpose, code)
+    await deliver_code(challenge.channel, challenge.destination, challenge.purpose, code)
 
 
 def challenge_usable(challenge: AuthChallenge | None, purpose: str) -> bool:

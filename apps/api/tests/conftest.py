@@ -24,7 +24,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.pool import NullPool
 
 from app.adapters import email, sms
-from app.core.config import get_analysis_settings, get_settings
+from app.adapters.storage import StubObjectStorage
+from app.core.config import get_adapters_settings, get_analysis_settings, get_settings
 from app.realtime import redis_client
 from app.worker import celery_app
 from tests.dbutil import TEST_DATABASE_URL, alembic_config, recreate_database, seed_database
@@ -75,6 +76,22 @@ def _isolate_per_test_state():
     fakeredis.FakeRedis(server=_fake_server).flushall()
     sms.OUTBOX.clear()
     email.OUTBOX.clear()
+    StubObjectStorage.OBJECTS.clear()
+
+
+@pytest.fixture
+def adapter_env(monkeypatch):
+    """`adapter_env(TURNSTILE_SECRET_KEY="x", ...)`: configure adapters for one test. Nothing
+    calls a real service: adapter tests mock HTTP with respx, clamd with a local socket and
+    S3 with botocore's Stubber."""
+
+    def configure(**variables: str) -> None:
+        for name, value in variables.items():
+            monkeypatch.setenv(name, value)
+        get_adapters_settings.cache_clear()
+
+    yield configure
+    get_adapters_settings.cache_clear()
 
 
 @pytest.fixture(scope="session")

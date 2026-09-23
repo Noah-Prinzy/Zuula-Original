@@ -28,3 +28,10 @@ async def dispatch_broadcast(broadcast_id: str) -> None:
     from app.worker.admin_tasks import deliver_broadcast
 
     deliver_broadcast.delay(broadcast_id)
+
+
+async def dispatch_message(channel: str, to: str, body: str, subject: str | None = None) -> None:
+    """Send one SMS ("sms") or email ("email") from the worker: codes, alerts, broadcasts."""
+    from app.worker.messaging import send_message
+
+    send_message.delay(channel, to, body, subject)

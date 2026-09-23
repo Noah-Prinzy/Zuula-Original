@@ -10,11 +10,10 @@ costs the recipient nothing to ignore, but it's still their number.
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.email import get_email_sender
-from app.adapters.sms import get_sms_sender
 from app.db.base import new_id, utcnow
 from app.db.models import AlertSettings, Broadcast, Notification, User
 from app.schemas.notifications import AlertSettings as AlertSettingsSchema
+from app.worker import dispatch
 
 # openapi.yaml's channel values: in-app, push, email, sms (matched case-insensitively, since
 # the sample broadcasts store the admin screen's display labels, "In-app", "SMS", …).
@@ -71,7 +70,8 @@ async def deliver_channels(db: AsyncSession, broadcast_id: str) -> dict[str, int
     for user, raw in rows:
         prefs = AlertSettingsSchema.model_validate(raw) if raw else AlertSettingsSchema()
         if wants_sms and prefs.channels.sms and user.phone:
-            get_sms_sender().send(to=user.phone, message=f"Zuula alert — {text}")
+            # One task per message: a failed send is retried on its own.
+            await dispatch.dispatch_message(_SMS, user.phone, f"Zuula alert — {text}")
             sent[_SMS] += 1
         if (
             wants_email
@@ -79,8 +79,8 @@ async def deliver_channels(db: AsyncSession, broadcast_id: str) -> dict[str, int
             and user.email
             and not user.email.endswith(".invalid")
         ):
-            get_email_sender().send(
-                to=user.email, subject=f"Zuula alert: {broadcast.title}", body=broadcast.message
+            await dispatch.dispatch_message(
+                _EMAIL, user.email, broadcast.message, f"Zuula alert: {broadcast.title}"
             )
             sent[_EMAIL] += 1
     return sent

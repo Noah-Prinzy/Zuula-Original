@@ -183,7 +183,13 @@ SMTP credentials in `.env`, codes are logged by the `zuula.adapters.sms` /
 Every `app/adapters/` module has a real implementation and a logging stub. The real one is
 used as soon as its `.env` values are set (see `.env.example`); leave them empty for local
 dev. **With `ZUULA_ENV=production`, the API and the worker refuse to start while any of them
-is missing**, naming each missing variable, so production can't quietly run on a stub.
+is missing**, naming each missing variable, so production can't quietly run on a stub. A
+deployment that knowingly goes without some of them (a demo, or launching before the WhatsApp
+number exists) lists their ids in `ZUULA_ALLOW_STUB_ADAPTERS` (`google`, `facebook`, `sms`,
+`email`, `turnstile`, `clamav`, `s3`, `whatsapp`, `telegram`) and starts with a warning. Even
+then, an unconfigured Google/Facebook sign-in sends people back to the sign-in page instead of
+the stub's demo account, and an unconfigured WhatsApp/Telegram webhook refuses every call.
+`ZUULA_SECRET_KEY` can never be left at its development default.
 
 | Adapter | Real implementation | Needs |
 |---|---|---|

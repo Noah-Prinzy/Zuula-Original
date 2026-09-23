@@ -72,7 +72,7 @@ class SmtpEmailSender:
 
 
 def get_email_sender() -> EmailSender:
-    if configured("Email (SMTP)"):
+    if configured("email"):
         settings = get_adapters_settings()
         return SmtpEmailSender(
             host=settings.email_smtp_host,

@@ -91,7 +91,7 @@ _s3: S3ObjectStorage | None = None
 
 def get_object_storage() -> ObjectStorage:
     global _s3
-    if configured("Media storage (S3)"):
+    if configured("s3"):
         # One client per process: boto3 clients are thread-safe and slow to build.
         if _s3 is None:
             _s3 = S3ObjectStorage.from_settings()

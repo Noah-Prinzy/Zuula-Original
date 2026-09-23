@@ -53,6 +53,6 @@ class CloudflareTurnstileVerifier:
 
 
 def get_turnstile_verifier() -> TurnstileVerifier:
-    if configured("Captcha (Turnstile)"):
+    if configured("turnstile"):
         return CloudflareTurnstileVerifier(secret_key=get_adapters_settings().turnstile_secret_key)
     return StubTurnstileVerifier()

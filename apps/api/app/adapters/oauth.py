@@ -5,7 +5,7 @@ The real providers exchange the code at the token endpoint and read the profile 
 `httpx`. A profile's `email` is only filled in when the provider has verified it, because
 the callback links a new identity to an existing account by email. A provider without a
 client id and secret falls back to the stub, which never calls anyone and "signs in" a fixed
-demo profile.
+demo profile; in production it's unavailable instead (`ProviderUnavailable`).
 """
 
 from dataclasses import dataclass
@@ -14,7 +14,7 @@ from urllib.parse import urlencode
 
 import httpx
 
-from app.adapters.readiness import configured
+from app.adapters.readiness import configured, is_production
 from app.core.config import get_adapters_settings
 
 _KNOWN_PROVIDERS = ("google", "facebook")
@@ -24,6 +24,11 @@ FACEBOOK_GRAPH_VERSION = "v21.0"
 
 class OAuthError(Exception):
     pass
+
+
+class ProviderUnavailable(OAuthError):
+    """This provider has no credentials, and production never falls back to the stub (which
+    would sign anyone in as its demo profile)."""
 
 
 @dataclass
@@ -178,14 +183,16 @@ def get_oauth_provider(provider: str) -> OAuthProvider:
     if provider not in _KNOWN_PROVIDERS:
         raise ValueError(f"Unknown OAuth provider '{provider}'.")
     settings = get_adapters_settings()
-    if provider == "google" and configured("Google sign-in", settings):
+    if provider == "google" and configured("google", settings):
         return GoogleOAuthProvider(
             client_id=settings.google_oauth_client_id,
             client_secret=settings.google_oauth_client_secret,
         )
-    if provider == "facebook" and configured("Facebook sign-in", settings):
+    if provider == "facebook" and configured("facebook", settings):
         return FacebookOAuthProvider(
             client_id=settings.facebook_oauth_client_id,
             client_secret=settings.facebook_oauth_client_secret,
         )
+    if is_production():
+        raise ProviderUnavailable(f"Sign-in with {provider} isn't set up.")
     return StubOAuthProvider(provider)

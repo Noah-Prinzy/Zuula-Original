@@ -2,6 +2,7 @@
 
 from datetime import date, timedelta
 
+from app.core import rules
 from app.schemas.admin import (
     AdminOverview,
     AdminUser,
@@ -136,17 +137,17 @@ SAMPLE_AUDIT: list[AuditEntry] = [
 
 DEFAULT_SETTINGS = PlatformSettings(
     thresholds=Thresholds(
-        verified_min=90,
-        questioned_min=40,
-        questioned_max=69,
-        questioned_ratings=50,
-        escalated_max=39,
-        escalated_ratings=100,
-        suspended_max=19,
-        suspended_ratings=200,
+        verified_min=rules.CCS_THRESHOLDS["verified"]["min_score"],
+        questioned_min=rules.CCS_THRESHOLDS["questioned"]["min_score"],
+        questioned_max=rules.CCS_THRESHOLDS["questioned"]["max_score"],
+        questioned_ratings=rules.CCS_THRESHOLDS["questioned"]["min_ratings"],
+        escalated_max=rules.CCS_THRESHOLDS["escalated"]["max_score"],
+        escalated_ratings=rules.CCS_THRESHOLDS["escalated"]["min_ratings"],
+        suspended_max=rules.CCS_THRESHOLDS["suspended"]["max_score"],
+        suspended_ratings=rules.CCS_THRESHOLDS["suspended"]["min_ratings"],
     ),
-    weights=Weights(public=1, journalist=2, expert=5),
-    sla_hours=48,
-    api_rate_limit=100,
-    retraining=Retraining(cadence="weekly", min_ccs=85),
+    weights=Weights(**rules.RATING_WEIGHTS),
+    sla_hours=rules.REVIEW_SLA_HOURS,
+    api_rate_limit=rules.PARTNER_RATE_LIMIT_PER_HOUR,
+    retraining=Retraining(cadence=rules.RETRAINING_CADENCE, min_ccs=rules.RETRAINING_MIN_CCS),
 )

@@ -1,9 +1,10 @@
 """Transliterated from apps/web/lib/mock/account.ts."""
 
+from app.core.rules import PARTNER_RATE_LIMIT_PER_HOUR
 from app.schemas.account import ApiKey, DeviceSession
 from app.schemas.submission import ActivityRating, ActivitySubmission
 
-API_RATE_LIMIT = 100
+API_RATE_LIMIT = PARTNER_RATE_LIMIT_PER_HOUR
 
 SAMPLE_SUBMISSIONS: list[ActivitySubmission] = [
     ActivitySubmission(

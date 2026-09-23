@@ -2,9 +2,9 @@
 
 from datetime import UTC, datetime, timedelta
 
+from app.core.rules import REVIEW_DUE_SOON_HOURS, REVIEW_SLA_HOURS
 from app.schemas.review import ReviewCase, ReviewDecision
 
-REVIEW_SLA_HOURS = 48
 REVIEW_NOW = datetime(2026, 9, 21, 9, 0, tzinfo=UTC)  # 12:00 EAT
 
 REASON_META = {
@@ -32,7 +32,7 @@ _RAW_CASES = [
 def _sla(flagged_at: str) -> tuple[datetime, str]:
     due = datetime.fromisoformat(flagged_at) + timedelta(hours=REVIEW_SLA_HOURS)
     hours_left = (due - REVIEW_NOW).total_seconds() / 3600
-    state = "overdue" if hours_left < 0 else "due-soon" if hours_left < 12 else "on-track"
+    state = "overdue" if hours_left < 0 else "due-soon" if hours_left < REVIEW_DUE_SOON_HOURS else "on-track"
     return due, state
 
 

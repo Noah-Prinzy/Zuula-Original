@@ -1,16 +1,8 @@
 """Mirrors apps/web/lib/community.ts exactly (weights, CCS formula, status thresholds) so stub
 data shows realistic scores. P3 moves this server-side for real; P2 just needs it consistent."""
 
+from app.core.rules import CCS_THRESHOLDS, RATING_WEIGHTS
 from app.schemas.fact_check import CommunityScore, RatingCounts
-
-RATING_WEIGHTS = {"public": 1, "journalist": 2, "expert": 5}
-
-CCS_THRESHOLDS = {
-    "verified": {"min_score": 90},
-    "questioned": {"min_score": 40, "max_score": 69, "min_ratings": 50},
-    "escalated": {"max_score": 39, "min_ratings": 100},
-    "suspended": {"max_score": 19, "min_ratings": 200},
-}
 
 
 def _sum(c: RatingCounts) -> int:

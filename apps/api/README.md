@@ -61,8 +61,9 @@ covers the security behaviour itself (sessions, 2FA, lockout, roles, keys, CSRF)
 
 `tests/pipeline/` tests `app/worker/pipeline.py`, `app/providers/analysis.py` and
 `app/realtime/` directly (step sequencing per submission type, the failure path, pub/sub).
-`tests/adapters/` tests each `app/adapters/` module directly (OAuth URL/profile shape,
-WhatsApp/Telegram payload parsing, Turnstile presence check, ...). All three suites run
+`tests/adapters/` tests each real `app/adapters/` implementation without calling the real
+service: HTTP through `respx` mocks, clamd through a fake local socket, S3 through botocore's
+`Stubber`, SMTP with `aiosmtplib.send` captured. All three suites run
 against a fake Redis (`tests/conftest.py`, `fakeredis`) with Celery in eager mode and
 pipeline step durations scaled to 0 — no live Redis server or worker process needed, and the
 suite doesn't spend real seconds sleeping through a text submission's ~8-second simulated
@@ -119,7 +120,7 @@ app/
   stubs/                 In-memory sample data transliterated from apps/web/lib/mock/*.ts
   providers/
     analysis.py          AnalysisProvider interface + StubAnalysisProvider (the pipeline's AI step)
-  adapters/               One interface + stub per Step 4 integration (oauth, sms, turnstile, clamav, storage, email, whatsapp, telegram) — see the ADR for what each is wired into
+  adapters/               One interface, one real implementation and one dev stub per integration (oauth, sms, turnstile, clamav, storage, email, whatsapp, telegram); readiness.py picks real vs. stub and guards production
   realtime/
     redis_client.py       Production get_redis()/get_async_redis() wiring
     submissions.py         Shared submission state + pub/sub (worker <-> API process), redis-client-agnostic for tests
@@ -173,15 +174,40 @@ Real since P3 PR 2 ([ADR 0002 §5](../../docs/adr/0002-p3-backend-and-database.m
 
 **Local dev sign-in**: after `python -m app.db.seed`, the sample accounts
 (`mary@example.com` admin, `david@example.com` expert, `sarah@example.com` journalist,
-`amina@example.com` public, …) all use the password `zuula-sample-password`. SMS and email
-are still stubs (P3 PR 5), so codes are logged by the `zuula.adapters.sms` /
-`zuula.adapters.email` loggers.
+`amina@example.com` public, …) all use the password `zuula-sample-password`. Without SMS or
+SMTP credentials in `.env`, codes are logged by the `zuula.adapters.sms` /
+`zuula.adapters.email` loggers instead of sent.
+
+## Integrations
+
+Every `app/adapters/` module has a real implementation and a logging stub. The real one is
+used as soon as its `.env` values are set (see `.env.example`); leave them empty for local
+dev. **With `ZUULA_ENV=production`, the API and the worker refuse to start while any of them
+is missing**, naming each missing variable, so production can't quietly run on a stub.
+
+| Adapter | Real implementation | Needs |
+|---|---|---|
+| Google / Facebook sign-in | Authorization-code flow over `httpx` | `*_OAUTH_CLIENT_ID`, `*_OAUTH_CLIENT_SECRET` |
+| SMS | Africa's Talking messaging API (`sandbox` → their simulator) | `AFRICASTALKING_USERNAME`, `AFRICASTALKING_API_KEY` |
+| Email | SMTP via `aiosmtplib` | `EMAIL_SMTP_*`, `EMAIL_FROM` |
+| Captcha | Cloudflare Turnstile `siteverify`, with the visitor's IP | `TURNSTILE_SECRET_KEY` |
+| Malware scan | clamd `INSTREAM` over TCP | `CLAMAV_HOST`, `CLAMAV_PORT` |
+| Media storage | `boto3`, any S3-compatible endpoint (AWS, R2, MinIO) | `S3_*` |
+| WhatsApp | Graph API messages; inbound calls must carry a valid `X-Hub-Signature-256` | `WHATSAPP_*` |
+| Telegram | `sendMessage`; inbound calls must carry `X-Telegram-Bot-Api-Secret-Token` | `TELEGRAM_*` |
+
+SMS and email always leave from the worker (`zuula.send_message`, retried with backoff), never
+inside a request. Media submissions are `multipart/form-data` with a `file` (images, audio,
+video up to 50 MB; `413`/`415` otherwise): the API stores the file, and the worker's "scan"
+step runs ClamAV on it before anything else reads it. The scan fails closed, and an infected
+file is deleted. clamd's `StreamMaxLength` must be at least 50M.
 
 ## What's real vs. stubbed (P2)
 
-**P3 in progress:** the database, migrations and seed exist, and auth, content and admin are
-all real (ADR 0002 §4–§6, §11). The external adapters are still stubs until P3 PR 5, and the
-AI verdicts until P4. The bullets below describe P2 and are out of date where they conflict.
+**P3 in progress:** the database, migrations and seed exist, and auth, content, admin and
+the external integrations are all real (ADR 0002 §4–§7, §11). The AI verdicts stay
+placeholders until P4. The bullets below describe P2 and are out of date where they conflict;
+P3 PR 6 rewrites this section.
 
 This is all documented more fully in the ADR, but briefly:
 - **Auth** is a stub: the core API reads an `X-Zuula-Role` header (mirrors the frontend's own

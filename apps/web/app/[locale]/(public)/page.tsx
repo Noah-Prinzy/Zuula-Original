@@ -71,13 +71,6 @@ function ReportSlide({
 // One section: the hero text and composer, with two short status cards right below whose
 // slides rotate. FR-SEARCH-05: recent and most debated checks. FR-RATE-10: leaderboard.
 // "Why Zuula" lives on /about.
-//
-// Phones and tablets (below lg): the first screen frames the photo's subject, a person reading
-// in the middle of the frame. The heading sits in the darkened top band, the composer at the
-// bottom, and the band between them is left empty with only a light scrim, so the person
-// stays visible. The status cards move below the fold; the top of the first one peeks in so
-// it reads as "more below". From lg up the whole section is one centred column over an
-// evenly darkened photo.
 export default function HomePage() {
   const recent = latest(SAMPLE_REPORTS, 5)
   const debated = mostDebated(SAMPLE_REPORTS, 5)
@@ -91,61 +84,51 @@ export default function HomePage() {
       photo={PHOTOS.newspaperWall}
       priority
       position="center 60%"
-      scrim={{ base: "subject", lg: "dark" }}
-      // Below lg the photo covers the first screen only, so the subject lands in the gap
-      // between heading and composer however tall the cards below make the section. Scaling
-      // it up from the bottom edge lifts the reader's head and shoulders into that gap.
-      mediaClassName="max-lg:bottom-auto max-lg:h-(--hero-screen-h) max-lg:[&>img]:origin-bottom max-lg:[&>img]:scale-[1.12]"
-      className="flex min-h-(--screen-h) flex-col [--hero-peek:3.5rem] [--hero-screen-h:calc(var(--screen-h)-var(--hero-peek))] lg:[--hero-peek:0px]"
+      // In development the "Demo: view as" bar (#role-switcher) sits above the header; leave room for it.
+      className="flex min-h-[calc(100svh-var(--header-h))] flex-col [html:has(#role-switcher)_&]:min-h-[calc(100svh-var(--header-h)-2.3125rem)]"
     >
-      <div className="flex page-container flex-1 flex-col items-center gap-5 pb-10 text-center lg:justify-center lg:py-8 [@media(max-height:52rem)]:lg:py-4">
-        {/* The first screen on phones; from lg it dissolves into the centred column. */}
-        <div className="flex min-h-(--hero-screen-h) w-full flex-col items-center gap-3 pt-5 pb-4 sm:gap-4 sm:pt-8 lg:contents">
-          <Badge
-            variant="outline"
-            className="enter hidden border-white/40 bg-black/20 text-white backdrop-blur-sm sm:inline-flex"
-          >
-            Uganda Fact-Guard · Victoria University CIT
-          </Badge>
-          <h1 className="max-w-4xl font-heading text-[2.125rem]/[1.1] font-bold tracking-tight text-balance drop-shadow-sm [--kinetic-accent:var(--chart-1)] sm:text-4xl md:text-5xl xl:text-6xl">
-            <KineticText text="Check a" delay={120} />{" "}
-            <WordRotator
-              words={["claim", "rumour", "photo", "video", "voice note"]}
-              delay={230}
-              marker
-              className="em-mark-solid"
-            />
-            <br />
-            <KineticText text="before you" delay={120} offset={3} />{" "}
-            {/* Rotates like the word above, without the highlighter stroke. */}
-            <WordRotator words={["share", "believe"]} interval={3200} delay={380} />{" "}
-            <KineticText text="it" delay={120} offset={5} />
-          </h1>
-          <p
-            className="enter max-w-3xl text-sm text-balance text-white/90 [text-shadow:0_1px_2px_rgb(0_0_0/0.5)] sm:text-base md:text-lg xl:text-xl"
-            style={delay(4)}
-          >
-            Paste a message, a link or upload media. Zuula tells you whether it is
-            authentic, false or AI-generated — and{" "}
-            <Emphasis variant="scribble" tone="light" delay={900}>
-              shows you the sources
-            </Emphasis>
-            .
-          </p>
+      <div className="flex page-container flex-1 flex-col items-center justify-center gap-5 py-8 text-center [@media(max-height:52rem)]:py-4">
+        <Badge
+          variant="outline"
+          className="enter border-white/40 bg-black/20 text-white backdrop-blur-sm"
+        >
+          Uganda Fact-Guard · Victoria University CIT
+        </Badge>
+        <h1 className="max-w-4xl font-heading text-4xl font-bold tracking-tight text-balance drop-shadow-sm [--kinetic-accent:var(--chart-1)] md:text-5xl xl:text-6xl">
+          <KineticText text="Check a" delay={120} />{" "}
+          <WordRotator
+            words={["claim", "rumour", "photo", "video", "voice note"]}
+            delay={230}
+            marker
+            className="em-mark-solid"
+          />
+          <br />
+          <KineticText text="before you" delay={120} offset={3} />{" "}
+          {/* Rotates like the word above, without the highlighter stroke. */}
+          <WordRotator words={["share", "believe"]} interval={3200} delay={380} />{" "}
+          <KineticText text="it" delay={120} offset={5} />
+        </h1>
+        <p
+          className="enter max-w-3xl text-base text-balance text-white/85 md:text-lg xl:text-xl"
+          style={delay(4)}
+        >
+          Paste a message, a link or upload media. Zuula tells you whether it is
+          authentic, false or AI-generated — and{" "}
+          <Emphasis variant="scribble" tone="light" delay={900}>
+            shows you the sources
+          </Emphasis>
+          .
+        </p>
 
-          {/* The window onto the photo's subject. */}
-          <div aria-hidden className="min-h-24 flex-1 lg:hidden" />
-
-          <div className="enter w-full max-w-5xl lg:mt-4" style={delay(6)}>
-            <SubmissionComposer
-              variant="compact"
-              className="w-full text-foreground shadow-2xl"
-            />
-          </div>
+        <div className="enter mt-4 w-full max-w-5xl" style={delay(6)}>
+          <SubmissionComposer
+            variant="compact"
+            className="w-full text-foreground shadow-2xl"
+          />
         </div>
 
         {/* Status cards sit directly under the composer. */}
-        <div className="grid w-full max-w-7xl gap-4 lg:grid-cols-2 [@media(max-height:52rem)]:lg:-mt-2">
+        <div className="grid w-full max-w-7xl gap-4 lg:grid-cols-2 [@media(max-height:52rem)]:-mt-2">
           <RotatingCard
             id="feed-title"
             eyebrow="Recent"

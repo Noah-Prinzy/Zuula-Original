@@ -882,11 +882,6 @@
         "4": "Strong"
       }
     },
-    "demo": {
-      "roles": "Demo: any password works. Use <code>journalist@</code>, <code>expert@</code> or <code>admin@</code> any domain to try other roles.",
-      "code": "Demo: any 6 digits work, except 000000.",
-      "twoFactor": "Demo: any 6 digits work except 000000. Backup codes look like ABCD-1234."
-    },
     "social": {
       "divider": "or continue with",
       "notConnected": "{provider} sign-in isn't connected yet",

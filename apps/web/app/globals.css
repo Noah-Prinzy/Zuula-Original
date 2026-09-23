@@ -157,9 +157,24 @@
 
 :root {
   --header-h: calc(3.5rem + 1px);
+  /* Phones get a bottom tab bar (components/shell/bottom-nav.tsx); it clears the home
+     indicator on notched phones. The dev-only "Demo: view as" bar sits above the header. */
+  --bottom-nav-h: 0px;
+  --demo-bar-h: 0px;
+  /* The screen left for page content between the site chrome. */
+  --screen-h: calc(100svh - var(--header-h) - var(--demo-bar-h) - var(--bottom-nav-h));
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
   --reveal-duration: 700ms;
   --reveal-distance: 1.25rem;
+}
+
+@media (width < 48rem) {
+  :root {
+    --bottom-nav-h: calc(3.5rem + 1px + env(safe-area-inset-bottom));
+  }
+}
+html:has(#role-switcher) {
+  --demo-bar-h: 2.3125rem;
 }
 
 /* A band that fills the viewport under the sticky header, so the next section never peeks in

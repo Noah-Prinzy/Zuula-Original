@@ -160,6 +160,7 @@ export function SourceManager() {
         accessorFn: (s) => s.name,
         sortFn: "alphanumeric",
         header: ({ column }) => <SortableHeader column={column} label="Source" />,
+        meta: { label: "Source" },
         cell: ({ row: { original: s } }) => (
           <div className={cn("flex min-w-44 flex-col", !s.active && "opacity-60")}>
             <span className="font-medium">{s.name}</span>
@@ -174,6 +175,7 @@ export function SourceManager() {
         accessorFn: (s) => s.tier,
         sortFn: "basic",
         header: ({ column }) => <SortableHeader column={column} label="Tier" />,
+        meta: { label: "Tier" },
         cell: ({ row: { original: s } }) => <span className="font-mono">{s.tier}</span>,
       },
       {

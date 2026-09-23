@@ -10,6 +10,7 @@ import {
   RiUserSettingsLine,
 } from "@remixicon/react"
 import { useTranslations } from "next-intl"
+import { toast } from "sonner"
 
 import { useSession } from "@/components/providers/session-provider"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -32,6 +33,7 @@ export function UserMenu() {
   const t = useTranslations("Nav")
   const tc = useTranslations("Common")
   const tr = useTranslations("Roles")
+  const te = useTranslations("Auth.errors")
 
   if (!user) {
     return (
@@ -98,7 +100,7 @@ export function UserMenu() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={signOut}>
+        <DropdownMenuItem onSelect={() => signOut().catch(() => toast.error(te("signOutFailed")))}>
           <RiLogoutBoxRLine aria-hidden /> {tc("signOut")}
         </DropdownMenuItem>
       </DropdownMenuContent>

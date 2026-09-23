@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@zuula/shared": ["../../packages/shared/src/index.ts"]
     }
   },
   "include": [

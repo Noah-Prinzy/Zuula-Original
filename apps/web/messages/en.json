@@ -91,7 +91,9 @@
   },
   "Demo": {
     "viewAs": "Demo: view as",
-    "signedOut": "Signed out"
+    "signedOut": "Signed out",
+    "previewAs": "Preview as",
+    "previewNote": "Not signed in. Previews use sample data and grant no access."
   },
   "Theme": {
     "change": "Change theme",
@@ -937,6 +939,8 @@
       "title": "Two-factor authentication",
       "descriptionApp": "Enter the 6-digit code from your authenticator app.",
       "descriptionBackup": "Enter one of the backup codes you saved when you set up two-factor.",
+      "sentTo": "Enter the 6-digit sign-in code we sent to <strong>{destination}</strong>.",
+      "cantReceive": "Can't receive the code?",
       "codeLabel": "Authentication code",
       "backupLabel": "Backup code",
       "backupHint": "Each backup code works once.",
@@ -975,7 +979,14 @@
       "noCode": "No code?",
       "requestNew": "Request a new one",
       "toastTitle": "Password updated",
-      "toastBody": "Sign in with your new password."
+      "toastBody": "Sign in with your new password.",
+      "startFirst": "Request a reset code first, so we know which account to update.",
+      "startFirstAction": "Get a reset code"
+    },
+    "errors": {
+      "network": "Couldn't reach Zuula. Check your connection and try again.",
+      "unconfigured": "Sign-in isn't available on this site yet.",
+      "signOutFailed": "Couldn't sign you out. Try again."
     }
   },
   "Pwa": {

@@ -46,8 +46,8 @@ Open questions for the supervisor:
 
 ### Known gaps
 
-- Everything uses mock data from `lib/mock`.
-- Role checks run only in the browser.
+- Content (fact-checks, ratings, review, admin, account settings) still uses mock data from `lib/mock`. Sign-up, sign-in, two-factor, password reset, sign-out and "who am I" are real calls to `apps/api` (`lib/api.ts`); see "Signing in locally" below.
+- Role checks in the UI run in the browser, from the real session's role. The API enforces roles on its own endpoints, but most screens don't call it yet.
 - CAPTCHA is off in development.
 - Python must be upgraded to 3.12 before P3.
 
@@ -58,4 +58,19 @@ npm install
 npm run dev
 ```
 
-Checks: `npm run lint`, `npm run typecheck`. Add shadcn components with `npx shadcn@latest add <name>`; they go in `components/ui`.
+Checks: `npm run lint`, `npm run typecheck`, `npm test`.
+
+### Signing in locally
+
+Sign-in needs `apps/api` running with its database (see [its README](../api/README.md)). Then:
+
+```bash
+cp .env.example .env.local   # NEXT_PUBLIC_API_URL=http://localhost:8000
+npm run dev                  # open http://localhost:3000 (not 127.0.0.1: the session cookie is SameSite=Lax)
+```
+
+- Seeded accounts (`python -m app.db.seed`) all use the password `zuula-sample-password`: `amina@example.com` (Public User), `sarah@example.com` (Journalist), `david@example.com` (Expert), `mary@example.com` (Admin). Experts and admins get a two-factor code.
+- Codes (sign-up, two-factor, reset) go through the API's stub email/SMS adapters, which only log them at INFO level. A plain `uvicorn app.main:app` doesn't show that level, so run the API with logging on to see them:
+  `python -c "import logging, uvicorn; logging.basicConfig(level=logging.INFO); uvicorn.run('app.main:app', reload=False)"`
+- Some Safari versions won't store the API's `Secure` cookie over plain `http://localhost`; if sign-in doesn't stick there, set `ZUULA_SESSION_COOKIE_SECURE=false` in `apps/api/.env`. Chrome and Firefox work as is.
+- `NEXT_PUBLIC_ROLE_SWITCHER=true` adds a "Preview as" bar for looking at role-gated screens as a sample user while signed out. It's a UI preview, not sign-in: it grants nothing in the API and disappears once you really sign in. It's off unless set. Add shadcn components with `npx shadcn@latest add <name>`; they go in `components/ui`.

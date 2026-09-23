@@ -7,27 +7,28 @@ import { useSession } from "@/components/providers/session-provider"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { ROLES, type Role } from "@/lib/roles"
 
-// Demo-only bar for switching roles without real auth. Hidden when
-// NEXT_PUBLIC_ROLE_SWITCHER is "false" (set that in production).
+// Role preview, not sign-in: while nobody is signed in, look at the role-gated screens (still
+// on mock content) as a sample user. It never reaches the API. Hidden once someone really
+// signs in (their own role applies everywhere), and unless NEXT_PUBLIC_ROLE_SWITCHER is "true".
 export function RoleSwitcher() {
-  const { role, signInAs, signOut } = useSession()
+  const { role, ready, source, previewEnabled, previewAs } = useSession()
   const t = useTranslations("Demo")
   const tr = useTranslations("Roles")
 
-  if (process.env.NEXT_PUBLIC_ROLE_SWITCHER === "false") return null
+  if (!previewEnabled || !ready || source === "account") return null
 
   return (
-    <div className="flex items-center justify-center gap-2 border-b bg-muted px-4 py-1 text-xs text-muted-foreground">
+    <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 border-b bg-muted px-4 py-1 text-xs text-muted-foreground">
       <RiFlaskLine className="size-3.5" aria-hidden />
-      <label htmlFor="role-switcher">{t("viewAs")}</label>
+      <label htmlFor="role-switcher">{t("previewAs")}</label>
       <NativeSelect
         id="role-switcher"
         size="sm"
         value={role ?? "signed-out"}
+        aria-describedby="role-switcher-note"
         onChange={(e) => {
           const v = e.target.value
-          if (v === "signed-out") signOut()
-          else signInAs(v as Role)
+          previewAs(v === "signed-out" ? null : (v as Role))
         }}
       >
         <NativeSelectOption value="signed-out">{t("signedOut")}</NativeSelectOption>
@@ -37,6 +38,7 @@ export function RoleSwitcher() {
           </NativeSelectOption>
         ))}
       </NativeSelect>
+      <span id="role-switcher-note">{t("previewNote")}</span>
     </div>
   )
 }

@@ -1,0 +1,129 @@
+import type { components, operations } from "@zuula/shared"
+
+// Thin client for apps/api (the core /api/v1 surface), typed from packages/shared's generated
+// openapi.ts. Only the identity/session calls live here for now: content (fact-checks,
+// ratings, review, admin) still comes from lib/mock until the backend's content layer lands.
+//
+// The session is the API's HttpOnly `zuula_session` cookie, so every call sends credentials
+// and this code never sees the token. That only works when the API lists this site's origin in
+// ZUULA_CORS_ORIGINS and both are on the same site (localhost:3000 → localhost:8000 locally,
+// zuula.ug → api.zuula.ug in production): the cookie is SameSite=Lax.
+
+type Schemas = components["schemas"]
+
+export type UserProfile = Schemas["UserProfile"]
+export type ApiSession = Schemas["Session"]
+export type TwoFactorChallenge = Schemas["TwoFactorChallenge"]
+export type ApiErrorCode = Schemas["ErrorEnvelope"]["error"]["code"]
+
+type JsonBody<Op extends keyof operations> = operations[Op] extends {
+  requestBody: { content: { "application/json": infer B } }
+}
+  ? B
+  : never
+
+type SignUpAccepted = operations["signUp"]["responses"][202]["content"]["application/json"]
+
+// Where apps/api lives. NEXT_PUBLIC_* is inlined at build time, so it must be read as this
+// literal expression. Development falls back to the API's default local address; a production
+// build without it configured refuses to send anything rather than guess.
+export function apiBaseUrl(): string | null {
+  const configured = process.env.NEXT_PUBLIC_API_URL?.trim()
+  if (configured) return configured.replace(/\/+$/, "")
+  return process.env.NODE_ENV === "production" ? null : "http://localhost:8000"
+}
+
+export class ApiError extends Error {
+  /** HTTP status; 0 when the request never got a response. */
+  readonly status: number
+  /** The contract's error code, or "network" / "unconfigured" for failures before a response. */
+  readonly code: ApiErrorCode | "network" | "unconfigured"
+  readonly retryAfter?: number
+
+  constructor(status: number, code: ApiError["code"], message: string, retryAfter?: number) {
+    super(message)
+    this.name = "ApiError"
+    this.status = status
+    this.code = code
+    this.retryAfter = retryAfter
+  }
+}
+
+async function request<T>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
+  const base = apiBaseUrl()
+  if (!base) throw new ApiError(0, "unconfigured", "NEXT_PUBLIC_API_URL is not set.")
+
+  let res: Response
+  try {
+    res = await fetch(`${base}${path}`, {
+      method: init.method ?? "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: init.body === undefined ? undefined : { "Content-Type": "application/json" },
+      body: init.body === undefined ? undefined : JSON.stringify(init.body),
+    })
+  } catch {
+    throw new ApiError(0, "network", "Couldn't reach the Zuula API.")
+  }
+
+  const text = await res.text()
+  let data: unknown = undefined
+  if (text) {
+    try {
+      data = JSON.parse(text)
+    } catch {
+      // Not JSON (a proxy error page, say); handled below.
+    }
+  }
+
+  if (!res.ok) {
+    const error = (data as Partial<Schemas["ErrorEnvelope"]> | undefined)?.error
+    throw new ApiError(
+      res.status,
+      error?.code ?? "server_error",
+      error?.message ?? `Request failed (${res.status}).`,
+      error?.retryAfter
+    )
+  }
+  return data as T
+}
+
+export function isTwoFactorChallenge(r: ApiSession | TwoFactorChallenge): r is TwoFactorChallenge {
+  return "challengeId" in r
+}
+
+export const authApi = {
+  signUp: (body: JsonBody<"signUp">) =>
+    request<SignUpAccepted>("/api/v1/auth/sign-up", { method: "POST", body }),
+
+  // The sign-up it belongs to travels in the API's HttpOnly `zuula_signup` cookie.
+  verifySignUp: (body: JsonBody<"verifySignUp">) =>
+    request<ApiSession>("/api/v1/auth/sign-up/verify", { method: "POST", body }),
+
+  signIn: (body: JsonBody<"signIn">) =>
+    request<ApiSession | TwoFactorChallenge>("/api/v1/auth/sign-in", { method: "POST", body }),
+
+  verifyTwoFactor: (body: JsonBody<"verifyTwoFactor">) =>
+    request<ApiSession>("/api/v1/auth/two-factor/verify", { method: "POST", body }),
+
+  resendTwoFactor: (body: JsonBody<"resendTwoFactor">) =>
+    request<void>("/api/v1/auth/two-factor/resend", { method: "POST", body }),
+
+  signOut: () => request<void>("/api/v1/auth/sign-out", { method: "POST" }),
+
+  forgotPassword: (body: JsonBody<"forgotPassword">) =>
+    request<void>("/api/v1/auth/forgot-password", { method: "POST", body }),
+
+  resetPassword: (body: JsonBody<"resetPassword">) =>
+    request<void>("/api/v1/auth/reset-password", { method: "POST", body }),
+
+  /** The signed-in user, or null when the session cookie is missing, expired or revoked. */
+  async me(): Promise<UserProfile | null> {
+    try {
+      return await request<UserProfile>("/api/v1/me")
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) return null
+      throw e
+    }
+  },
+}

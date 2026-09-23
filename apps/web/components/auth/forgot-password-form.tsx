@@ -9,12 +9,15 @@ import { Controller, useForm } from "react-hook-form"
 import type { z } from "zod"
 
 import { AuthHeading } from "@/components/auth/auth-heading"
+import { FormError } from "@/components/auth/form-error"
 import { ResendCode } from "@/components/auth/resend-code"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
+import { useApiErrorMessage } from "@/hooks/use-api-error-message"
 import { useValidationMessage } from "@/hooks/use-validation-message"
+import { authApi } from "@/lib/api"
 import { forgotSchema, identifierKind, maskIdentifier, setPendingAuth } from "@/lib/auth"
 
 type Values = z.infer<typeof forgotSchema>
@@ -23,14 +26,25 @@ type Values = z.infer<typeof forgotSchema>
 export function ForgotPasswordForm() {
   const t = useTranslations("Auth")
   const v = useValidationMessage()
+  const apiMessage = useApiErrorMessage()
   const [sentTo, setSentTo] = React.useState<string | null>(null)
+  const [error, setError] = React.useState<string | null>(null)
   const form = useForm<Values>({ resolver: zodResolver(forgotSchema), defaultValues: { identifier: "" } })
   const { control, handleSubmit, formState } = form
 
   async function onSubmit(values: Values) {
-    await new Promise((r) => setTimeout(r, 600))
-    setPendingAuth({ role: "public", identifier: values.identifier, next: "/sign-in" })
-    setSentTo(values.identifier)
+    setError(null)
+    const identifier = values.identifier.trim()
+    try {
+      // Always 202, account or not: the API never reveals who has one.
+      await authApi.forgotPassword({ identifier })
+    } catch (e) {
+      setError(apiMessage(e))
+      return
+    }
+    // The reset call needs the identifier again along with the code.
+    setPendingAuth({ identifier })
+    setSentTo(identifier)
   }
 
   const back = (
@@ -55,7 +69,7 @@ export function ForgotPasswordForm() {
         <Button asChild size="lg" className="h-10">
           <Link href="/reset-password">{t("forgot.enterCode")}</Link>
         </Button>
-        <ResendCode destination={masked} />
+        <ResendCode destination={masked} onResend={() => authApi.forgotPassword({ identifier: sentTo })} />
         {back}
       </div>
     )
@@ -64,6 +78,7 @@ export function ForgotPasswordForm() {
   return (
     <div className="flex flex-col gap-6">
       <AuthHeading icon={RiLockPasswordLine} title={t("forgot.title")} description={t("forgot.description")} />
+      <FormError message={error} />
       <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <Controller
           control={control}

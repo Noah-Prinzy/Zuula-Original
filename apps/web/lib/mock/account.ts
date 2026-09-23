@@ -218,3 +218,9 @@ export function relativeTime(iso: string, now = MOCK_NOW) {
   if (days < 7) return `${days} days ago`
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
 }
+
+// The Account page's two-factor setup dialog is still a mock (it isn't wired to
+// POST /api/v1/me/two-factor yet): any 6 digits work, except "000000" to show the error state.
+export function isDemoCodeValid(code: string) {
+  return /^\d{6}$/.test(code) && code !== "000000"
+}

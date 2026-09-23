@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils"
 // note. Language is detected automatically; the language picker and the long-article form
 // live on /verify, one tap away under "More options". Same layout at every width.
 export function QuickComposer({ className }: { className?: string }) {
-  const { form, control, type, text, submitting, uploadProgress, user, onToken, submit, onKeyDown } =
+  const { form, control, type, text, submitting, uploadProgress, signedIn, onToken, submit, onKeyDown } =
     useSubmissionForm({ detectLinks: true })
   const { setValue, clearErrors, formState } = form
   const media = type === "media"
@@ -155,7 +155,7 @@ export function QuickComposer({ className }: { className?: string }) {
           . Don&apos;t include personal information you don&apos;t want stored.
         </p>
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-          {user ? <span>You&apos;ll be notified when the check is complete.</span> : <CaptchaField onToken={onToken} />}
+          {signedIn ? <span>You&apos;ll be notified when the check is complete.</span> : <CaptchaField onToken={onToken} />}
           <Link href="/verify" className="inline-flex items-center gap-1 font-medium text-primary hover:underline dark:text-foreground">
             More options: language, full articles
             <RiArrowRightLine className="size-3.5" aria-hidden />

@@ -62,7 +62,7 @@ export function SubmissionComposer({
 
 // Every input type in tabs, with language and article fields (/verify).
 function FullComposer({ className }: { className?: string }) {
-  const { form, control, type, text, body, submitting, uploadProgress, user, onToken, submit, onKeyDown } =
+  const { form, control, type, text, body, submitting, uploadProgress, signedIn, onToken, submit, onKeyDown } =
     useSubmissionForm()
 
   return (
@@ -284,7 +284,7 @@ function FullComposer({ className }: { className?: string }) {
       </div>
 
       <div className="flex flex-col gap-1 border-t px-3 py-2 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-4">
-        {user ? (
+        {signedIn ? (
           <span>You&apos;ll be notified when the check is complete.</span>
         ) : (
           <>

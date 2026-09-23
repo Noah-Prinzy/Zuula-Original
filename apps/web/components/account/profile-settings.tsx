@@ -43,9 +43,9 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Switch } from "@/components/ui/switch"
-import { identifierKind, isDemoCodeValid, PASSWORD_MIN, passwordStrength } from "@/lib/auth"
+import { identifierKind, PASSWORD_MIN, passwordStrength } from "@/lib/auth"
 import { LOCALES, type LocaleCode } from "@/lib/locales"
-import { SAMPLE_RATINGS, SAMPLE_SESSIONS, SAMPLE_SUBMISSIONS } from "@/lib/mock/account"
+import { isDemoCodeValid, SAMPLE_RATINGS, SAMPLE_SESSIONS, SAMPLE_SUBMISSIONS } from "@/lib/mock/account"
 import { initials } from "@/lib/utils"
 
 function DetailsSection() {
@@ -438,7 +438,8 @@ function DataSection() {
                 disabled={confirmText !== "DELETE"}
                 className="bg-destructive text-white hover:bg-destructive/90"
                 onClick={() => {
-                  signOut()
+                  // Still a mock: nothing is deleted yet. For a real account this only signs out.
+                  void signOut().catch(() => {})
                   toast.success(t("deleted"), { description: t("deletedBody") })
                   router.push("/")
                 }}

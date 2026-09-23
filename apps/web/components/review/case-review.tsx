@@ -169,7 +169,7 @@ function DecisionForm({ report, caseId }: { report: FactCheckReport; caseId: str
                 aria-checked={verdict === v}
                 onClick={() => setVerdict(v)}
                 className={cn(
-                  "border p-1 outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "press border p-1 outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   verdict === v ? "border-foreground" : "border-transparent opacity-70 hover:opacity-100"
                 )}
               >

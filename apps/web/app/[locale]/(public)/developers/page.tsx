@@ -227,7 +227,7 @@ export default async function DevelopersPage() {
                 <li key={s}>
                   <a
                     href={`#${s}`}
-                    className="-ml-px block border-l-2 border-transparent px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+                    className="press-tint -ml-px block border-l-2 border-transparent px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
                   >
                     {t(`toc.${TOC_KEYS[s]}`)}
                   </a>

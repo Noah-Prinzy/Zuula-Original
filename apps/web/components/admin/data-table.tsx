@@ -50,7 +50,7 @@ export function SortableHeader<T extends RowData>({ column, label }: { column: C
   const dir = column.getIsSorted()
   const Icon = dir === "asc" ? RiArrowUpSLine : dir === "desc" ? RiArrowDownSLine : RiArrowUpDownLine
   return (
-    <button type="button" onClick={() => column.toggleSorting()} className="-ml-1 inline-flex items-center gap-1 px-1 hover:text-foreground">
+    <button type="button" onClick={() => column.toggleSorting()} className="press -ml-1 inline-flex items-center gap-1 px-1 [--press-scale:0.94] hover:text-foreground">
       {label}
       <Icon className="size-3.5" aria-hidden />
     </button>

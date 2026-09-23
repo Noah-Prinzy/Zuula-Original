@@ -14,7 +14,7 @@ export function Logo({
     <Link
       href="/"
       aria-label="Zuula home"
-      className={cn("flex items-center gap-2 font-heading text-base font-bold tracking-wide", className)}
+      className={cn("press flex items-center gap-2 font-heading [--press-tint:transparent] text-base font-bold tracking-wide", className)}
     >
       <ZuulaMark className="size-7" />
       {showWordmark && <span>ZUULA</span>}

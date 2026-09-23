@@ -47,7 +47,7 @@ const features = tableFeatures({
 function SortHeader({ label, dir, onClick }: { label: string; dir: false | "asc" | "desc"; onClick: () => void }) {
   const Icon = dir === "asc" ? RiArrowUpSLine : dir === "desc" ? RiArrowDownSLine : RiArrowUpDownLine
   return (
-    <button type="button" onClick={onClick} className="-ml-1 inline-flex items-center gap-1 px-1 hover:text-foreground">
+    <button type="button" onClick={onClick} className="press -ml-1 inline-flex items-center gap-1 px-1 [--press-scale:0.94] hover:text-foreground">
       {label}
       <Icon className="size-3.5" aria-hidden />
     </button>

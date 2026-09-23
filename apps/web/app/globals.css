@@ -550,3 +550,125 @@ html:has(.snap-page) {
     }
   }
 }
+
+/* Press feedback ---------------------------------------------------------------------------
+   One interaction language for everything clickable. Same rules as "Motion + sections":
+   anything that moves lives under prefers-reduced-motion: no-preference, so reduced-motion
+   users get no transforms or transitions at all, only the instant press tint. None of this
+   hides content, so it doesn't need html[data-motion].
+
+   .press          compact controls (buttons, toggles, tabs, checkboxes): shrink on press,
+                   spring back on release. --press-scale tunes it per size.
+   .press-lift     adds a 1px hover lift and a soft drop shadow (--lift-shadow) on devices
+                   that really hover. For solid, raised controls, not ghosts or links.
+   .press-tint     wide rows and menu items, where scaling would shift their edges: a tint
+                   while held, no movement.
+   .press-surface  cards and list rows made clickable by a stretched link: tinted while the
+                   link is held, and cards also give a little (--surface-scale; list rows set
+                   it to 1). Pressing a nested button doesn't count.
+
+   The press comes in fast (--press-in) and releases slower on a slight overshoot
+   (--press-out), so a quick click still reads as a press without delaying anything: the
+   click itself fires on the browser's schedule, never ours. Transforms use `transform`,
+   which Tailwind's translate/scale/rotate utilities leave alone, so centring offsets such
+   as -translate-y-1/2 keep working. */
+
+:root {
+  --press-scale: 0.97;
+  --press-in: 80ms;
+  --press-out: 260ms;
+  --ease-press: cubic-bezier(0.2, 0, 0, 1);
+  --ease-release: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --press-tint: color-mix(in oklch, currentColor 10%, transparent);
+  --surface-scale: 0.99;
+  --lift: -1px;
+  --lift-shadow: 0 3px 6px oklch(0 0 0 / 0.14);
+}
+.dark {
+  --lift-shadow: 0 3px 8px oklch(0 0 0 / 0.55);
+}
+
+/* Whole cards and rows take a lighter tint than a button would. */
+.press-surface {
+  --press-tint: color-mix(in oklch, currentColor 5%, transparent);
+}
+
+/* Full-width controls are wide enough that the default scale would visibly shrink them. */
+.press.w-full {
+  --press-scale: 0.985;
+}
+
+:is(.press, .press-tint):active:not(:disabled, [aria-disabled="true"], [data-disabled]),
+.press-surface:is(a[href]:active, :has(a[href]:active)) {
+  background-image: linear-gradient(var(--press-tint), var(--press-tint));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .press {
+    transition:
+      transform var(--press-out) var(--ease-release),
+      filter var(--press-out) var(--ease-out-soft),
+      color 150ms ease-out,
+      background-color 150ms ease-out,
+      border-color 150ms ease-out,
+      text-decoration-color 150ms ease-out,
+      box-shadow 150ms ease-out,
+      opacity 150ms ease-out;
+  }
+  @media (hover: hover) {
+    .press-lift:hover:not(:disabled, [aria-disabled="true"], [data-disabled]) {
+      transform: translate3d(0, var(--lift), 0);
+      filter: drop-shadow(var(--lift-shadow));
+    }
+  }
+  /* Menu triggers open on pointerdown, so the menu is already over the release: shadcn keeps
+     them still, and so do we. They still get the tint and their open state. */
+  .press:active:not(:disabled, [aria-disabled="true"], [data-disabled], [aria-haspopup="menu"]) {
+    transform: scale(var(--press-scale));
+    transition-duration: var(--press-in);
+    transition-timing-function: var(--ease-press);
+  }
+  .press-lift:active:not(:disabled, [aria-disabled="true"], [data-disabled]) {
+    filter: none;
+  }
+
+  .press-surface {
+    transition:
+      transform var(--press-out) var(--ease-release),
+      background-color 150ms ease-out,
+      box-shadow 300ms var(--ease-out-soft),
+      border-color 200ms ease-out;
+  }
+  .press-surface:is(a[href]:active, :has(a[href]:active)) {
+    transform: scale(var(--surface-scale));
+    transition-duration: var(--press-in);
+    transition-timing-function: var(--ease-press);
+  }
+}
+
+/* Text links everywhere else: a brief dim while held. Opacity, not movement, so it applies
+   under reduced motion too, and in the base layer so any utility can override it. */
+@layer base {
+  a[href]:not(.press, .press-tint, .press-surface, .press-surface a):active {
+    opacity: 0.7;
+  }
+}
+
+/* Reduced motion, sitewide ----------------------------------------------------------------
+   Everything above already sits behind no-preference, but third-party and shadcn styles
+   (tw-animate-css open/close animations on dialogs, menus and sheets, colour fades,
+   accordion height) don't. For reduced-motion users those finish instantly instead. The
+   durations are near-zero rather than none so animationend/transitionend still fire for
+   the libraries (Radix Presence, vaul) that wait on them. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}

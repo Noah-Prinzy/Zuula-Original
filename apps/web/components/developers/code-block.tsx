@@ -21,7 +21,7 @@ function CopyButton({ code }: { code: string }) {
     <button
       type="button"
       onClick={() => navigator.clipboard?.writeText(code).then(() => setCopied(true))}
-      className="inline-flex shrink-0 items-center gap-1 px-3 py-2 text-xs text-zinc-400 transition-colors outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-ring"
+      className="press inline-flex shrink-0 items-center gap-1 px-3 py-2 text-xs text-zinc-400 outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-ring"
     >
       {copied ? (
         <RiCheckLine className="size-3.5" aria-hidden />

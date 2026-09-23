@@ -44,7 +44,7 @@ export function FactCheckCard({
   return (
     <article
       className={cn(
-        "group relative flex h-full flex-col gap-3 border bg-card p-4 transition-colors focus-within:ring-2 focus-within:ring-ring hover:border-foreground/30",
+        "group press-surface relative flex h-full flex-col gap-3 border bg-card p-4 transition-colors focus-within:ring-2 focus-within:ring-ring hover:border-foreground/30",
         className
       )}
     >

@@ -248,7 +248,7 @@ export function LibraryBrowser({
               key={c.label}
               type="button"
               onClick={c.clear}
-              className="inline-flex items-center gap-1 border bg-muted px-2 py-0.5 text-xs hover:border-foreground/30"
+              className="press inline-flex items-center gap-1 border bg-muted px-2 py-0.5 text-xs [--press-scale:0.94] hover:border-foreground/30"
               aria-label={t("removeFilter", { label: c.label })}
             >
               {c.label}

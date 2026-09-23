@@ -25,7 +25,7 @@ export function ArticleSections({
             <li key={s.id}>
               <a
                 href={`#${s.id}`}
-                className="block border-l-2 border-transparent px-3 py-1.5 text-muted-foreground transition-colors outline-none hover:border-primary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                className="press-tint block border-l-2 border-transparent px-3 py-1.5 text-muted-foreground transition-colors outline-none hover:border-primary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {s.title}
               </a>

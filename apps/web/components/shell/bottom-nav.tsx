@@ -105,7 +105,7 @@ export function BottomNav() {
                   href={tab.href}
                   aria-current={tab.active ? "page" : undefined}
                   className={cn(
-                    "relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[0.6875rem] text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                    "press-tint relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[0.6875rem] text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
                     // Same 2px primary marker as the header links and section tabs.
                     "before:absolute before:inset-x-3 before:top-0 before:h-0.5 before:bg-transparent before:transition-colors",
                     tab.active && "font-semibold text-foreground before:bg-primary"

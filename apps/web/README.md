@@ -69,6 +69,8 @@ cp .env.example .env.local   # NEXT_PUBLIC_API_URL=http://localhost:8000
 npm run dev                  # open http://localhost:3000 (not 127.0.0.1: the session cookie is SameSite=Lax)
 ```
 
+Deployed, the API usually isn't on a sibling subdomain (e.g. Vercel + Render), so the site proxies it instead: set `NEXT_PUBLIC_API_URL=/` and `ZUULA_API_ORIGIN=<the API's URL>` in the web app's build environment, and the site's own origin in the API's `ZUULA_CORS_ORIGINS`. See `.env.example` and [docs/deploy/render-agent-prompt.md](../../docs/deploy/render-agent-prompt.md).
+
 - Seeded accounts (`python -m app.db.seed`) all use the password `zuula-sample-password`: `amina@example.com` (Public User), `sarah@example.com` (Journalist), `david@example.com` (Expert), `mary@example.com` (Admin). Experts and admins get a two-factor code.
 - Codes (sign-up, two-factor, reset) go through the API's stub email/SMS adapters, which only log them at INFO level. A plain `uvicorn app.main:app` doesn't show that level, so run the API with logging on to see them:
   `python -c "import logging, uvicorn; logging.basicConfig(level=logging.INFO); uvicorn.run('app.main:app', reload=False)"`

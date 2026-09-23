@@ -3,70 +3,33 @@ the request and the response against apps/api/openapi.yaml and raises on any mis
 test here fails, either the code doesn't match the contract or the contract doesn't match the
 code — both are bugs. This is the check Step 1 promised: "every endpoint returns stub data
 that validates against openapi.yaml."
+
+Fixtures (a real database per test, real sign-in sessions per role) are in conftest.py.
 """
 
-from pathlib import Path
+import re
+from urllib.parse import parse_qs, urlparse
 
 import pytest
-from openapi_core import OpenAPI
-from openapi_core.configurations import Config
-from openapi_core.contrib.fastapi.middlewares import FastAPIOpenAPIMiddleware
-from openapi_core.deserializing.media_types.util import plain_loads
 from starlette.testclient import TestClient
 
+from app.adapters import email
 from app.main import app as _app
-
-SPEC_PATH = Path(__file__).parent.parent.parent / "openapi.yaml"
-
-
-@pytest.fixture(scope="session")
-def validated_app():
-    # Wrap _app instead of calling _app.add_middleware(...): that would mutate the shared
-    # module-level app singleton in place, which would also affect
-    # test_health_endpoints_not_in_contract_but_still_ok's supposedly-unvalidated plain client
-    # below (import order/fixture caching would make that test order-dependent otherwise).
-    #
-    # openapi-core ships no default deserializer for text/event-stream (the two SSE
-    # endpoints' media type) — it falls back to binary_loads, handing schema validation raw
-    # bytes against a `type: string` schema, which always fails. plain_loads (its own
-    # text/plain deserializer) is exactly what SSE frames need: decode bytes to str.
-    config = Config(extra_media_type_deserializers={"text/event-stream": plain_loads})
-    spec = OpenAPI.from_file_path(str(SPEC_PATH), config=config)
-    return FastAPIOpenAPIMiddleware(_app, openapi=spec)
+from tests.contract.conftest import (
+    ADMIN,
+    EXPERT,
+    JOURNALIST,
+    PARTNER_KEY,
+    PUBLIC,
+    SAMPLE_PASSWORD,
+)
 
 
-@pytest.fixture
-def core_client(validated_app):
-    # Matches the `https://zuula.ug` server entry openapi.yaml declares for /api/v1/*.
-    # openapi.yaml's sessionAuth scheme is an apiKey cookie — openapi-core enforces the
-    # cookie's mere *presence* on any operation that doesn't override security, independently
-    # of app.core.security's own (unrelated, P2-stub) X-Zuula-Role header check. Without this
-    # dummy cookie, openapi-core would short-circuit every authenticated request itself before
-    # it ever reaches our app, so the app's own 401/403 logic (what these tests exercise) would
-    # never run. The app doesn't read this cookie at all — it only decides auth via the role
-    # header, so its absence still correctly yields the app's own 401.
-    client = TestClient(validated_app, base_url="https://zuula.ug", raise_server_exceptions=True)
-    client.cookies.set("zuula_session", "stub")
-    return client
+def latest_code(outbox) -> str:
+    """The 6-digit code in the most recent stub email/SMS (app/adapters/*.OUTBOX)."""
+    message = outbox[-1]
+    return re.search(r"\b(\d{6})\b", message.get("body") or message.get("message")).group(1)
 
-
-@pytest.fixture
-def partner_client(validated_app):
-    # Matches the `https://api.zuula.ug` server override openapi.yaml declares for /v1/*.
-    # Same reasoning as core_client's cookie: a default (deliberately invalid) bearer token
-    # satisfies openapi-core's presence check for the partnerApiKey scheme so requests reach
-    # app.core.security.require_partner_key, which still correctly rejects it with 401 — same
-    # outcome as no key at all, which is what TestPartnerApi.test_no_key_rejected checks.
-    client = TestClient(validated_app, base_url="https://api.zuula.ug", raise_server_exceptions=True)
-    client.headers.update({"Authorization": "Bearer stub_unauthenticated"})
-    return client
-
-
-ADMIN = {"X-Zuula-Role": "admin"}
-EXPERT = {"X-Zuula-Role": "expert"}
-JOURNALIST = {"X-Zuula-Role": "journalist"}
-PUBLIC = {"X-Zuula-Role": "public"}
-PARTNER_KEY = {"Authorization": "Bearer zl_live_testkey1234567890abcdef"}
 
 REPORT_IDS = [
     "fc-2026-0142",
@@ -121,36 +84,58 @@ class TestAuth:
 
     def test_sign_in_public(self, core_client):
         r = core_client.post(
-            "/api/v1/auth/sign-in", json={"identifier": "user@example.com", "password": "x"}
+            "/api/v1/auth/sign-in",
+            json={"identifier": "amina@example.com", "password": SAMPLE_PASSWORD},
         )
         assert r.status_code == 200
+        assert r.json()["user"]["role"] == "public"
 
     def test_sign_in_needs_two_factor(self, core_client):
         r = core_client.post(
-            "/api/v1/auth/sign-in", json={"identifier": "expert@zuula.ug", "password": "x"}
+            "/api/v1/auth/sign-in",
+            json={"identifier": "david@example.com", "password": SAMPLE_PASSWORD},
         )
         assert r.status_code == 200
+        assert r.json()["challengeId"]
 
     def test_sign_in_unauthorized(self, core_client):
         r = core_client.post("/api/v1/auth/sign-in", json={"identifier": "", "password": ""})
         assert r.status_code == 401
 
     def test_two_factor_verify(self, core_client):
+        challenge = core_client.post(
+            "/api/v1/auth/sign-in",
+            json={"identifier": "mary@example.com", "password": SAMPLE_PASSWORD},
+        ).json()
         r = core_client.post(
-            "/api/v1/auth/two-factor/verify", json={"challengeId": "tfc_admin", "code": "123456"}
+            "/api/v1/auth/two-factor/verify",
+            json={"challengeId": challenge["challengeId"], "code": latest_code(email.OUTBOX)},
         )
         assert r.status_code == 200
+        assert r.json()["user"]["role"] == "admin"
 
     def test_forgot_password(self, core_client):
         r = core_client.post("/api/v1/auth/forgot-password", json={"identifier": "a@b.com"})
         assert r.status_code == 202
 
     def test_reset_password(self, core_client):
+        core_client.post("/api/v1/auth/forgot-password", json={"identifier": "amina@example.com"})
+        r = core_client.post(
+            "/api/v1/auth/reset-password",
+            json={
+                "identifier": "amina@example.com",
+                "code": latest_code(email.OUTBOX),
+                "password": "x" * 12,
+            },
+        )
+        assert r.status_code == 200
+
+    def test_reset_password_wrong_code(self, core_client):
         r = core_client.post(
             "/api/v1/auth/reset-password",
             json={"identifier": "a@b.com", "code": "123456", "password": "x" * 12},
         )
-        assert r.status_code == 200
+        assert r.status_code == 400
 
     def test_two_factor_resend(self, core_client):
         r = core_client.post("/api/v1/auth/two-factor/resend", json={"challengeId": "tfc_admin"})
@@ -169,13 +154,18 @@ class TestAuth:
         assert r.status_code == 400
 
     def test_oauth_callback_redirects(self, core_client):
+        start = core_client.get(
+            "/api/v1/auth/oauth/facebook/start", params={"next": "/account"}, follow_redirects=False
+        )
+        state = parse_qs(urlparse(start.headers["location"]).query)["state"][0]
         r = core_client.get(
             "/api/v1/auth/oauth/facebook/callback",
-            params={"code": "stub-code", "state": "/account"},
+            params={"code": "stub-code", "state": state},
             follow_redirects=False,
         )
         assert r.status_code == 302
-        assert r.headers["location"] == "/account"
+        assert r.headers["location"].endswith("/account")
+        assert r.cookies.get("zuula_session")
 
     def test_sign_out(self, core_client):
         assert core_client.post("/api/v1/auth/sign-out").status_code == 204
@@ -196,7 +186,7 @@ class TestAccount:
     def test_change_password(self, core_client):
         r = core_client.post(
             "/api/v1/me/password",
-            json={"currentPassword": "old", "newPassword": "x" * 12},
+            json={"currentPassword": SAMPLE_PASSWORD, "newPassword": "x" * 12},
             headers=PUBLIC,
         )
         assert r.status_code == 200
@@ -250,9 +240,9 @@ class TestSubmissions:
         assert r.json()["trackingId"]
 
     def test_create_anonymous_without_captcha_rejected(self, core_client):
-        # FR-AUTH-07: no captchaToken and no signed-in role (core_client sends the sessionAuth
-        # cookie so openapi-core's own security check passes, but no X-Zuula-Role header, so
-        # app.core.security.get_current_user sees no one signed in).
+        # FR-AUTH-07: no captchaToken and no one signed in (core_client's placeholder
+        # sessionAuth cookie satisfies openapi-core's presence check but isn't a real session,
+        # so app.core.security.get_current_user sees no one).
         r = core_client.post("/api/v1/submissions", json={"type": "text", "content": "x" * 30})
         assert r.status_code == 400
 

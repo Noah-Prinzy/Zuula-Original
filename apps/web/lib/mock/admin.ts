@@ -208,6 +208,7 @@ export type AuditAction =
   | "verdict.confirm"
   | "user.role_change"
   | "user.suspend"
+  | "user.reinstate"
   | "source.add"
   | "source.deactivate"
   | "broadcast.send"
@@ -230,6 +231,7 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   "verdict.confirm": "Verdict confirmed",
   "user.role_change": "Role changed",
   "user.suspend": "User suspended",
+  "user.reinstate": "User reinstated",
   "source.add": "Source added",
   "source.deactivate": "Source deactivated",
   "broadcast.send": "Broadcast sent",

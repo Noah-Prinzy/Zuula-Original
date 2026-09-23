@@ -1,10 +1,8 @@
 """In-app notifications (FR-NOTIFY): stored per user, and pushed live to that user's open
 GET /notifications/stream connections over Redis pub/sub.
 
-A notification is published only after the transaction that created it commits (an
-`after_commit` hook on the session), so no one is ever told about something that was then
-rolled back — and a notification written inside a rolled-back test transaction is never
-published at all.
+A notification is published only after the session that created it commits (an
+`after_commit` hook), so no one is told about something that was then rolled back.
 """
 
 import json

@@ -34,3 +34,24 @@ def default_settings() -> PlatformSettings:
 async def get_platform_settings(db: AsyncSession) -> PlatformSettings:
     row = await db.get(PlatformSettingsRow, 1)
     return PlatformSettings.model_validate(row.settings) if row else default_settings()
+
+
+def weights_of(settings: PlatformSettings) -> dict[str, int]:
+    """The live §9.1 weights in app.services.community's shape."""
+    w = settings.weights
+    return {"public": w.public, "journalist": w.journalist, "expert": w.expert}
+
+
+def thresholds_of(settings: PlatformSettings) -> dict[str, dict[str, int]]:
+    """The live §9.2 thresholds in app.core.rules.CCS_STATUS_THRESHOLDS' shape."""
+    t = settings.thresholds
+    return {
+        "verified": {"min_score": t.verified_min},
+        "questioned": {
+            "min_score": t.questioned_min,
+            "max_score": t.questioned_max,
+            "min_ratings": t.questioned_ratings,
+        },
+        "escalated": {"max_score": t.escalated_max, "min_ratings": t.escalated_ratings},
+        "suspended": {"max_score": t.suspended_max, "min_ratings": t.suspended_ratings},
+    }

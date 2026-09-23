@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     # than hardcoding its own copy of the same number.
     partner_rate_limit_per_hour: int = PARTNER_RATE_LIMIT_PER_HOUR
 
+    # How long one GET /notifications/stream connection stays open before the server closes
+    # it; EventSource reconnects on its own and resumes from Last-Event-ID. Bounded so proxies
+    # and dead clients can't pin connections forever. Tests set 0 (replay, then close).
+    notification_stream_seconds: int = 300
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

@@ -1,11 +1,16 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.readiness import assert_production_ready
 from app.api.v1 import router as api_v1_router
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
+from app.db.session import get_db
 from app.partner.v1 import router as partner_v1_router
+from app.realtime import redis_client
 from app.webhooks import router as webhooks_router
 
 settings = get_settings()
@@ -16,8 +21,8 @@ app = FastAPI(
     title="Zuula API",
     version="0.1.0",
     description=(
-        "P2 skeleton — every endpoint returns stub data that validates against "
-        "apps/api/openapi.yaml. See that file for the full contract."
+        "The core web-app API (/api/v1) and the partner API (/v1). apps/api/openapi.yaml is "
+        "the contract; this generated schema isn't."
     ),
 )
 
@@ -43,7 +48,22 @@ def healthz():
 
 
 @app.get("/readyz", tags=["health"])
-def readyz():
-    """Readiness — dependencies are reachable. Postgres/Redis checks land in P3 alongside
-    the real database and worker; for now this just confirms the app itself is serving."""
-    return {"status": "ok", "checks": {"app": "ok"}}
+async def readyz(db: AsyncSession = Depends(get_db)):  # noqa: B008
+    """Readiness — PostgreSQL and Redis both answer. 503 (with which one failed) otherwise,
+    so a load balancer stops routing here until they're back."""
+    checks = {"app": "ok"}
+    try:
+        await db.execute(text("SELECT 1"))
+        checks["database"] = "ok"
+    except Exception:  # noqa: BLE001 — any failure means "not ready"
+        checks["database"] = "unavailable"
+    try:
+        await redis_client.get_async_redis().ping()
+        checks["redis"] = "ok"
+    except Exception:  # noqa: BLE001
+        checks["redis"] = "unavailable"
+    ready = all(v == "ok" for v in checks.values())
+    return JSONResponse(
+        {"status": "ok" if ready else "unavailable", "checks": checks},
+        status_code=200 if ready else 503,
+    )

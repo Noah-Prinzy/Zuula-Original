@@ -1,5 +1,5 @@
-"""The seeded database reproduces the P2 sample data: same ids, and community scores that
-come out identical to the sample data's scores even though they're now derived from individual votes."""
+"""The seeded database reproduces the sample data: same ids, and community scores identical
+to the sample data's own, even though they're now derived from individual votes."""
 
 from sqlalchemy import func, select
 

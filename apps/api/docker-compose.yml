@@ -31,6 +31,16 @@ services:
       migrate:
         condition: service_completed_successfully
 
+  # Celery beat: schedules the periodic jobs (the brigading check, app/worker/__init__.py).
+  beat:
+    build: .
+    command: celery -A app.worker.celery_app beat --loglevel=INFO
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_started
+
   # Runs `alembic upgrade head` once, then exits; api and worker wait for it. Load the sample
   # data afterwards with: docker compose run --rm api python -m app.db.seed
   migrate:

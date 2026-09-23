@@ -35,7 +35,9 @@ async def test_audit_log_accepts_inserts_after_the_seeded_ids(db):
     )
     db.add(entry)
     await db.flush()
-    assert entry.id == 13  # seeded a3…a12; the identity sequence continues after them
+    # Seeded a3…a12; the identity sequence continues after them. (Not "== 13": sequences
+    # aren't transactional, so other tests' rolled-back inserts still advance it.)
+    assert entry.id > 12
 
 
 async def test_a_report_has_at_most_one_open_review_case(db):

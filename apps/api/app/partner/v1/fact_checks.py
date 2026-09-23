@@ -2,7 +2,7 @@ from fastapi import Depends, Query, Response
 
 from app.core.errors import ApiError
 from app.core.router import APIRouter
-from app.core.security import PartnerPrincipal, rate_limit_headers, require_partner_key
+from app.core.security import PartnerPrincipal, require_partner_key
 from app.schemas.common import Verdict
 from app.schemas.fact_check import dump_report
 from app.schemas.partner import PartnerSearchResponse
@@ -18,7 +18,7 @@ def partner_get_fact_check(
     response: Response,
     principal: PartnerPrincipal = Depends(require_partner_key),  # noqa: B008
 ):
-    response.headers.update(rate_limit_headers(principal.key))
+    response.headers.update(principal.rate_limit_headers)
     report = get_report(id)
     if report is None:
         raise ApiError("not_found", f"No fact-check with id '{id}'.")
@@ -38,7 +38,7 @@ def partner_search_fact_checks(
     page: int = Query(1, ge=1),
     per_page: int = Query(10, ge=1, le=50, alias="perPage"),
 ):
-    response.headers.update(rate_limit_headers(principal.key))
+    response.headers.update(principal.rate_limit_headers)
 
     results = [
         r

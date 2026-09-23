@@ -23,6 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core import rules
 from app.db import models as m
 from app.schemas.fact_check import FactCheckReport as FactCheckReportSchema
+from app.services.auth import hash_password
 from app.services.community import recompute_report_community
 from app.stubs import account as stub_account
 from app.stubs import admin as stub_admin
@@ -38,9 +39,14 @@ POOL_CREATED = datetime(2026, 1, 1, tzinfo=UTC)
 RATER_ROLES = ("public", "journalist", "expert")
 
 # Whose account the "my …" sample data belongs to: Amina, the public sample user
-# (app/core/security.py's P2 STUB_USERS), and Sarah, the sample journalist, for API keys.
+# (P2's stub "public" session user), and Sarah, the sample journalist, for API keys.
 SAMPLE_OWNER = "u6"
 SAMPLE_KEYS_OWNER = "u4"
+
+# Sign-in password for the nine named sample accounts (mary@example.com, …), so local dev and
+# the contract tests can sign in for real. Sample data only — it never exists in production.
+# The sample raters have no password: they can't sign in.
+SAMPLE_PASSWORD = "zuula-sample-password"
 
 _SUBMISSION_TYPE = {
     "text": "text",
@@ -92,6 +98,7 @@ async def seed(session: AsyncSession) -> None:
 
 async def _seed_users(session: AsyncSession) -> dict[str, str]:
     rows = []
+    password_hash = hash_password(SAMPLE_PASSWORD)  # one bcrypt run, shared: sample data only
     for u in stub_admin.SAMPLE_USERS:
         joined = datetime.combine(u.joined, datetime.min.time(), UTC)
         rows.append(
@@ -99,6 +106,7 @@ async def _seed_users(session: AsyncSession) -> dict[str, str]:
                 "id": u.id,
                 "name": u.name,
                 "email": u.email,
+                "password_hash": password_hash,
                 "role": u.role,
                 "status": u.status,
                 "two_factor_enabled": u.role in rules.TWO_FACTOR_ROLES,

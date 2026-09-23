@@ -54,6 +54,11 @@ its pipeline task to completion and its SSE endpoint replaying the result. A fai
 there means the code and the contract have drifted — either fix the route or fix
 `openapi.yaml`, but don't skip the test.
 
+The contract tests run against the real test database (see "Database" below). Each test
+signs in for real: `tests/contract/conftest.py` gives every test a session per role and a
+partner key inside its own rolled-back transaction. `tests/contract/test_auth_flows.py`
+covers the security behaviour itself (sessions, 2FA, lockout, roles, keys, CSRF).
+
 `tests/pipeline/` tests `app/worker/pipeline.py`, `app/providers/analysis.py` and
 `app/realtime/` directly (step sequencing per submission type, the failure path, pub/sub).
 `tests/adapters/` tests each `app/adapters/` module directly (OAuth URL/profile shape,
@@ -130,6 +135,7 @@ tests/
   adapters/                 Direct tests of each app/adapters/ module
   core/                     Direct tests of app/core/rules.py and its consumers
   db/                       Migrations, seed and database-enforced rules, against a real PostgreSQL
+  dbutil.py                  Test-database helpers (recreate, migrate, seed)
   conftest.py                Shared fake-Redis + eager-Celery fixture all suites use
 migrations/                  Alembic (async env); versions/0001 is the initial P3 schema
 ```
@@ -147,11 +153,36 @@ payloads). Those bypass `response_model` entirely and are serialized through sma
 `app/schemas/review.py`) that restore the key as an explicit `null` after `exclude_none`
 would otherwise have dropped it.
 
+## Auth (P3)
+
+Real since P3 PR 2 ([ADR 0002 §5](../../docs/adr/0002-p3-backend-and-database.md)):
+
+- **Core API**: an opaque session token in the `zuula_session` cookie (HttpOnly, Secure,
+  SameSite=Lax), or the same token as `Authorization: Bearer …` for non-browser clients.
+  Stored only as a SHA-256 in `sessions`, so signing out or "sign out other devices" takes
+  effect on the next request. Roles are read from the database on every request.
+- **Passwords**: bcrypt (cost 12) over a SHA-256 pre-hash. **2FA**: 6-digit codes by SMS (or
+  email when there's no phone), always on for Expert Reviewers and Admins (FR-AUTH-05).
+- **Lockout**: 5 failures per account in 15 minutes → `429` on sign-in; wrong sign-up and
+  reset codes count too. The per-IP limit is 50, since many users share an IP.
+- **Partner API**: `zl_live_…` keys, stored as SHA-256, scoped (`POST` needs `submit`, `GET`
+  needs `read`), and only usable while the owner is a journalist or admin. Redis sliding
+  window at the admin-configured limit (default 100/hour).
+- **Audit log**: `app/services/audit.py`'s `record()`, written in the same transaction as the
+  action. IPs are stored truncated (`196.43.x.x`).
+
+**Local dev sign-in**: after `python -m app.db.seed`, the sample accounts
+(`mary@example.com` admin, `david@example.com` expert, `sarah@example.com` journalist,
+`amina@example.com` public, …) all use the password `zuula-sample-password`. SMS and email
+are still stubs (P3 PR 5), so codes are logged by the `zuula.adapters.sms` /
+`zuula.adapters.email` loggers.
+
 ## What's real vs. stubbed (P2)
 
-**P3 in progress:** the database schema, migrations and seed exist (see "Database" above), but
-the routers still serve the in-memory stubs until the P3 PRs that swap them over (ADR 0002
-§9). What follows describes the API surface as it still behaves today.
+**P3 in progress:** the database, migrations and seed exist, and auth is real (sections
+above). Content endpoints (fact-checks, ratings, review, notifications, most of admin) still
+serve the in-memory stubs until the P3 PRs that swap them over (ADR 0002 §9). The auth bullet
+below is out of date as of P3 PR 2.
 
 This is all documented more fully in the ADR, but briefly:
 - **Auth** is a stub: the core API reads an `X-Zuula-Role` header (mirrors the frontend's own

@@ -15,6 +15,8 @@ dependencies = [
   "asyncpg>=0.30",
   "alembic>=1.16",  # alembic.ini uses path_separator (1.16+)
   "pgvector>=0.3.6",
+  # P3 auth (ADR 0002 §5): the bcrypt package directly, not the unmaintained passlib.
+  "bcrypt>=4.2",
 ]
 
 [project.optional-dependencies]

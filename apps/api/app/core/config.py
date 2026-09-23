@@ -12,7 +12,14 @@ class Settings(BaseSettings):
     debug: bool = True
     secret_key: str = "change-me-dev-only"
     session_cookie_name: str = "zuula_session"
+    # ADR 0002 §5 / decision 9: the API is api.zuula.ug and the web app zuula.ug, so production
+    # sets ZUULA_SESSION_COOKIE_DOMAIN=zuula.ug. Empty = host-only (local dev).
+    session_cookie_domain: str = ""
+    session_cookie_secure: bool = True
     cors_origins: str = "http://localhost:3000"
+    # Where the web app lives (zuula.ug in production): OAuth callbacks redirect the browser
+    # back here, since the API is on its own host (api.zuula.ug).
+    web_app_url: str = "http://localhost:3000"
 
     # Independently overridable via ZUULA_PARTNER_RATE_LIMIT_PER_HOUR — see
     # app/core/rules.py's PARTNER_RATE_LIMIT_PER_HOUR for why this defaults to it rather

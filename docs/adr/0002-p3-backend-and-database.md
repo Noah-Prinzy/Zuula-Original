@@ -1,8 +1,8 @@
 # ADR 0002: Backend and database (P3)
 
 **Status:** Approved by Noah (23 Sep 2026; decisions in §10). Being built in the PR sequence
-of §9. PR 1 (database foundation, #5) and PR 2 (auth and roles, #8) are merged, and PR 3
-(content) is implemented; the rest describes what's still to come.
+of §9. PR 1 (database foundation, #5), PR 2 (auth and roles, #8) and PR 3 (content, #18) are
+merged, and PR 4 (admin) is implemented; the rest describes what's still to come.
 Once all six PRs have landed, this file becomes the record of what was actually decided
 (brief §3 step 5).
 
@@ -295,6 +295,37 @@ Answered by Noah on 23 Sep 2026:
 | 9 | Hosting | API on `api.zuula.ug`. Cookie `Domain=zuula.ug`, `SameSite=Lax`. |
 
 ## 11. Found while building
+
+**PR 4 (admin):**
+
+- **Contract additions** (additive):
+  - `excludeRatings` (boolean) on `updateAdminUser`'s body: decision 6a's way to drop or
+    restore a user's past ratings.
+  - `ratings.exclude` in `AuditAction`: dropping/restoring ratings is its own audited action.
+    **The frontend's `AUDIT_ACTION_LABELS` needs a label for it**, like `user.reinstate` did.
+  - `400`/`404` on `resolveContentReport`; `409` on `addSource`/`updateSource` (duplicate
+    domain); `404` on `removeSource`; `400` on `sendBroadcast` and `updatePlatformSettings`.
+  - `TrustedSource.lastCrawled`: description only. It's required, so until a source's first
+    crawl it carries the time the source was added.
+- **Overview KPIs are computed** (MAU = signed-in users active in 30 days; latency = p50 text
+  verdict time over 7 days; ratings per verdict; expert turnaround; partners = accounts with
+  an active key). F1 and deepfake accuracy come from `model_evaluations`, which P4 writes.
+  System health reports the database, the analysis queue, the model and the crawler; there's
+  no uptime figure without external monitoring.
+- **Moderation "remove" hides the reported comments** (flags now record which comment, migration
+  0003). A report about the verdict itself can't be "removed" (400): that's what expert
+  review is for.
+- **Sources are deactivated, never deleted**: past reports cite them.
+- **Broadcasts** go in-app to every active account at once; SMS and email follow from the
+  worker to people who turned those channels on. Two gaps: **push** has no adapter yet, and
+  **audience** is free text, so a regional broadcast still reaches everyone. Targeting needs
+  a district → region mapping.
+- **Settings changes** are validated (the score bands must stay in order), audited as a
+  readable diff ("Escalated: max score 39 → 55"), and re-score every report in the worker,
+  opening or upgrading cases for reports that newly cross a threshold (decision 6b).
+- **Brigading detector**: Celery beat runs it every 5 minutes (new `beat` service in Compose).
+  25+ accounts under 48 hours old voting the same way on one report within 15 minutes becomes
+  a signal for an admin; nothing is excluded automatically.
 
 **PR 3 (content):**
 

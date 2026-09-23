@@ -68,7 +68,7 @@ export function RotatingCard({
         if (!e.currentTarget.contains(e.relatedTarget)) setPaused(false)
       }}
       className={cn(
-        "enter flex flex-col border bg-background/95 text-left text-foreground shadow-2xl backdrop-blur-md",
+        "enter flex min-w-0 flex-col border bg-background/95 text-left text-foreground shadow-2xl backdrop-blur-md",
         className
       )}
     >
@@ -80,7 +80,7 @@ export function RotatingCard({
               <span className="relative inline-flex size-2 rounded-full bg-primary" />
             </span>
           )}
-          <p className="font-heading text-[0.6875rem] font-semibold tracking-widest text-primary uppercase">
+          <p className="shrink-0 font-heading text-[0.6875rem] font-semibold tracking-widest text-primary uppercase">
             <ScrambleText text={eyebrow} />
           </p>
           <h2 id={id} className="truncate font-heading text-sm font-bold">

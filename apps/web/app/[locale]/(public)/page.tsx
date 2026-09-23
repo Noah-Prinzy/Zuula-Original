@@ -87,38 +87,47 @@ export default function HomePage() {
       // In development the "Demo: view as" bar (#role-switcher) sits above the header; leave room for it.
       className="flex min-h-[calc(100svh-var(--header-h))] flex-col [html:has(#role-switcher)_&]:min-h-[calc(100svh-var(--header-h)-2.3125rem)]"
     >
-      <div className="flex page-container flex-1 flex-col items-center justify-center gap-5 py-8 text-center [@media(max-height:52rem)]:py-4">
-        <Badge
-          variant="outline"
-          className="enter border-white/40 bg-black/20 text-white backdrop-blur-sm"
-        >
-          Uganda Fact-Guard · Victoria University CIT
-        </Badge>
-        <h1 className="max-w-4xl font-heading text-4xl font-bold tracking-tight text-balance drop-shadow-sm [--kinetic-accent:var(--chart-1)] md:text-5xl xl:text-6xl">
-          <KineticText text="Check a" delay={120} />{" "}
-          <WordRotator
-            words={["claim", "rumour", "photo", "video", "voice note"]}
-            delay={230}
-            marker
-            className="em-mark-solid"
-          />
-          <br />
-          <KineticText text="before you" delay={120} offset={3} />{" "}
-          {/* Rotates like the word above, without the highlighter stroke. */}
-          <WordRotator words={["share", "believe"]} interval={3200} delay={380} />{" "}
-          <KineticText text="it" delay={120} offset={5} />
-        </h1>
-        <p
-          className="enter max-w-3xl text-base text-balance text-white/85 md:text-lg xl:text-xl"
-          style={delay(4)}
-        >
-          Paste a message, a link or upload media. Zuula tells you whether it is
-          authentic, false or AI-generated — and{" "}
-          <Emphasis variant="scribble" tone="light" delay={900}>
-            shows you the sources
-          </Emphasis>
-          .
-        </p>
+      <div className="flex page-container flex-1 flex-col items-center justify-center gap-5 py-8 text-center max-sm:gap-8 max-sm:pt-0 [@media(max-height:52rem)]:py-4">
+        {/* Phones: a "cover" block that pins the headline low, so the top of the screen is the
+            photo itself rather than wall-to-wall text and cards. From sm up it dissolves
+            (`contents`) into the centred stack. */}
+        <div className="flex min-h-[calc(72svh-var(--header-h))] w-full flex-col items-center justify-end gap-3 sm:contents">
+          <Badge
+            variant="outline"
+            className="enter hidden border-white/40 bg-black/20 text-white backdrop-blur-sm sm:inline-flex"
+          >
+            Uganda Fact-Guard · Victoria University CIT
+          </Badge>
+          <h1 className="max-w-4xl font-heading text-4xl font-bold tracking-tight text-balance drop-shadow-sm [--kinetic-accent:var(--chart-1)] md:text-5xl xl:text-6xl">
+            <KineticText text="Check a" delay={120} />{" "}
+            <WordRotator
+              words={["claim", "rumour", "photo", "video", "voice note"]}
+              delay={230}
+              marker
+              className="em-mark-solid"
+            />
+            <br />
+            <KineticText text="before you" delay={120} offset={3} />{" "}
+            {/* Rotates like the word above, without the highlighter stroke. */}
+            <WordRotator
+              words={["share", "believe"]}
+              interval={3200}
+              delay={380}
+            />{" "}
+            <KineticText text="it" delay={120} offset={5} />
+          </h1>
+          <p
+            className="enter max-w-3xl text-[0.9375rem] text-balance text-white/85 sm:text-base md:text-lg xl:text-xl"
+            style={delay(4)}
+          >
+            Paste a message, a link or upload media. Zuula tells you whether it
+            is authentic, false or AI-generated — and{" "}
+            <Emphasis variant="scribble" tone="light" delay={900}>
+              shows you the sources
+            </Emphasis>
+            .
+          </p>
+        </div>
 
         <div className="enter mt-4 w-full max-w-5xl" style={delay(6)}>
           <SubmissionComposer

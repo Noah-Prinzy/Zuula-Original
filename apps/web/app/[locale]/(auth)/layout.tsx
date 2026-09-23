@@ -21,13 +21,13 @@ export default function AuthLayout({
     <div className="relative isolate flex min-h-svh flex-col">
       <RouteBackdrop />
       <RoleSwitcher />
-      <div className="flex justify-end page-container pt-3 text-white">
+      <div className="flex page-container justify-end pt-3 text-white">
         <ThemeToggle />
       </div>
 
       <main
         id="main"
-        className="flex flex-1 flex-col items-center justify-center gap-6 page-container pb-10"
+        className="flex page-container flex-1 flex-col items-center justify-center gap-6 pb-10"
       >
         <div className="flex flex-col items-center gap-1 text-white">
           <Logo className="text-lg" />
@@ -40,10 +40,16 @@ export default function AuthLayout({
 
         <footer className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-center text-xs text-white/80">
           <span>{tf("copyright", { year: new Date().getFullYear() })}</span>
-          <Link href="/legal/privacy" className="hover:text-white hover:underline">
+          <Link
+            href="/legal/privacy"
+            className="hover:text-white hover:underline"
+          >
             {tf("privacy")}
           </Link>
-          <Link href="/legal/terms" className="hover:text-white hover:underline">
+          <Link
+            href="/legal/terms"
+            className="hover:text-white hover:underline"
+          >
             {tf("terms")}
           </Link>
           <RoutePhotoCredit className="text-xs text-white/80" />

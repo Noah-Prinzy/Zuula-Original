@@ -1107,7 +1107,7 @@ export interface components {
         /** @enum {string} */
         ReviewReason: "community-escalation" | "suspended" | "user-reports" | "low-confidence";
         /** @enum {string} */
-        AuditAction: "verdict.override" | "verdict.confirm" | "user.role_change" | "user.suspend" | "source.add" | "source.deactivate" | "broadcast.send" | "settings.update" | "moderation.remove";
+        AuditAction: "verdict.override" | "verdict.confirm" | "user.role_change" | "user.suspend" | "user.reinstate" | "source.add" | "source.deactivate" | "broadcast.send" | "settings.update" | "moderation.remove";
         /**
          * @example {
          *       "error": {
@@ -2232,8 +2232,11 @@ export interface operations {
                 };
                 content?: never;
             };
+            400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             409: components["responses"]["Conflict"];
+            413: components["responses"]["PayloadTooLarge"];
+            415: components["responses"]["UnsupportedMedia"];
         };
     };
     listMySubmissions: {
@@ -3532,6 +3535,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             413: components["responses"]["PayloadTooLarge"];
             415: components["responses"]["UnsupportedMedia"];
             422: components["responses"]["UnprocessableEntity"];
@@ -3560,6 +3564,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             429: components["responses"]["RateLimited"];
         };
@@ -3586,6 +3591,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             429: components["responses"]["RateLimited"];
         };
@@ -3623,6 +3629,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             429: components["responses"]["RateLimited"];
         };
     };

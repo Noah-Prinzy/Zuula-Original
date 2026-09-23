@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest"
 
+import { communityScore } from "@/lib/community"
 import {
   activeFilterCount,
+  agreementLowerBound,
   facets,
   isListed,
   latest,
@@ -165,6 +167,20 @@ describe("home feed helpers", () => {
   it("leaderboard needs enough ratings and ranks by score, then by volume", () => {
     expect(leaderboard(reports, 5).map((x) => x.report.id)).toEqual(["old", "mid", "new"])
     expect(leaderboard(reports, 5, 100).map((x) => x.report.id)).toEqual(["new"])
+  })
+
+  it("leaderboard weighs agreement by volume, so a small perfect score doesn't win", () => {
+    const few = makeReport({ id: "few", accurate: 26 })
+    const many = makeReport({ id: "many", accurate: 420, inaccurate: 4 })
+    expect(leaderboard([few, many], 2).map((x) => x.report.id)).toEqual(["many", "few"])
+  })
+
+  it("agreementLowerBound sits below the raw share and rises with more ratings", () => {
+    const score = (accurate: number, inaccurate: number) =>
+      communityScore({ accurate: { public: accurate, journalist: 0, expert: 0 }, inaccurate: { public: inaccurate, journalist: 0, expert: 0 } })
+    expect(agreementLowerBound(score(0, 0))).toBe(0)
+    expect(agreementLowerBound(score(9, 1))).toBeLessThan(0.9)
+    expect(agreementLowerBound(score(90, 10))).toBeGreaterThan(agreementLowerBound(score(9, 1)))
   })
 
   it("trendingTopics counts categories checked in the last week", () => {

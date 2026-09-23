@@ -18,7 +18,7 @@ export function AuthHeading({
           <Icon className="size-5" aria-hidden />
         </span>
       )}
-      <h1 className="font-heading text-2xl leading-tight font-bold tracking-tight sm:text-3xl">
+      <h1 className="font-heading text-2xl font-bold tracking-tight">
         <KineticText text={title} delay={Icon ? 90 : 0} />
       </h1>
       {description && (

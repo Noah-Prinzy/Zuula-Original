@@ -118,10 +118,14 @@ function BackdropVideos({ src }: { src?: string }) {
   const top = layers.at(-1)
   const topReady = !!top && top.playing && !top.leaving
 
-  // Once the top clip is showing, drop the ones underneath after the crossfade.
+  // Clips underneath are dropped when the top clip's fade-in finishes (transitionend, below);
+  // this timer is only a fallback in case that event never fires.
   useEffect(() => {
     if (!topReady || layers.length < 2) return
-    const t = window.setTimeout(() => setLayers((ls) => ls.slice(-1)), FADE_MS)
+    const t = window.setTimeout(
+      () => setLayers((ls) => ls.slice(-1)),
+      FADE_MS * 2
+    )
     return () => window.clearTimeout(t)
   }, [topReady, layers.length])
 
@@ -148,6 +152,11 @@ function BackdropVideos({ src }: { src?: string }) {
             onTransitionEnd={() => {
               if (l.leaving)
                 setLayers((ls) => ls.filter((x) => x.src !== l.src))
+              // The top clip is fully in: the ones underneath can go.
+              else if (l.playing)
+                setLayers((ls) =>
+                  ls.at(-1)?.src === l.src ? ls.slice(-1) : ls
+                )
             }}
             style={{ transitionDuration: `${FADE_MS}ms` }}
             className={cn(

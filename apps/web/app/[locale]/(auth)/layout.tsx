@@ -22,10 +22,10 @@ export default function AuthLayout({
       <RouteBackdrop />
       <RoleSwitcher />
       {/* Phones: logo and theme toggle share one row so the card starts higher up. */}
-      <div className="flex page-container items-center justify-between pt-3 text-white sm:justify-end">
+      <header className="flex page-container items-center justify-between pt-3 text-white sm:justify-end">
         <Logo className="sm:hidden" />
         <ThemeToggle />
-      </div>
+      </header>
 
       <main
         id="main"

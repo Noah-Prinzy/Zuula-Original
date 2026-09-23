@@ -120,7 +120,7 @@ export function TwoFactorForm() {
         <ResendCode destination={destination} onResend={() => authApi.resendTwoFactor({ challengeId })} />
         <p>
           {t("twoFactor.cantReceive")}{" "}
-          <Link href="/about#contact" className="text-primary underline-offset-4 hover:underline">
+          <Link href="/about#contact" className="text-primary underline underline-offset-4">
             {t("twoFactor.contactAdmin")}
           </Link>
         </p>

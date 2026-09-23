@@ -33,9 +33,12 @@ function CopyButton({ code }: { code: string }) {
   )
 }
 
+// Scrollable, so it must be reachable by keyboard to scroll it (WCAG 2.1.1).
 function Pre({ code }: { code: string }) {
   return (
-    <pre className="max-h-[28rem] overflow-auto p-4 font-mono text-[0.8125rem] leading-relaxed text-zinc-100">
+    <pre
+      tabIndex={0}
+      className="max-h-[28rem] overflow-auto p-4 font-mono text-[0.8125rem] leading-relaxed text-zinc-100">
       <code>{code}</code>
     </pre>
   )

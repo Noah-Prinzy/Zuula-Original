@@ -150,7 +150,7 @@ export function ResetPasswordForm() {
 
       <p className="text-sm text-muted-foreground">
         {t("reset.noCode")}{" "}
-        <Link href="/forgot-password" className="text-primary underline-offset-4 hover:underline">
+        <Link href="/forgot-password" className="text-primary underline underline-offset-4">
           {t("reset.requestNew")}
         </Link>
       </p>

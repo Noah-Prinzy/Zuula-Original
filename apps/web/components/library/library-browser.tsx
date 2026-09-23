@@ -276,13 +276,20 @@ export function LibraryBrowser({
             </EmptyContent>
           </Empty>
         ) : (
-          <ul className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
-            {result.items.map((r) => (
-              <li key={r.id}>
-                <FactCheckCard report={r} />
-              </li>
-            ))}
-          </ul>
+          // The cards' titles are h3s; this h2 keeps the outline unbroken on phones, where the
+          // filters (and their h2) move into a sheet.
+          <section aria-labelledby="library-results-title">
+            <h2 id="library-results-title" className="sr-only">
+              {t("results", { count: result.total })}
+            </h2>
+            <ul className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
+              {result.items.map((r) => (
+                <li key={r.id}>
+                  <FactCheckCard report={r} />
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
 
         {result.pageCount > 1 && (

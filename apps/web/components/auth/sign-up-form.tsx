@@ -185,7 +185,7 @@ export function SignUpForm({ next }: { next?: string }) {
         {t("signUp.haveAccount")}{" "}
         <Link
           href={next ? `/sign-in?next=${encodeURIComponent(next)}` : "/sign-in"}
-          className="font-medium text-primary underline-offset-4 hover:underline"
+          className="font-medium text-primary underline underline-offset-4"
         >
           {t("signUp.signIn")}
         </Link>

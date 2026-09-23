@@ -161,9 +161,10 @@ export function SectionLayout({ children }: { children: React.ReactNode }) {
       )}
     >
       {section && (
-        <aside className="hidden lg:block">
+        // Not an <aside>: the <nav> inside is already the (labelled) landmark.
+        <div className="hidden lg:block">
           <SectionSidebar section={section} pathname={pathname} />
-        </aside>
+        </div>
       )}
       <div className="flex min-w-0 flex-col gap-6">
         {section && (

@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import Link from "next/link"
 import { RiArrowLeftLine, RiArrowRightLine, RiImageAddLine, RiLink, RiSearchEyeLine } from "@remixicon/react"
 import { Controller } from "react-hook-form"
@@ -32,10 +33,20 @@ export function QuickComposer({ className }: { className?: string }) {
   const link = !media && isLink(text)
   const length = text.trim().length
 
+  // Switching modes unmounts the button that was pressed, so move focus to the new field
+  // rather than letting it fall back to the page (WCAG 2.4.3).
+  const focusAfterSwitch = useRef(false)
   function switchTo(next: "text" | "media") {
+    focusAfterSwitch.current = true
     setValue("type", next)
     clearErrors()
   }
+  useEffect(() => {
+    if (!focusAfterSwitch.current) return
+    focusAfterSwitch.current = false
+    if (media) document.getElementById("quick-file")?.focus()
+    else form.setFocus("text")
+  }, [media, form])
 
   const verify = (
     <Button type="submit" size="sm" disabled={submitting} className="ml-auto px-4">

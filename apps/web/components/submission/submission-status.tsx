@@ -220,7 +220,7 @@ function Tracker({ trackingId, submission }: { trackingId: string; submission: S
             <p>
               {t.rich("notifyGuest", {
                 link: (chunks) => (
-                  <Link href="/sign-up" className="font-medium text-primary underline-offset-4 hover:underline">
+                  <Link href="/sign-up" className="font-medium text-primary underline underline-offset-4">
                     {chunks}
                   </Link>
                 ),

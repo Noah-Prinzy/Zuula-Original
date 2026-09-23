@@ -69,7 +69,7 @@ const code = (chunks: React.ReactNode) => (
 function inlineLink(href: string) {
   return function InlineLink(chunks: React.ReactNode) {
     return (
-      <Link href={href} className="font-medium text-primary underline-offset-2 hover:underline">
+      <Link href={href} className="font-medium text-primary underline underline-offset-2">
         {chunks}
       </Link>
     )
@@ -79,7 +79,8 @@ function inlineLink(href: string) {
 async function FieldTable({ rows, caption }: { rows: Row[]; caption: string }) {
   const t = await getTranslations("Developers.table")
   return (
-    <div className="overflow-x-auto border">
+    // Scrolls sideways on phones, so it's focusable for keyboard scrolling (WCAG 2.1.1).
+    <div tabIndex={0} className="overflow-x-auto border">
       <table className="w-full text-left text-sm">
         <caption className="sr-only">{caption}</caption>
         <thead className="bg-muted/50 text-xs text-muted-foreground">
@@ -381,7 +382,7 @@ export default async function DevelopersPage() {
                   keys: inlineLink("/account/api-access"),
                   terms: inlineLink("/legal/terms#api"),
                   email: (chunks) => (
-                    <a href="mailto:hello@zuula.ug" className="font-medium text-primary underline-offset-2 hover:underline">
+                    <a href="mailto:hello@zuula.ug" className="font-medium text-primary underline underline-offset-2">
                       {chunks}
                     </a>
                   ),

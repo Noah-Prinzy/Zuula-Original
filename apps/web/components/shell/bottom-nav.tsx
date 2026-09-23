@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -40,7 +41,9 @@ type Tab = {
 // stays one tap away on a poor connection. The header menu still holds About, search and the
 // Review/Admin workspaces. A spacer in the page flow keeps the last content clear of the bar;
 // its height is --bottom-nav-h (globals.css), which also clears the home indicator.
-// Offline, a strip on top of the bar says so and points to the saved reports.
+// Offline, a strip on top of the bar says so and points to the saved reports. A live region
+// that is always mounted (and not limited to phones) announces going offline and back online;
+// screen readers often skip live regions that appear already filled.
 export function BottomNav() {
   const pathname = usePathname()
   const { user } = useSession()
@@ -48,6 +51,9 @@ export function BottomNav() {
   const tc = useTranslations("Common")
   const to = useTranslations("Offline")
   const online = useOnline()
+  // Remember an outage so the live region can also announce the reconnection.
+  const [wasOffline, setWasOffline] = useState(false)
+  if (!online && !wasOffline) setWasOffline(true)
 
   const account = user ? "/account" : "/sign-in"
   const tabs: Tab[] = [
@@ -78,13 +84,16 @@ export function BottomNav() {
 
   return (
     <>
+      <p role="status" className="sr-only">
+        {!online ? to("banner") : wasOffline ? to("bannerBack") : ""}
+      </p>
       <div aria-hidden className={cn("h-(--bottom-nav-h) shrink-0 md:hidden", !online && "h-[calc(var(--bottom-nav-h)+2rem)]")} />
       <nav
         aria-label={t("tabBar")}
-        className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
       >
         {!online && (
-          <p role="status" className="flex h-8 items-center justify-between gap-3 border-b bg-muted px-4 text-xs">
+          <p className="flex h-8 items-center justify-between gap-3 border-b bg-muted px-4 text-xs">
             <span className="inline-flex items-center gap-1.5 font-medium">
               <RiWifiOffLine className="size-3.5" aria-hidden />
               {to("banner")}

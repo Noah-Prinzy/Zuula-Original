@@ -6,8 +6,9 @@ import type { components, operations } from "@zuula/shared"
 //
 // The session is the API's HttpOnly `zuula_session` cookie, so every call sends credentials
 // and this code never sees the token. That only works when the API lists this site's origin in
-// ZUULA_CORS_ORIGINS and both are on the same site (localhost:3000 → localhost:8000 locally,
-// zuula.ug → api.zuula.ug in production): the cookie is SameSite=Lax.
+// ZUULA_CORS_ORIGINS and the browser sees both on the same site: the cookie is SameSite=Lax.
+// That holds for localhost:3000 → localhost:8000, for zuula.ug → api.zuula.ug, and for any
+// host when this site proxies the API (NEXT_PUBLIC_API_URL=/, see next.config.ts).
 
 type Schemas = components["schemas"]
 
@@ -25,8 +26,10 @@ type JsonBody<Op extends keyof operations> = operations[Op] extends {
 type SignUpAccepted = operations["signUp"]["responses"][202]["content"]["application/json"]
 
 // Where apps/api lives. NEXT_PUBLIC_* is inlined at build time, so it must be read as this
-// literal expression. Development falls back to the API's default local address; a production
-// build without it configured refuses to send anything rather than guess.
+// literal expression. "/" means this site's own origin: next.config.ts proxies /api/v1/* to
+// ZUULA_API_ORIGIN (the way to deploy when the API isn't on a sibling subdomain). Returns ""
+// then, so paths stay relative. Development falls back to the API's default local address; a
+// production build without it configured refuses to send anything rather than guess.
 export function apiBaseUrl(): string | null {
   const configured = process.env.NEXT_PUBLIC_API_URL?.trim()
   if (configured) return configured.replace(/\/+$/, "")
@@ -51,7 +54,7 @@ export class ApiError extends Error {
 
 async function request<T>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
   const base = apiBaseUrl()
-  if (!base) throw new ApiError(0, "unconfigured", "NEXT_PUBLIC_API_URL is not set.")
+  if (base === null) throw new ApiError(0, "unconfigured", "NEXT_PUBLIC_API_URL is not set.")
 
   let res: Response
   try {

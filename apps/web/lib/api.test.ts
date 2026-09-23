@@ -37,6 +37,15 @@ describe("apiBaseUrl", () => {
     expect(apiBaseUrl()).toBe("https://api.zuula.ug")
   })
 
+  it("treats \"/\" as this site's own origin (the next.config.ts proxy)", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "/")
+    vi.stubEnv("NODE_ENV", "production")
+    expect(apiBaseUrl()).toBe("")
+    fetchMock.mockResolvedValueOnce(reply(401, { error: { code: "unauthorized", message: "Sign in required." } }))
+    await expect(authApi.me()).resolves.toBeNull()
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/v1/me")
+  })
+
   it("falls back to the local API outside production", () => {
     vi.stubEnv("NEXT_PUBLIC_API_URL", "")
     vi.stubEnv("NODE_ENV", "development")

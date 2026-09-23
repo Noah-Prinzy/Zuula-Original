@@ -60,7 +60,7 @@ function SectionSidebar({ section, pathname }: { section: NavGroup; pathname: st
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-2.5 border-l-2 border-transparent px-3 py-2 text-sm text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-4 [&_svg]:shrink-0",
+                  "press-tint flex items-center gap-2.5 border-l-2 border-transparent px-3 py-2 text-sm text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-4 [&_svg]:shrink-0",
                   active && "border-primary bg-muted font-medium text-foreground"
                 )}
               >
@@ -102,7 +102,7 @@ function SectionTabs({ section, pathname }: { section: NavGroup; pathname: strin
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-2 border-b-2 border-transparent px-3 py-2.5 text-sm whitespace-nowrap text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset [&_svg]:size-4",
+                  "press-tint flex items-center gap-2 border-b-2 border-transparent px-3 py-2.5 text-sm whitespace-nowrap text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset [&_svg]:size-4",
                   active && "border-primary font-medium text-foreground"
                 )}
               >
@@ -161,9 +161,10 @@ export function SectionLayout({ children }: { children: React.ReactNode }) {
       )}
     >
       {section && (
-        <aside className="hidden lg:block">
+        // Not an <aside>: the <nav> inside is already the (labelled) landmark.
+        <div className="hidden lg:block">
           <SectionSidebar section={section} pathname={pathname} />
-        </aside>
+        </div>
       )}
       <div className="flex min-w-0 flex-col gap-6">
         {section && (

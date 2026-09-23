@@ -3,12 +3,9 @@ import { afterEach, describe, expect, it } from "vitest"
 
 import {
   clearPendingAuth,
-  demoRoleFor,
   homeFor,
   identifierKind,
-  isDemoCodeValid,
   maskIdentifier,
-  needsTwoFactor,
   PASSWORD_MIN,
   passwordStrength,
   resetSchema,
@@ -79,29 +76,11 @@ describe("schemas", () => {
   })
 })
 
-describe("mock auth", () => {
-  it("picks a demo role from the address", () => {
-    expect(demoRoleFor("Admin@zuula.ug")).toBe("admin")
-    expect(demoRoleFor("expert@x")).toBe("expert")
-    expect(demoRoleFor("journalist@x")).toBe("journalist")
-    expect(demoRoleFor("0772123456")).toBe("public")
-  })
-
-  it("requires two-factor for experts and admins (FR-AUTH-05)", () => {
-    expect(needsTwoFactor("expert")).toBe(true)
-    expect(needsTwoFactor("admin")).toBe(true)
-    expect(needsTwoFactor("journalist")).toBe(false)
-  })
-
-  it("accepts any six digits except 000000", () => {
-    expect(isDemoCodeValid("123456")).toBe(true)
-    expect(isDemoCodeValid("000000")).toBe(false)
-    expect(isDemoCodeValid("12345")).toBe(false)
-  })
-
+describe("homeFor", () => {
   it("sends each role to its home", () => {
     expect(homeFor("admin")).toBe("/admin")
     expect(homeFor("expert")).toBe("/review")
+    expect(homeFor("journalist")).toBe("/")
     expect(homeFor("public")).toBe("/")
   })
 })
@@ -111,6 +90,7 @@ describe("safeNext (open-redirect guard)", () => {
     ["/fact-checks?q=1", "/fact-checks?q=1"],
     ["//evil.example", "/"],
     ["https://evil.example", "/"],
+    ["/\\evil.example", "/"],
     [null, "/"],
     [undefined, "/"],
   ])("%j → %j", (next, expected) => {
@@ -122,7 +102,12 @@ describe("pending auth", () => {
   afterEach(() => sessionStorage.clear())
 
   it("stores, takes and clears the pending sign-in", () => {
-    const pending = { role: "expert" as const, identifier: "expert@x", next: "/review" }
+    const pending = {
+      identifier: "mary@example.com",
+      next: "/review",
+      challengeId: "chl_123",
+      maskedIdentifier: "ma••@example.com",
+    }
     setPendingAuth(pending)
     expect(takePendingAuth()).toEqual(pending)
     clearPendingAuth()

@@ -80,7 +80,7 @@ export function ReviewOverview() {
             {withSla.slice(0, 4).map((c) => {
               const report = getSampleReport(c.reportId)!
               return (
-                <li key={c.id} className="relative flex flex-col gap-2 p-4 hover:bg-muted/40 md:flex-row md:items-center">
+                <li key={c.id} className="press-surface relative flex flex-col gap-2 p-4 [--surface-scale:1] hover:bg-muted/40 md:flex-row md:items-center">
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <Link href={`/review/cases/${c.id}`} className="font-medium after:absolute after:inset-0 hover:text-primary">
                       {report.title}

@@ -174,7 +174,7 @@ function DecisionForm({ report, caseId }: { report: FactCheckReport; caseId: str
                 aria-checked={verdict === v}
                 onClick={() => setVerdict(v)}
                 className={cn(
-                  "border p-1 outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "press border p-1 outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   verdict === v ? "border-foreground" : "border-transparent opacity-70 hover:opacity-100"
                 )}
               >
@@ -277,7 +277,7 @@ export function CaseReview({ reviewCase, report }: { reviewCase: ReviewCase; rep
 
       <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="flex min-w-0 flex-col gap-8">
-          <VerdictSummary report={report} className="enter [--d:1]" />
+          <VerdictSummary report={report} headingLevel={2} className="enter [--d:1]" />
           <CommunityStatusBanner status={score.status} className="enter [--d:2]" />
           <Section id="checked" title={tRep("checked")}>
             <div className="border bg-card p-4">

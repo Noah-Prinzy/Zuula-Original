@@ -2,6 +2,8 @@ from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.core.rules import PARTNER_RATE_LIMIT_PER_HOUR
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="ZUULA_", env_file=".env", extra="ignore")
@@ -10,13 +12,40 @@ class Settings(BaseSettings):
     debug: bool = True
     secret_key: str = "change-me-dev-only"
     session_cookie_name: str = "zuula_session"
+    # ADR 0002 §5 / decision 9: the API is api.zuula.ug and the web app zuula.ug, so production
+    # sets ZUULA_SESSION_COOKIE_DOMAIN=zuula.ug. Empty = host-only (local dev).
+    session_cookie_domain: str = ""
+    session_cookie_secure: bool = True
     cors_origins: str = "http://localhost:3000"
+    # Where the web app lives (zuula.ug in production): OAuth callbacks redirect the browser
+    # back here, since the API is on its own host (api.zuula.ug).
+    web_app_url: str = "http://localhost:3000"
 
-    partner_rate_limit_per_hour: int = 100
+    # Independently overridable via ZUULA_PARTNER_RATE_LIMIT_PER_HOUR — see
+    # app/core/rules.py's PARTNER_RATE_LIMIT_PER_HOUR for why this defaults to it rather
+    # than hardcoding its own copy of the same number.
+    partner_rate_limit_per_hour: int = PARTNER_RATE_LIMIT_PER_HOUR
+
+    # How long one GET /notifications/stream connection stays open before the server closes
+    # it; EventSource reconnects on its own and resumes from Last-Event-ID. Bounded so proxies
+    # and dead clients can't pin connections forever. Tests set 0 (replay, then close).
+    notification_stream_seconds: int = 300
 
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+
+class DatabaseSettings(BaseSettings):
+    """PostgreSQL (+ pgvector). Same no-prefix convention as the settings classes below —
+    field names match .env.example's var names. The URL must use the asyncpg driver
+    (`postgresql+asyncpg://`); the worker runs its DB work through the same async engine."""
+
+    model_config = SettingsConfigDict(extra="ignore")
+
+    database_url: str = "postgresql+asyncpg://zuula:zuula@localhost:5432/zuula"
+    database_pool_size: int = 5
+    database_echo: bool = False
 
 
 class CelerySettings(BaseSettings):
@@ -90,6 +119,11 @@ class AdaptersSettings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+@lru_cache
+def get_database_settings() -> DatabaseSettings:
+    return DatabaseSettings()
 
 
 @lru_cache

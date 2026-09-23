@@ -46,7 +46,7 @@ export function SiteHeader() {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground",
+                  "press px-2.5 py-1.5 text-sm text-muted-foreground [--press-tint:transparent] hover:text-foreground",
                   active && "text-foreground underline decoration-primary decoration-2 underline-offset-[18px]"
                 )}
               >
@@ -89,7 +89,7 @@ export function SiteHeader() {
                       <Link
                         href={item.href}
                         aria-current={isInSection(pathname, item.href) ? "page" : undefined}
-                        className="border-b py-3 text-sm aria-[current=page]:font-semibold aria-[current=page]:text-primary"
+                        className="press-tint border-b py-3 text-sm aria-[current=page]:font-semibold aria-[current=page]:text-primary"
                       >
                         {t(`items.${item.key}`)}
                       </Link>

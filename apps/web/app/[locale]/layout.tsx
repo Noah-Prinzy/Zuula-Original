@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { notFound } from "next/navigation"
 import { locale as rootLocale } from "next/root-params"
 import { getMessages, getTranslations } from "next-intl/server"
@@ -41,7 +41,22 @@ const fontMono = Geist_Mono({
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Pages.site")
-  return { title: t("title"), description: t("description") }
+  // Page titles name the site too (WCAG 2.4.2), e.g. "Verify · Zuula".
+  return {
+    title: { default: t("title"), template: "%s · Zuula" },
+    description: t("description"),
+  }
+}
+
+// viewport-fit=cover lets the phone tab bar pad itself clear of the home indicator
+// (env(safe-area-inset-bottom)); the theme colour tints the browser/PWA chrome to match the
+// header in each theme (--background in globals.css).
+export const viewport: Viewport = {
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#090b0c" },
+  ],
 }
 
 export default async function RootLayout({
@@ -90,7 +105,8 @@ export default async function RootLayout({
             <SessionProvider>
               <TooltipProvider>
                 {children}
-                <Toaster />
+                {/* On phones, keep toasts clear of the bottom tab bar. */}
+                <Toaster mobileOffset={{ bottom: "calc(var(--bottom-nav-h) + 1rem)" }} />
               </TooltipProvider>
             </SessionProvider>
           </ThemeProvider>

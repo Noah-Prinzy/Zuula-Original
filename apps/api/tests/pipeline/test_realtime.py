@@ -1,26 +1,7 @@
 import asyncio
 
 from app.realtime import redis_client
-from app.realtime.submissions import (
-    load_state,
-    new_state,
-    publish_done,
-    publish_step,
-    save_state,
-    subscribe,
-)
-
-
-def test_state_round_trips_through_redis():
-    r = redis_client.get_redis()
-    state = new_state("ZL-STATE-1", content_type="text", language="English")
-    save_state(r, "ZL-STATE-1", state)
-    loaded = load_state(r, "ZL-STATE-1")
-    assert loaded == state
-
-
-def test_load_state_missing_returns_none():
-    assert load_state(redis_client.get_redis(), "ZL-NOPE-00") is None
+from app.realtime.submissions import publish_done, publish_step, subscribe
 
 
 async def test_subscribe_yields_published_step_event():

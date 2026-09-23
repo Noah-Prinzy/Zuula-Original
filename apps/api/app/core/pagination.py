@@ -16,7 +16,12 @@ class PageParams(BaseModel):
     per_page: int = 20
 
 
-def page_params(page: int = Query(1, ge=1), per_page: int = Query(20, ge=1, le=100)) -> PageParams:
+def page_params(
+    page: int = Query(1, ge=1),
+    # The contract's parameter is `perPage` (components.parameters.PerPage). Without the alias
+    # FastAPI read `per_page`, so P2 silently ignored the page size clients sent.
+    per_page: int = Query(20, ge=1, le=100, alias="perPage"),
+) -> PageParams:
     return PageParams(page=page, per_page=per_page)
 
 

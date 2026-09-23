@@ -28,7 +28,7 @@ export function PageHero({
       )}
     >
       {eyebrow && (
-        <p className="enter font-heading text-xs font-semibold tracking-widest text-white/80 uppercase">
+        <p className="enter font-heading text-xs font-semibold tracking-widest text-white/90 uppercase">
           {eyebrow}
         </p>
       )}

@@ -17,13 +17,13 @@
     --secondary: oklch(0.967 0.001 286.375);
     --secondary-foreground: oklch(0.21 0.006 285.885);
     --muted: oklch(0.963 0.002 197.1);
-    --muted-foreground: oklch(0.52 0.021 213.5);
+    --muted-foreground: oklch(0.5 0.021 213.5);
     --accent: oklch(0.963 0.002 197.1);
     --accent-foreground: oklch(0.218 0.008 223.9);
-    --destructive: oklch(0.577 0.245 27.325);
+    --destructive: oklch(0.52 0.215 27.325);
     --border: oklch(0.925 0.005 214.3);
     --input: oklch(0.925 0.005 214.3);
-    --ring: oklch(0.723 0.014 214.4);
+    --ring: oklch(0.56 0.021 213.5);
     --chart-1: oklch(0.81 0.117 11.638);
     --chart-2: oklch(0.645 0.246 16.439);
     --chart-3: oklch(0.586 0.253 17.585);
@@ -38,12 +38,13 @@
     --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
     --sidebar-border: oklch(0.925 0.005 214.3);
     --sidebar-ring: oklch(0.723 0.014 214.4);
-    /* Verdict colours (FR-DETECT-01). Text-safe on background; use /10 for tints. */
-    --verdict-authentic: oklch(0.52 0.14 152);
-    --verdict-likely-false: oklch(0.55 0.14 55);
-    --verdict-false: oklch(0.53 0.21 27);
-    --verdict-ai-generated: oklch(0.52 0.2 295);
-    --verdict-unverifiable: oklch(0.52 0.02 250);
+    /* Verdict colours (FR-DETECT-01). Text-safe (WCAG AA, 4.5:1) on background and on their
+       own /10–/15 tints. */
+    --verdict-authentic: oklch(0.48 0.13 152);
+    --verdict-likely-false: oklch(0.5 0.13 55);
+    --verdict-false: oklch(0.49 0.2 27);
+    --verdict-ai-generated: oklch(0.5 0.2 295);
+    --verdict-unverifiable: oklch(0.5 0.02 250);
 }
 
 .dark {
@@ -62,10 +63,10 @@
     --muted-foreground: oklch(0.723 0.014 214.4);
     --accent: oklch(0.275 0.011 216.9);
     --accent-foreground: oklch(0.987 0.002 197.1);
-    --destructive: oklch(0.704 0.191 22.216);
+    --destructive: oklch(0.75 0.17 22.216);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.56 0.021 213.5);
+    --ring: oklch(0.723 0.014 214.4);
     --chart-1: oklch(0.81 0.117 11.638);
     --chart-2: oklch(0.645 0.246 16.439);
     --chart-3: oklch(0.586 0.253 17.585);
@@ -134,6 +135,15 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Dark --primary is a fill colour (light text on it is 7:1), but as text on the dark surfaces
+   it is only ~2.3:1. Text set in the primary colour gets a lighter crimson in dark mode
+   (5.5:1 on --muted, 7:1+ on --background and --card). */
+@layer utilities {
+  .dark :is(.text-primary, .hover\:text-primary:hover, .group:hover .group-hover\:text-primary) {
+    color: oklch(0.72 0.17 15);
+  }
+}
+
 /* Full-width page container with fluid side padding (16px on phones → 48px on large screens). */
 @utility page-container {
   width: 100%;
@@ -144,6 +154,16 @@
   * {
     @apply border-border outline-ring/50;
     }
+  /* Keyboard focus (WCAG 2.4.7, 1.4.11): a solid 2px ring for anything without its own focus
+     style. Links take their own text colour, which already contrasts with whatever they sit
+     on (including the photo heroes). Components with a focus ring of their own set
+     outline-none, which wins over this. */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+  a:focus-visible {
+    outline-color: currentColor;
+  }
   body {
     @apply bg-background text-foreground;
     }
@@ -170,9 +190,18 @@
 
 :root {
   --header-h: calc(3.5rem + 1px);
+  /* Phones get a bottom tab bar (components/shell/bottom-nav.tsx); it clears the home
+     indicator on notched phones. */
+  --bottom-nav-h: 0px;
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
   --reveal-duration: 700ms;
   --reveal-distance: 1.25rem;
+}
+
+@media (width < 48rem) {
+  :root {
+    --bottom-nav-h: calc(3.5rem + 1px + env(safe-area-inset-bottom));
+  }
 }
 
 /* A band that fills the viewport under the sticky header, so the next section never peeks in
@@ -575,5 +604,127 @@ html:has(.snap-page) {
         width 600ms var(--ease-out-soft),
         opacity 300ms ease-out;
     }
+  }
+}
+
+/* Press feedback ---------------------------------------------------------------------------
+   One interaction language for everything clickable. Same rules as "Motion + sections":
+   anything that moves lives under prefers-reduced-motion: no-preference, so reduced-motion
+   users get no transforms or transitions at all, only the instant press tint. None of this
+   hides content, so it doesn't need html[data-motion].
+
+   .press          compact controls (buttons, toggles, tabs, checkboxes): shrink on press,
+                   spring back on release. --press-scale tunes it per size.
+   .press-lift     adds a 1px hover lift and a soft drop shadow (--lift-shadow) on devices
+                   that really hover. For solid, raised controls, not ghosts or links.
+   .press-tint     wide rows and menu items, where scaling would shift their edges: a tint
+                   while held, no movement.
+   .press-surface  cards and list rows made clickable by a stretched link: tinted while the
+                   link is held, and cards also give a little (--surface-scale; list rows set
+                   it to 1). Pressing a nested button doesn't count.
+
+   The press comes in fast (--press-in) and releases slower on a slight overshoot
+   (--press-out), so a quick click still reads as a press without delaying anything: the
+   click itself fires on the browser's schedule, never ours. Transforms use `transform`,
+   which Tailwind's translate/scale/rotate utilities leave alone, so centring offsets such
+   as -translate-y-1/2 keep working. */
+
+:root {
+  --press-scale: 0.97;
+  --press-in: 80ms;
+  --press-out: 260ms;
+  --ease-press: cubic-bezier(0.2, 0, 0, 1);
+  --ease-release: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --press-tint: color-mix(in oklch, currentColor 10%, transparent);
+  --surface-scale: 0.99;
+  --lift: -1px;
+  --lift-shadow: 0 3px 6px oklch(0 0 0 / 0.14);
+}
+.dark {
+  --lift-shadow: 0 3px 8px oklch(0 0 0 / 0.55);
+}
+
+/* Whole cards and rows take a lighter tint than a button would. */
+.press-surface {
+  --press-tint: color-mix(in oklch, currentColor 5%, transparent);
+}
+
+/* Full-width controls are wide enough that the default scale would visibly shrink them. */
+.press.w-full {
+  --press-scale: 0.985;
+}
+
+:is(.press, .press-tint):active:not(:disabled, [aria-disabled="true"], [data-disabled]),
+.press-surface:is(a[href]:active, :has(a[href]:active)) {
+  background-image: linear-gradient(var(--press-tint), var(--press-tint));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .press {
+    transition:
+      transform var(--press-out) var(--ease-release),
+      filter var(--press-out) var(--ease-out-soft),
+      color 150ms ease-out,
+      background-color 150ms ease-out,
+      border-color 150ms ease-out,
+      text-decoration-color 150ms ease-out,
+      box-shadow 150ms ease-out,
+      opacity 150ms ease-out;
+  }
+  @media (hover: hover) {
+    .press-lift:hover:not(:disabled, [aria-disabled="true"], [data-disabled]) {
+      transform: translate3d(0, var(--lift), 0);
+      filter: drop-shadow(var(--lift-shadow));
+    }
+  }
+  /* Menu triggers open on pointerdown, so the menu is already over the release: shadcn keeps
+     them still, and so do we. They still get the tint and their open state. */
+  .press:active:not(:disabled, [aria-disabled="true"], [data-disabled], [aria-haspopup="menu"]) {
+    transform: scale(var(--press-scale));
+    transition-duration: var(--press-in);
+    transition-timing-function: var(--ease-press);
+  }
+  .press-lift:active:not(:disabled, [aria-disabled="true"], [data-disabled]) {
+    filter: none;
+  }
+
+  .press-surface {
+    transition:
+      transform var(--press-out) var(--ease-release),
+      background-color 150ms ease-out,
+      box-shadow 300ms var(--ease-out-soft),
+      border-color 200ms ease-out;
+  }
+  .press-surface:is(a[href]:active, :has(a[href]:active)) {
+    transform: scale(var(--surface-scale));
+    transition-duration: var(--press-in);
+    transition-timing-function: var(--ease-press);
+  }
+}
+
+/* Text links everywhere else: a brief dim while held. Opacity, not movement, so it applies
+   under reduced motion too, and in the base layer so any utility can override it. */
+@layer base {
+  a[href]:not(.press, .press-tint, .press-surface, .press-surface a):active {
+    opacity: 0.7;
+  }
+}
+
+/* Reduced motion, sitewide ----------------------------------------------------------------
+   Everything above already sits behind no-preference, but third-party and shadcn styles
+   (tw-animate-css open/close animations on dialogs, menus and sheets, colour fades,
+   accordion height) don't. For reduced-motion users those finish instantly instead. The
+   durations are near-zero rather than none so animationend/transitionend still fire for
+   the libraries (Radix Presence, vaul) that wait on them. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
   }
 }

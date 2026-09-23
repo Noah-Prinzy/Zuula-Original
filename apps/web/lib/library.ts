@@ -1,4 +1,4 @@
-import { communityScore } from "@/lib/community"
+import { communityScore, type CommunityScore } from "@/lib/community"
 import type { ContentType, FactCheckReport, Verdict } from "@/lib/types/fact-check"
 import { VERDICTS } from "@/lib/types/fact-check"
 
@@ -154,14 +154,31 @@ export function mostDebated(all: FactCheckReport[], n: number) {
     .slice(0, n)
 }
 
-// FR-RATE-10: most accurately rated stories (high CCS with enough ratings).
+// How sure we can be that the community agrees with a verdict: the lower bound of the 95%
+// Wilson interval around the weighted CCS share, over the number of people who rated. It
+// rewards agreement and volume together, so 26 ratings at 100% don't outrank 424 at 99%.
+export function agreementLowerBound(score: CommunityScore, z = 1.96) {
+  const n = score.total
+  const weighted = score.weightedAccurate + score.weightedInaccurate
+  if (n === 0 || weighted === 0) return 0
+  const p = score.weightedAccurate / weighted
+  const z2 = z * z
+  return (p + z2 / (2 * n) - z * Math.sqrt((p * (1 - p) + z2 / (4 * n)) / n)) / (1 + z2 / n)
+}
+
+// FR-RATE-10: most accurately rated stories — the verdicts the community most confidently
+// agrees with, among listed reports with enough ratings to judge.
 export function leaderboard(all: FactCheckReport[], n: number, minRatings = 25) {
   return all
     .filter(isListed)
-    .map((r) => ({ report: r, score: communityScore(r.community) }))
+    .map((r) => {
+      const score = communityScore(r.community)
+      return { report: r, score, rank: agreementLowerBound(score) }
+    })
     .filter((x) => x.score.total >= minRatings && x.score.ccs !== null)
-    .sort((a, b) => (b.score.ccs ?? 0) - (a.score.ccs ?? 0) || b.score.total - a.score.total)
+    .sort((a, b) => b.rank - a.rank || b.score.total - a.score.total)
     .slice(0, n)
+    .map(({ report, score }) => ({ report, score }))
 }
 
 export function trendingTopics(all: FactCheckReport[], n: number, now = new Date(), days = 7) {

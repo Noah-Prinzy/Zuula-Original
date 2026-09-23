@@ -11,13 +11,15 @@ Deadline **30 Nov 2026**, one developer.
 
 | Phase | Dates | Scope | Status |
 |---|---|---|---|
-| P1 Frontend | 21 Sep – 9 Oct | Next.js 16 + shadcn/ui, every page on mock data | In progress |
-| P2 API design | 12 – 20 Oct | FastAPI core REST API; separate partner API (API keys, 100 requests/hour); SSE/WebSockets; WhatsApp and Telegram webhooks; AI job queue (Celery + Redis); OAuth, Africa's Talking SMS, Turnstile, ClamAV, S3 | Not started |
-| P3 Backend + database | 21 Oct – 6 Nov | PostgreSQL + pgvector, Redis, auth (bcrypt, 2FA), weighted CCS and escalation, audit log | Not started |
+| P1 Frontend | 21 Sep – 9 Oct | Next.js 16 + shadcn/ui, every page on mock data | In progress — core pages done; auth layout, home hero and mobile UI passes landed ahead of schedule |
+| P2 API design | 12 – 20 Oct | FastAPI core REST API; separate partner API (API keys, 100 requests/hour); SSE/WebSockets; WhatsApp and Telegram webhooks; AI job queue (Celery + Redis); OAuth, Africa's Talking SMS, Turnstile, ClamAV, S3 | Done — Steps 1–6 merged |
+| P3 Backend + database | 21 Oct – 6 Nov | PostgreSQL + pgvector, Redis, auth (bcrypt, 2FA), weighted CCS and escalation, audit log | In progress — PR 1 (DB foundation) and PR 2 (real auth/roles) merged; PRs 3–6 (content, admin, real adapters, docs) remaining ([ADR 0002](../../docs/adr/0002-p3-backend-and-database.md)) |
 | P4 AI engine | 9 – 24 Nov | Hosted LLM (Claude) with evidence retrieval; Sunbird AI for Ugandan languages; Whisper; RoBERTa AI-text detector and a deepfake API; evaluation on about 500 labelled items | Not started |
 | Hardening + launch | 25 – 30 Nov | Security, performance, deployment | Not started |
 
-Repo layout: `apps/web` (this app), `apps/api` (P2–P3), `services/ai` (P4), `packages/shared`. Only `apps/web` has code so far.
+All three phases above are running well ahead of their scheduled windows — P2's window hasn't opened yet and it's already done; P3's PRs 1–2 landed three weeks before P3's window starts.
+
+Repo layout: `apps/web` (this app), `apps/api` (P2–P3), `services/ai` (P4), `packages/shared`. `apps/api` now has substantial code (see its own README); `services/ai` is still empty, pending P4.
 
 Pages live in `app/[locale]/(public|auth|app)/`. The URL never carries the language: `proxy.ts` (next-intl, `localePrefix: "never"`) maps the `NEXT_LOCALE` cookie to the `[locale]` segment, so each language is prerendered. English strings live in `messages/en.json`.
 
@@ -40,11 +42,12 @@ Open questions for the supervisor:
 - The spec gives admins no rating weight. The code uses 1×.
 - FR-API-01 targets media organisations, but FR-AUTH-02 has no organisation role. API keys are currently limited to Verified Journalists and Admins.
 - Sending submissions to a hosted LLM outside Uganda must be checked against the Data Protection and Privacy Act 2019 (§10.1).
+- FR-RATE-10's "most accurately rated" is read as: the verdicts the community most confidently agrees with — the lower bound of the 95% Wilson interval on the weighted CCS, with at least 25 ratings, so a few unanimous votes can't outrank hundreds. The homepage leaderboard (`components/home/leaderboard.tsx`) uses this; confirm the reading.
 
 ### Known gaps
 
-- Everything uses mock data from `lib/mock`.
-- Role checks run only in the browser.
+- Content (fact-checks, ratings, review, admin, account settings) still uses mock data from `lib/mock`. Sign-up, sign-in, two-factor, password reset, sign-out and "who am I" are real calls to `apps/api` (`lib/api.ts`); see "Signing in locally" below.
+- Role checks in the UI run in the browser, from the real session's role. The API enforces roles on its own endpoints, but most screens don't call it yet.
 - CAPTCHA is off in development.
 - Python must be upgraded to 3.12 before P3.
 
@@ -55,4 +58,21 @@ npm install
 npm run dev
 ```
 
-Checks: `npm run lint`, `npm run typecheck`. Add shadcn components with `npx shadcn@latest add <name>`; they go in `components/ui`.
+Checks: `npm run lint`, `npm run typecheck`, `npm test`.
+
+### Signing in locally
+
+Sign-in needs `apps/api` running with its database (see [its README](../api/README.md)). Then:
+
+```bash
+cp .env.example .env.local   # NEXT_PUBLIC_API_URL=http://localhost:8000
+npm run dev                  # open http://localhost:3000 (not 127.0.0.1: the session cookie is SameSite=Lax)
+```
+
+Deployed, the API usually isn't on a sibling subdomain (e.g. Vercel + Render), so the site proxies it instead: set `NEXT_PUBLIC_API_URL=/` and `ZUULA_API_ORIGIN=<the API's URL>` in the web app's build environment, and the site's own origin in the API's `ZUULA_CORS_ORIGINS`. See `.env.example` and [docs/deploy/render-agent-prompt.md](../../docs/deploy/render-agent-prompt.md).
+
+- Seeded accounts (`python -m app.db.seed`) all use the password `zuula-sample-password`: `amina@example.com` (Public User), `sarah@example.com` (Journalist), `david@example.com` (Expert), `mary@example.com` (Admin). Experts and admins get a two-factor code.
+- Codes (sign-up, two-factor, reset) go through the API's stub email/SMS adapters, which only log them at INFO level. A plain `uvicorn app.main:app` doesn't show that level, so run the API with logging on to see them:
+  `python -c "import logging, uvicorn; logging.basicConfig(level=logging.INFO); uvicorn.run('app.main:app', reload=False)"`
+- Some Safari versions won't store the API's `Secure` cookie over plain `http://localhost`; if sign-in doesn't stick there, set `ZUULA_SESSION_COOKIE_SECURE=false` in `apps/api/.env`. Chrome and Firefox work as is.
+- `NEXT_PUBLIC_ROLE_SWITCHER=true` adds a "Preview as" bar for looking at role-gated screens as a sample user while signed out. It's a UI preview, not sign-in: it grants nothing in the API and disappears once you really sign in. It's off unless set. Add shadcn components with `npx shadcn@latest add <name>`; they go in `components/ui`.

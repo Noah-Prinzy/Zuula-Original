@@ -4,6 +4,7 @@ import { RiFireLine, RiThumbUpLine, RiTrophyLine } from "@remixicon/react"
 
 import { PhotoHero } from "@/components/decor/photo-hero"
 import { PHOTOS } from "@/components/decor/photos"
+import { Leaderboard } from "@/components/home/leaderboard"
 import { RotatingCard } from "@/components/home/rotating-card"
 import { Emphasis } from "@/components/motion/text/emphasis"
 import { KineticText } from "@/components/motion/text/kinetic-text"
@@ -41,7 +42,7 @@ function ReportSlide({
 }) {
   const score = communityScore(report.community)
   return (
-    <div className="relative flex h-full flex-col justify-center gap-1 px-4 py-2.5 transition-colors hover:bg-muted/50 xl:flex-row xl:items-center xl:gap-3">
+    <div className="press-surface relative flex h-full flex-col justify-center gap-1 px-4 py-2.5 transition-colors [--surface-scale:1] hover:bg-muted/50 xl:flex-row xl:items-center xl:gap-3">
       <Link
         href={`/fact-checks/${report.id}`}
         className="line-clamp-1 text-sm font-medium after:absolute after:inset-0 hover:text-primary xl:min-w-0 xl:flex-1"
@@ -71,10 +72,20 @@ function ReportSlide({
   )
 }
 
-// One section: the hero text and composer, with two short status cards right below whose
-// slides rotate. FR-SEARCH-05: recent and most debated checks. FR-RATE-10: leaderboard.
-// "Why Zuula" lives on /about.
-export default async function HomePage() {
+// FR-RATE-10: the leaderboard sits below the hero; its leaders also rotate through the
+// hero's Community card as a teaser. "Why Zuula" lives on /about.
+export default function HomePage() {
+  return (
+    <>
+      <HomeHero />
+      <Leaderboard leaders={leaderboard(SAMPLE_REPORTS, 5)} />
+    </>
+  )
+}
+
+// The hero text and composer, with two short status cards right below whose slides rotate.
+// FR-SEARCH-05: recent and most debated checks.
+async function HomeHero() {
   const t = await getTranslations("Home")
   // Word lists are keyed objects ("0", "1", …) because next-intl messages can't be arrays.
   // next-intl only types leaf keys, so the object key is cast for t.raw.
@@ -88,6 +99,9 @@ export default async function HomePage() {
   const carousel = {
     previous: t("carousel.previous"),
     next: t("carousel.next"),
+    stop: t("carousel.stop"),
+    start: t("carousel.start"),
+    slides: t.raw("carousel.slides") as string,
     slide: t.raw("carousel.slide") as string,
   }
 
@@ -106,57 +120,62 @@ export default async function HomePage() {
       // In development the "Demo: view as" bar (#role-switcher) sits above the header; leave room for it.
       className="flex min-h-[calc(100svh-var(--header-h))] flex-col [html:has(#role-switcher)_&]:min-h-[calc(100svh-var(--header-h)-2.3125rem)]"
     >
-      <div className="flex page-container flex-1 flex-col items-center justify-center gap-5 py-8 text-center [@media(max-height:52rem)]:py-4">
-        <Badge
-          variant="outline"
-          className="enter border-white/40 bg-black/20 text-white backdrop-blur-sm"
-        >
-          {t("badge")}
-        </Badge>
-        <h1 className="max-w-4xl font-heading text-4xl font-bold tracking-tight text-balance drop-shadow-sm [--kinetic-accent:var(--chart-1)] md:text-5xl xl:text-6xl">
-          <KineticText text={t("headline.line1Before")} delay={120} />{" "}
-          <WordRotator
-            words={words("line1Words")}
-            delay={230}
-            marker
-            className="em-mark-solid"
-          />
-          {t("headline.line1After") && (
-            <>
-              {" "}
-              <KineticText
-                text={t("headline.line1After")}
-                delay={120}
-                offset={2}
-              />
-            </>
-          )}
-          <br />
-          <KineticText
-            text={t("headline.line2Before")}
-            delay={120}
-            offset={3}
-          />{" "}
-          {/* Rotates like the word above, without the highlighter stroke. */}
-          <WordRotator
-            words={words("line2Words")}
-            interval={3200}
-            delay={380}
-          />{" "}
-          <KineticText text={t("headline.line2After")} delay={120} offset={5} />
-        </h1>
-        <p
-          className="enter max-w-3xl text-base text-balance text-white/85 md:text-lg xl:text-xl"
-          style={delay(4)}
-        >
-          {t.rich("subtitle", {
-            scribble: (chunks) => (
-              <Emphasis variant="scribble" tone="light" delay={900}>
-                {chunks}
-              </Emphasis>
-            ),
-          })}
-        </p>
+      <div className="flex page-container flex-1 flex-col items-center justify-center gap-5 py-8 text-center max-sm:gap-8 max-sm:pt-0 [@media(max-height:52rem)]:py-4">
+        {/* Phones: a "cover" block that pins the headline low, so the top of the screen is the
+            photo itself rather than wall-to-wall text and cards. From sm up it dissolves
+            (`contents`) into the centred stack. */}
+        <div className="flex min-h-[calc(72svh-var(--header-h))] w-full flex-col items-center justify-end gap-3 sm:contents">
+          <Badge
+            variant="outline"
+            className="enter hidden border-white/40 bg-black/20 text-white backdrop-blur-sm sm:inline-flex"
+          >
+            {t("badge")}
+          </Badge>
+          <h1 className="max-w-4xl font-heading text-4xl font-bold tracking-tight text-balance drop-shadow-sm [--kinetic-accent:var(--chart-1)] md:text-5xl xl:text-6xl">
+            <KineticText text={t("headline.line1Before")} delay={120} />{" "}
+            <WordRotator
+              words={words("line1Words")}
+              delay={230}
+              marker
+              className="em-mark-solid"
+            />
+            {t("headline.line1After") && (
+              <>
+                {" "}
+                <KineticText
+                  text={t("headline.line1After")}
+                  delay={120}
+                  offset={2}
+                />
+              </>
+            )}
+            <br />
+            <KineticText
+              text={t("headline.line2Before")}
+              delay={120}
+              offset={3}
+            />{" "}
+            {/* Rotates like the word above, without the highlighter stroke. */}
+            <WordRotator
+              words={words("line2Words")}
+              interval={3200}
+              delay={380}
+            />{" "}
+            <KineticText text={t("headline.line2After")} delay={120} offset={5} />
+          </h1>
+          <p
+            className="enter max-w-3xl text-[0.9375rem] text-balance text-white/85 sm:text-base md:text-lg xl:text-xl"
+            style={delay(4)}
+          >
+            {t.rich("subtitle", {
+              scribble: (chunks) => (
+                <Emphasis variant="scribble" tone="light" delay={900}>
+                  {chunks}
+                </Emphasis>
+              ),
+            })}
+          </p>
+        </div>
 
         <div className="enter mt-4 w-full max-w-5xl" style={delay(6)}>
           <SubmissionComposer
@@ -217,7 +236,7 @@ export default async function HomePage() {
                   <li key={topic.category}>
                     <Link
                       href={`/fact-checks?${toSearchParams({ category: topic.category })}`}
-                      className="inline-flex items-center gap-1.5 border bg-card px-2 py-0.5 text-xs transition-colors hover:border-primary hover:text-primary"
+                      className="press inline-flex items-center gap-1.5 border bg-card px-2 py-0.5 text-xs [--press-scale:0.94] hover:border-primary hover:text-primary"
                     >
                       <RiFireLine
                         className="size-3.5 text-primary"
@@ -235,7 +254,7 @@ export default async function HomePage() {
             {leaders.map(({ report, score }, i) => (
               <div
                 key={report.id}
-                className="relative flex h-full flex-col justify-center gap-1 px-4 py-2.5 transition-colors hover:bg-muted/50 xl:flex-row xl:items-center xl:gap-3"
+                className="press-surface relative flex h-full flex-col justify-center gap-1 px-4 py-2.5 transition-colors [--surface-scale:1] hover:bg-muted/50 xl:flex-row xl:items-center xl:gap-3"
               >
                 <Link
                   href={`/fact-checks/${report.id}`}

@@ -16,6 +16,7 @@ import { RiArrowDownSLine, RiArrowUpDownLine, RiArrowUpSLine, RiSearchLine, RiUs
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
+import { TableCards } from "@/components/admin/data-table"
 import { CommunityBadge } from "@/components/community/community-status"
 import { useSession } from "@/components/providers/session-provider"
 import { ReasonBadge, SlaBadge } from "@/components/review/review-badges"
@@ -28,6 +29,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { VerdictBadge } from "@/components/verdict/verdict-badge"
 import { communityScore } from "@/lib/community"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { getSampleReport } from "@/lib/mock/fact-checks"
 import { REASON_META, SAMPLE_CASES, slaFor, type ReviewCase, type ReviewReason } from "@/lib/mock/review"
 import type { FactCheckReport } from "@/lib/types/fact-check"
@@ -46,7 +48,7 @@ const features = tableFeatures({
 function SortHeader({ label, dir, onClick }: { label: string; dir: false | "asc" | "desc"; onClick: () => void }) {
   const Icon = dir === "asc" ? RiArrowUpSLine : dir === "desc" ? RiArrowDownSLine : RiArrowUpDownLine
   return (
-    <button type="button" onClick={onClick} className="-ml-1 inline-flex items-center gap-1 px-1 hover:text-foreground">
+    <button type="button" onClick={onClick} className="press -ml-1 inline-flex items-center gap-1 px-1 [--press-scale:0.94] hover:text-foreground">
       {label}
       <Icon className="size-3.5" aria-hidden />
     </button>
@@ -64,6 +66,7 @@ export function ReviewQueue() {
   const t = useTranslations("Review.queue")
   const tr = useTranslations("Review.reasons")
   const tReview = useTranslations("Review")
+  const isMobile = useIsMobile()
 
   const assign = React.useCallback(
     (id: string) => {
@@ -117,6 +120,7 @@ export function ReviewQueue() {
         header: ({ column }) => (
           <SortHeader label={t("columns.ccs")} dir={column.getIsSorted()} onClick={() => column.toggleSorting()} />
         ),
+        meta: { label: t("columns.ccs") },
         cell: ({ row: { original: r } }) => (
           <div className="flex flex-col gap-1">
             <span className="font-mono tabular-nums">{r.ccs === null ? "—" : `${r.ccs}%`}</span>
@@ -132,6 +136,7 @@ export function ReviewQueue() {
         header: ({ column }) => (
           <SortHeader label={t("columns.sla")} dir={column.getIsSorted()} onClick={() => column.toggleSorting()} />
         ),
+        meta: { label: t("columns.sla") },
         cell: ({ row: { original: r } }) => <SlaBadge flaggedAt={r.flaggedAt} />,
       },
       {
@@ -217,6 +222,8 @@ export function ReviewQueue() {
             <EmptyDescription>{t("emptyBody")}</EmptyDescription>
           </EmptyHeader>
         </Empty>
+      ) : isMobile ? (
+        <TableCards table={table} rowClassName={(r) => (r.hoursLeft < 0 ? "bg-verdict-false/[0.04]" : undefined)} />
       ) : (
         <div className="overflow-x-auto border bg-card">
           <Table>

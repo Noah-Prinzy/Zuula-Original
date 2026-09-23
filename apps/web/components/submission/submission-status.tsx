@@ -69,7 +69,8 @@ function Tracker({ trackingId, submission }: { trackingId: string; submission: S
   const ts = useTranslations("Submit")
   const f = useFormat()
   const router = useRouter()
-  const { user } = useSession()
+  const { source } = useSession()
+  const signedIn = source === "account"
   const type = submission?.type ?? "text"
   const steps = React.useMemo(() => pipelineFor(type), [type])
 
@@ -213,13 +214,13 @@ function Tracker({ trackingId, submission }: { trackingId: string; submission: S
         <TrackingIdCard trackingId={trackingId} />
         <div className="flex gap-3 border bg-card p-4 text-sm">
           <RiNotification3Line className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
-          {user ? (
+          {signedIn ? (
             <p>{t("notifySignedIn")}</p>
           ) : (
             <p>
               {t.rich("notifyGuest", {
                 link: (chunks) => (
-                  <Link href="/sign-up" className="font-medium text-primary underline-offset-4 hover:underline">
+                  <Link href="/sign-up" className="font-medium text-primary underline underline-offset-4">
                     {chunks}
                   </Link>
                 ),

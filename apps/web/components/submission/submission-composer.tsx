@@ -2,22 +2,20 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { zodResolver } from "@hookform/resolvers/zod"
 import {
   RiArticleLine,
   RiFileTextLine,
   RiImageLine,
   RiLink,
   RiSearchEyeLine,
+  RiTranslate2,
 } from "@remixicon/react"
-import { Controller, useForm, useWatch } from "react-hook-form"
-import { toast } from "sonner"
+import { Controller } from "react-hook-form"
 
-import { useSession } from "@/components/providers/session-provider"
-import { startNavigationProgress } from "@/components/shell/route-progress"
 import { CaptchaField } from "@/components/submission/captcha-field"
 import { MediaDropzone } from "@/components/submission/media-dropzone"
+import { QuickComposer } from "@/components/submission/quick-composer"
+import { useSubmissionForm } from "@/components/submission/use-submission-form"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -32,15 +30,7 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { newTrackingId, saveSubmission } from "@/lib/mock/submissions"
-import {
-  CONTENT_LANGUAGES,
-  EMPTY_SUBMISSION,
-  LIMITS,
-  submissionSchema,
-  type SubmissionType,
-  type SubmissionValues,
-} from "@/lib/submission"
+import { CONTENT_LANGUAGES, LIMITS, type SubmissionType } from "@/lib/submission"
 import { cn } from "@/lib/utils"
 
 const TABS: { value: SubmissionType; label: string; icon: typeof RiFileTextLine }[] = [
@@ -58,93 +48,27 @@ function Counter({ value, max }: { value: number; max: number }) {
   )
 }
 
-function previewOf(v: SubmissionValues) {
-  switch (v.type) {
-    case "text":
-      return v.text.trim().slice(0, 200)
-    case "url":
-      return v.url.trim()
-    case "media":
-      return v.file?.name ?? ""
-    case "article":
-      return (v.headline.trim() || v.body.trim()).slice(0, 200)
-  }
-}
-
 // FR-SUBMIT-01–06: text, link, media or pasted article → tracking ID → Status page.
 export function SubmissionComposer({
   variant = "full",
   className,
 }: {
-  /** "compact" is used on Home: same form, lighter chrome. */
+  /** "compact" is used on Home: one box for text or a link, plus a media button (QuickComposer). */
   variant?: "full" | "compact"
   className?: string
 }) {
-  const router = useRouter()
-  const { user } = useSession()
-  const [uploadProgress, setUploadProgress] = React.useState<number | undefined>()
+  return variant === "compact" ? <QuickComposer className={className} /> : <FullComposer className={className} />
+}
 
-  const form = useForm<SubmissionValues>({
-    resolver: zodResolver(submissionSchema),
-    defaultValues: EMPTY_SUBMISSION,
-    mode: "onSubmit",
-    reValidateMode: "onChange",
-  })
-  const { control, handleSubmit, setValue, formState } = form
-  const type = useWatch({ control, name: "type" })
-  const text = useWatch({ control, name: "text" })
-  const body = useWatch({ control, name: "body" })
-  const submitting = formState.isSubmitting
-
-  const onToken = React.useCallback(
-    (token: string | null) => setValue("captchaToken", token),
-    [setValue]
-  )
-
-  async function onSubmit(values: SubmissionValues) {
-    if (!user && !values.captchaToken) {
-      toast.error("Please complete the human check first.")
-      return
-    }
-
-    // Simulated upload until the API exists; real uploads stream progress from the server.
-    if (values.type === "media") {
-      for (let p = 0; p <= 100; p += 10) {
-        setUploadProgress(p)
-        await new Promise((r) => setTimeout(r, 120))
-      }
-    } else {
-      await new Promise((r) => setTimeout(r, 400))
-    }
-
-    const trackingId = newTrackingId()
-    saveSubmission({
-      trackingId,
-      type: values.type,
-      language: values.language,
-      preview: previewOf(values),
-      fileName: values.file?.name,
-      submittedAt: new Date().toISOString(),
-    })
-    toast.success("Submitted for checking", { description: `Tracking ID ${trackingId}` })
-    startNavigationProgress()
-    router.push(`/submissions/${trackingId}`)
-  }
-
-  // Ctrl/Cmd + Enter submits from any field.
-  function onKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault()
-      void handleSubmit(onSubmit)()
-    }
-  }
-
-  const compact = variant === "compact"
+// Every input type in tabs, with language and article fields (/verify).
+function FullComposer({ className }: { className?: string }) {
+  const { form, control, type, text, body, submitting, uploadProgress, signedIn, onToken, submit, onKeyDown } =
+    useSubmissionForm()
 
   return (
     <form
       noValidate
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={submit}
       onKeyDown={onKeyDown}
       aria-label="Submit content to verify"
       className={cn("flex flex-col border bg-card text-left", className)}
@@ -161,7 +85,7 @@ export function SubmissionComposer({
             }}
             className="gap-0"
           >
-            <div className={cn("border-b px-3 sm:px-4", compact ? "pt-1.5" : "pt-3")}>
+            <div className={cn("border-b px-3 sm:px-4", "pt-3")}>
               <TabsList variant="line" className="w-full justify-start">
                 {TABS.map((t) => (
                   <TabsTrigger key={t.value} value={t.value} disabled={submitting} className="flex-none">
@@ -172,7 +96,7 @@ export function SubmissionComposer({
               </TabsList>
             </div>
 
-            <div className={compact ? "px-3 py-2.5 sm:px-4" : "p-3 sm:p-4"}>
+            <div className="p-3 sm:p-4">
               <TabsContent value="text">
                 <Controller
                   control={control}
@@ -185,11 +109,11 @@ export function SubmissionComposer({
                       <Textarea
                         {...field}
                         id="submit-text"
-                        rows={compact ? 3 : 8}
+                        rows={8}
                         disabled={submitting}
                         aria-invalid={fieldState.invalid}
                         placeholder="Paste a message, post or claim you want to check…"
-                        className={cn("resize-y text-base", compact ? "min-h-20" : "min-h-32")}
+                        className="min-h-32 resize-y text-base"
                       />
                       <div className="flex justify-between gap-2 text-xs text-muted-foreground">
                         <FieldError errors={[fieldState.error]} />
@@ -298,7 +222,7 @@ export function SubmissionComposer({
                       <Textarea
                         {...field}
                         id="submit-body"
-                        rows={compact ? 6 : 10}
+                        rows={10}
                         disabled={submitting}
                         aria-invalid={fieldState.invalid}
                         placeholder="Paste the full article…"
@@ -319,22 +243,19 @@ export function SubmissionComposer({
         )}
       />
 
-      <div
-        className={cn(
-          "flex flex-col gap-3 border-t bg-muted/30 p-3 sm:flex-row sm:items-center",
-          compact ? "sm:px-4 sm:py-2" : "sm:p-4"
-        )}
-      >
+      <div className="flex items-center gap-3 border-t bg-muted/30 p-3 sm:p-4">
         <Controller
           control={control}
           name="language"
           render={({ field }) => (
-            <Field orientation="horizontal" className="w-auto">
-              <FieldLabel htmlFor="submit-language" className="shrink-0 text-xs text-muted-foreground">
+            // Shares one row with Verify at every width; on phones the label gives way to an icon.
+            <Field orientation="horizontal" className="w-auto min-w-0 flex-1 sm:flex-none">
+              <FieldLabel htmlFor="submit-language" className="sr-only shrink-0 text-xs text-muted-foreground sm:not-sr-only">
                 Language
               </FieldLabel>
               <Select value={field.value} onValueChange={field.onChange} disabled={submitting}>
-                <SelectTrigger id="submit-language" size="sm" className="w-48">
+                <SelectTrigger id="submit-language" size="sm" className="w-full min-w-0 sm:w-48">
+                  <RiTranslate2 className="text-muted-foreground sm:hidden" aria-hidden />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -349,12 +270,12 @@ export function SubmissionComposer({
           )}
         />
 
-        <div className="flex flex-1 flex-col gap-1 sm:items-end">
+        <div className="flex shrink-0 flex-col gap-1 sm:flex-1 sm:items-end">
           <div className="flex items-center gap-3">
             <span className="hidden text-xs text-muted-foreground lg:inline">
               <Kbd>Ctrl</Kbd> + <Kbd>Enter</Kbd>
             </span>
-            <Button type="submit" size={compact ? "default" : "lg"} disabled={submitting} className="w-full px-5 sm:w-auto">
+            <Button type="submit" size="lg" disabled={submitting} className="px-5">
               {submitting ? <Spinner /> : <RiSearchEyeLine aria-hidden />}
               {submitting ? (type === "media" ? "Uploading…" : "Submitting…") : "Verify"}
             </Button>
@@ -363,13 +284,13 @@ export function SubmissionComposer({
       </div>
 
       <div className="flex flex-col gap-1 border-t px-3 py-2 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-4">
-        {user ? (
+        {signedIn ? (
           <span>You&apos;ll be notified when the check is complete.</span>
         ) : (
           <>
             <span>
               Checking without an account.{" "}
-              <Link href="/sign-in" className="text-primary underline-offset-4 hover:underline">
+              <Link href="/sign-in" className="text-primary underline underline-offset-4">
                 Sign in
               </Link>{" "}
               to be notified when it&apos;s done.
@@ -378,13 +299,7 @@ export function SubmissionComposer({
           </>
         )}
       </div>
-      {/* Compact (Home) folds the consent line into the notice row above to save height. */}
-      <p
-        className={cn(
-          "border-t px-3 py-2 text-[11px] text-muted-foreground sm:px-4",
-          compact && "sm:-mt-px sm:border-t-0 sm:pt-0"
-        )}
-      >
+      <p className="border-t px-3 py-2 text-[11px] text-muted-foreground sm:px-4">
         By submitting you agree to our{" "}
         <Link href="/legal/terms" className="underline underline-offset-2">
           Terms

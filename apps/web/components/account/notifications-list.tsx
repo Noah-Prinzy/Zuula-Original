@@ -74,7 +74,7 @@ export function NotificationsList() {
       ) : (
         <ul className="flex flex-col divide-y border bg-card">
           {shown.map((n) => (
-            <li key={n.id} className={cn("relative flex gap-3 p-4", !n.read && "bg-primary/[0.03]")}>
+            <li key={n.id} className={cn("press-surface relative flex gap-3 p-4 [--surface-scale:1]", !n.read && "bg-primary/[0.03]")}>
               <NotificationIcon kind={n.kind} />
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <p className="text-xs text-muted-foreground">
@@ -94,7 +94,11 @@ export function NotificationsList() {
                 <p className="text-sm text-muted-foreground">{n.body}</p>
               </div>
               <div className="relative z-10 flex items-start gap-2">
-                {!n.read && <span className="mt-2 size-2 bg-primary" aria-label={t("unreadDot")} />}
+                {!n.read && (
+                  <span className="mt-2 size-2 bg-primary">
+                    <span className="sr-only">{t("unreadDot")}</span>
+                  </span>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon-sm" aria-label={t("options", { title: n.title })}>

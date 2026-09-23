@@ -65,8 +65,9 @@ export default function GlobalError({
           <button
             type="button"
             onClick={reset}
+            className="press press-lift"
             style={{
-              background: "#C70036",
+              backgroundColor: "#C70036",
               color: "#FFFFFF",
               border: 0,
               padding: "0.625rem 1rem",

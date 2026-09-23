@@ -123,7 +123,7 @@ export function RatingPanel({
         <p className="text-xs text-muted-foreground">
           <Link
             href={`/sign-in?next=${encodeURIComponent(pathname)}`}
-            className="font-medium text-primary underline-offset-4 hover:underline"
+            className="font-medium text-primary underline underline-offset-4"
           >
             {t("signIn")}
           </Link>{" "}

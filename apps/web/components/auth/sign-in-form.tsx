@@ -1,43 +1,40 @@
 "use client"
 
+import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { RiFlaskLine } from "@remixicon/react"
 import { useTranslations } from "next-intl"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import type { z } from "zod"
 
 import { AuthHeading } from "@/components/auth/auth-heading"
+import { FormError } from "@/components/auth/form-error"
 import { PasswordInput } from "@/components/auth/password-input"
 import { SocialButtons } from "@/components/auth/social-buttons"
 import { useSession } from "@/components/providers/session-provider"
 import { startNavigationProgress } from "@/components/shell/route-progress"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
+import { useApiErrorMessage } from "@/hooks/use-api-error-message"
 import { useValidationMessage } from "@/hooks/use-validation-message"
-import {
-  demoRoleFor,
-  homeFor,
-  needsTwoFactor,
-  safeNext,
-  setPendingAuth,
-  signInSchema,
-} from "@/lib/auth"
+import { authApi, isTwoFactorChallenge } from "@/lib/api"
+import { homeFor, safeNext, setPendingAuth, signInSchema } from "@/lib/auth"
 
 type Values = z.infer<typeof signInSchema>
 
 export function SignInForm({ next }: { next?: string }) {
   const router = useRouter()
-  const { signInAs } = useSession()
+  const { setAccount } = useSession()
   const t = useTranslations("Auth")
   const tr = useTranslations("Roles")
   const v = useValidationMessage()
+  const apiMessage = useApiErrorMessage()
+  const [error, setError] = React.useState<string | null>(null)
   const form = useForm<Values>({
     resolver: zodResolver(signInSchema),
     defaultValues: { identifier: "", password: "", remember: true },
@@ -45,30 +42,42 @@ export function SignInForm({ next }: { next?: string }) {
   const { control, handleSubmit, formState } = form
 
   async function onSubmit(values: Values) {
-    await new Promise((r) => setTimeout(r, 500)) // mock network
-    const role = demoRoleFor(values.identifier)
+    setError(null)
+    let result
+    try {
+      result = await authApi.signIn({
+        identifier: values.identifier.trim(),
+        password: values.password,
+        remember: values.remember,
+      })
+    } catch (e) {
+      setError(apiMessage(e))
+      return
+    }
     startNavigationProgress()
 
-    if (needsTwoFactor(role)) {
-      setPendingAuth({ role, identifier: values.identifier, next: safeNext(next, homeFor(role)) })
+    // FR-AUTH-05: the API asks Expert Reviewers, Admins and opted-in users for a second factor.
+    if (isTwoFactorChallenge(result)) {
+      setPendingAuth({
+        identifier: values.identifier.trim(),
+        next: safeNext(next, "") || undefined,
+        challengeId: result.challengeId,
+        maskedIdentifier: result.maskedIdentifier,
+      })
       router.push("/sign-in/two-factor")
       return
     }
-    signInAs(role)
-    toast.success(t("signIn.toastTitle"), { description: t("signIn.toastBody", { role: tr(role) }) })
-    router.push(safeNext(next, homeFor(role)))
+    const { user } = result
+    setAccount(user)
+    toast.success(t("signIn.toastTitle"), { description: t("signIn.toastBody", { role: tr(user.role) }) })
+    router.push(safeNext(next, homeFor(user.role)))
   }
 
   return (
     <div className="flex flex-col gap-6">
       <AuthHeading title={t("signIn.title")} description={t("signIn.description")} />
 
-      <Alert>
-        <RiFlaskLine aria-hidden />
-        <AlertDescription>
-          {t.rich("demo.roles", { code: (chunks) => <code className="font-mono">{chunks}</code> })}
-        </AlertDescription>
-      </Alert>
+      <FormError message={error} />
 
       <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <Controller
@@ -140,7 +149,7 @@ export function SignInForm({ next }: { next?: string }) {
         {t("signIn.newHere")}{" "}
         <Link
           href={next ? `/sign-up?next=${encodeURIComponent(next)}` : "/sign-up"}
-          className="font-medium text-primary underline-offset-4 hover:underline"
+          className="font-medium text-primary underline underline-offset-4"
         >
           {t("signIn.createAccount")}
         </Link>

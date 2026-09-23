@@ -166,9 +166,11 @@ export function SourceManager() {
         accessorFn: (s) => s.name,
         sortFn: "alphanumeric",
         header: ({ column }) => <SortableHeader column={column} label={t("columns.source")} />,
+        meta: { label: t("columns.source") },
         cell: ({ row: { original: s } }) => (
-          <div className={cn("flex min-w-44 flex-col", !s.active && "opacity-60")}>
-            <span className="font-medium">{s.name}</span>
+          // Inactive sources are muted in colour, not faded with opacity, so they keep AA contrast.
+          <div className="flex min-w-44 flex-col">
+            <span className={cn("font-medium", !s.active && "text-muted-foreground")}>{s.name}</span>
             <span className="font-mono text-xs text-muted-foreground">{s.domain}</span>
           </div>
         ),
@@ -180,6 +182,7 @@ export function SourceManager() {
         accessorFn: (s) => s.tier,
         sortFn: "basic",
         header: ({ column }) => <SortableHeader column={column} label={t("columns.tier")} />,
+        meta: { label: t("columns.tier") },
         cell: ({ row: { original: s } }) => <span className="font-mono">{s.tier}</span>,
       },
       {

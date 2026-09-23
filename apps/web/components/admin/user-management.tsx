@@ -86,6 +86,7 @@ export function UserManagement() {
         accessorFn: (u) => u.name,
         sortFn: "alphanumeric",
         header: ({ column }) => <SortableHeader column={column} label={t("columns.user")} />,
+        meta: { label: t("columns.user") },
         cell: ({ row: { original: u } }) => (
           <div className="flex min-w-48 items-center gap-3">
             <Avatar className="size-8">
@@ -117,6 +118,7 @@ export function UserManagement() {
         accessorFn: (u) => u.ratings,
         sortFn: "basic",
         header: ({ column }) => <SortableHeader column={column} label={t("columns.ratings")} />,
+        meta: { label: t("columns.ratings") },
         cell: ({ row: { original: u } }) => <span className="font-mono tabular-nums">{u.ratings}</span>,
       },
       {
@@ -124,6 +126,7 @@ export function UserManagement() {
         accessorFn: (u) => u.lastActive,
         sortFn: "alphanumeric",
         header: ({ column }) => <SortableHeader column={column} label={t("columns.lastActive")} />,
+        meta: { label: t("columns.lastActive") },
         cell: ({ row: { original: u } }) => (
           <span className="text-xs whitespace-nowrap text-muted-foreground">
             {f.date(u.lastActive)} <br /> {t("joined", { date: f.date(u.joined) })}

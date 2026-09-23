@@ -56,6 +56,7 @@ export function AuditLog() {
         accessorFn: (e) => e.at,
         sortFn: "alphanumeric",
         header: ({ column }) => <SortableHeader column={column} label={t("columns.time")} />,
+        meta: { label: t("columns.time") },
         cell: ({ row: { original: e } }) => (
           <time dateTime={e.at} className="font-mono text-xs whitespace-nowrap">
             {f.dateTime(e.at)}

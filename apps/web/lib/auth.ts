@@ -4,8 +4,9 @@ import * as z from "zod/mini"
 
 import type { Role } from "@/lib/roles"
 
-// FR-AUTH-01 / 04 / 06. Validation shared by the auth pages; the same rules are
-// enforced server-side in Phase 3 (passwords hashed with bcrypt there).
+// FR-AUTH-01 / 04 / 06. Validation shared by the auth pages. apps/api enforces its own rules
+// (12-character minimum, identifier format) and hashes passwords with bcrypt; the strength
+// rules beyond length only guide users here.
 // Error messages are Validation.* translation keys, rendered by useValidationMessage().
 
 export const PASSWORD_MIN = 12
@@ -101,35 +102,22 @@ export const resetSchema = z
 export const OTP_LENGTH = 6
 export const RESEND_SECONDS = 30
 
-// ---- Mock auth (until the auth API exists) ----
-
-// Demo accounts: the part before @ picks the role, e.g. expert@zuula.ug. Anything else signs
-// in as a Public User. Any password works.
-export function demoRoleFor(identifierValue: string): Role {
-  const local = identifierValue.trim().toLowerCase().split("@")[0]
-  if (local === "admin") return "admin"
-  if (local === "expert") return "expert"
-  if (local === "journalist") return "journalist"
-  return "public"
-}
-
-// FR-AUTH-05: Expert Reviewers and Admins must pass two-factor authentication.
-export function needsTwoFactor(role: Role) {
-  return role === "expert" || role === "admin"
-}
-
-// Code "000000" is treated as wrong so the error state can be demonstrated.
-export function isDemoCodeValid(code: string) {
-  return /^\d{6}$/.test(code) && code !== "000000"
-}
+// ---- In-progress sign-in / sign-up / reset (between the API's two steps) ----
 
 const PENDING_KEY = "zuula.pending-auth"
 
+// What the second screen of a flow needs from the first. Never a password or a token: the
+// sign-up itself is tied to the API's HttpOnly `zuula_signup` cookie, and a two-factor
+// challenge id is useless without the code sent to the user.
 export type PendingAuth = {
-  role: Role
   identifier: string
-  next: string
+  /** Where to go afterwards (already passed through safeNext); unset: the user's role home. */
+  next?: string
   name?: string
+  /** As the API masked it, e.g. "am•••@example.com". */
+  maskedIdentifier?: string
+  /** Sign-in's two-factor challenge (FR-AUTH-05). */
+  challengeId?: string
 }
 
 export function setPendingAuth(p: PendingAuth) {
@@ -157,9 +145,10 @@ export function clearPendingAuth() {
   }
 }
 
-// Only allow same-site relative redirects (prevents open redirects via ?next=).
+// Only allow same-site relative redirects (prevents open redirects via ?next=). Browsers read
+// "/\host" like "//host", so a backslash second character is refused too.
 export function safeNext(next: string | null | undefined, fallback = "/") {
-  if (!next || !next.startsWith("/") || next.startsWith("//")) return fallback
+  if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return fallback
   return next
 }
 

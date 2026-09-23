@@ -21,5 +21,10 @@ def ping() -> str:
     return "pong"
 
 
-from app.worker import pipeline  # noqa: E402,F401 — after celery_app so pipeline's own
+# Periodic jobs, run by the `beat` service (docker-compose.yml).
+celery_app.conf.beat_schedule = {
+    "detect-brigading": {"task": "zuula.detect_brigading", "schedule": 300.0},
+}
+
+from app.worker import admin_tasks, pipeline  # noqa: E402,F401 — after celery_app so their
 # `from app.worker import celery_app` resolves against this (already-populated) module.

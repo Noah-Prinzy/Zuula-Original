@@ -3,6 +3,7 @@ import { RiFireLine, RiThumbUpLine, RiTrophyLine } from "@remixicon/react"
 
 import { PhotoHero } from "@/components/decor/photo-hero"
 import { PHOTOS } from "@/components/decor/photos"
+import { Leaderboard } from "@/components/home/leaderboard"
 import { RotatingCard } from "@/components/home/rotating-card"
 import { Emphasis } from "@/components/motion/text/emphasis"
 import { KineticText } from "@/components/motion/text/kinetic-text"
@@ -68,10 +69,20 @@ function ReportSlide({
   )
 }
 
-// One section: the hero text and composer, with two short status cards right below whose
-// slides rotate. FR-SEARCH-05: recent and most debated checks. FR-RATE-10: leaderboard.
-// "Why Zuula" lives on /about.
+// FR-RATE-10: the leaderboard sits below the hero; its leaders also rotate through the
+// hero's Community card as a teaser. "Why Zuula" lives on /about.
 export default function HomePage() {
+  return (
+    <>
+      <HomeHero />
+      <Leaderboard leaders={leaderboard(SAMPLE_REPORTS, 5)} />
+    </>
+  )
+}
+
+// The hero text and composer, with two short status cards right below whose slides rotate.
+// FR-SEARCH-05: recent and most debated checks.
+function HomeHero() {
   const recent = latest(SAMPLE_REPORTS, 5)
   const debated = mostDebated(SAMPLE_REPORTS, 5)
     .filter((r) => !recent.some((x) => x.id === r.id))

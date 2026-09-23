@@ -2,6 +2,12 @@
 
 from datetime import date, timedelta
 
+from app.core.rules import (
+    CCS_STATUS_THRESHOLDS,
+    CCS_WEIGHTS,
+    PARTNER_RATE_LIMIT_PER_HOUR,
+    REVIEW_SLA_HOURS,
+)
 from app.schemas.admin import (
     AdminOverview,
     AdminUser,
@@ -134,19 +140,20 @@ SAMPLE_AUDIT: list[AuditEntry] = [
     AuditEntry(id="a3", at="2026-09-10T12:00:00+03:00", actor="Mary Akello", actor_role="admin", action="source.deactivate", target="Makerere University AI Lab", detail="Feed discontinued", ip="196.43.x.x"),
 ]
 
+_t = CCS_STATUS_THRESHOLDS
 DEFAULT_SETTINGS = PlatformSettings(
     thresholds=Thresholds(
-        verified_min=90,
-        questioned_min=40,
-        questioned_max=69,
-        questioned_ratings=50,
-        escalated_max=39,
-        escalated_ratings=100,
-        suspended_max=19,
-        suspended_ratings=200,
+        verified_min=_t["verified"]["min_score"],
+        questioned_min=_t["questioned"]["min_score"],
+        questioned_max=_t["questioned"]["max_score"],
+        questioned_ratings=_t["questioned"]["min_ratings"],
+        escalated_max=_t["escalated"]["max_score"],
+        escalated_ratings=_t["escalated"]["min_ratings"],
+        suspended_max=_t["suspended"]["max_score"],
+        suspended_ratings=_t["suspended"]["min_ratings"],
     ),
-    weights=Weights(public=1, journalist=2, expert=5),
-    sla_hours=48,
-    api_rate_limit=100,
+    weights=Weights(**CCS_WEIGHTS),
+    sla_hours=REVIEW_SLA_HOURS,
+    api_rate_limit=PARTNER_RATE_LIMIT_PER_HOUR,
     retraining=Retraining(cadence="weekly", min_ccs=85),
 )

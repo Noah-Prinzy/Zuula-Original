@@ -1,12 +1,12 @@
 # ADR 0001: API architecture (P2)
 
 **Status:** Accepted. Step 1 (the contract, [PR #1](../../apps/api/openapi.yaml)), Step 2
-(the FastAPI skeleton, [PR #2](https://github.com/Noah-Prinzy/zuula/pull/2)) and Step 3 (the
-real submission pipeline and realtime delivery, [PR #3](https://github.com/Noah-Prinzy/zuula/pull/3))
-are merged; Step 4 (integration adapters) is this revision's addition — see the Adapters
-section below, rewritten from a placeholder-only summary into a real per-adapter account.
-Several decisions here are explicitly P2-only and are expected to be superseded in P3 —
-each says so.
+(the FastAPI skeleton, [PR #2](https://github.com/Noah-Prinzy/zuula/pull/2)), and Steps 3+4
+(the real submission pipeline, realtime delivery, and integration adapters,
+[PR #3](https://github.com/Noah-Prinzy/zuula/pull/3)) are merged; Step 5 (business rules as
+documented constants) is this revision's addition — see the new Business rules section
+below. Several decisions here are explicitly P2-only and are expected to be superseded in
+P3 — each says so.
 
 ## Context
 
@@ -184,6 +184,41 @@ POST handlers parse the provider's real payload shape, then call the same
 `enqueue_submission()` helper `POST /api/v1/submissions` uses — a chat message becomes a
 submission through the identical tracking-id/state/pipeline path a website visitor's does,
 not a parallel one.
+
+## Business rules (`app/core/rules.py`)
+
+**Decision:** one module holds every numeric business rule the brief's Step 5 names — CCS
+weights (§9.1), the CCS status thresholds including the escalation figure (§9.2), the review
+SLA, the password minimum (FR-AUTH), the media upload cap (FR-SUBMIT-05), and the partner
+rate limit (FR-API-01) — each with a citation and a note on where it's actually used.
+
+**This is a consolidation, not new behavior.** Every one of these values already existed in
+P2's code before Step 5, just duplicated: `app/stubs/scoring.py` had its own copy of the CCS
+weights and thresholds, `app/stubs/review.py` had its own SLA constant, and
+`app/stubs/admin.py`'s platform-settings stub had a *third* copy of essentially all of the
+above (plus `app/core/config.py`'s partner rate limit setting was a fourth, independent
+default). All four now import from `app/core/rules.py` instead of hardcoding their own
+number — one source of truth for something a future edit could otherwise update in one
+place and silently miss the other three.
+
+**Two are explicitly open questions**, carried since the Step 1 contract PR and still
+unresolved: whether admins get their own CCS weight (§9.1 is silent; the app currently rates
+admins at the `public` weight — see `app/api/v1/ratings.py`'s `add_comment`), and whether
+escalation should key off total ratings (§9.2, what's implemented) or "dislikes"
+(FR-RATE-05, a count the app doesn't currently model at all). Both are flagged in
+`rules.py` itself, not just in this ADR, so they surface to whoever next touches that code.
+
+**Two rules are documented but not enforced yet, deliberately:** `PASSWORD_MIN_LENGTH` and
+`MAX_MEDIA_BYTES` are declared in the contract (`openapi.yaml`'s schemas, and the frontend's
+own `apps/web/lib/submission.ts`) but nothing in `apps/api` checks them — `auth.py`'s
+sign-up/reset routes accept an untyped body without validating it, and `create_submission`
+takes JSON, not a multipart upload, so there's no file to size-check. The brief's own Step 5
+wording is "put these in one module... implement them in P3," so real enforcement is left
+for when real password storage and real file uploads exist to enforce them against, rather
+than half-built ahead of that. `PARTNER_RATE_LIMIT_PER_HOUR` is the exception — it's already
+enforced for real (an in-memory counter; see the Adapters section above for why that's a
+P2-only simplification), so Step 5 only needed to point its existing setting at the
+constant rather than add new enforcement.
 
 ## Pagination
 

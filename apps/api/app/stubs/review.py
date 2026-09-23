@@ -2,9 +2,9 @@
 
 from datetime import UTC, datetime, timedelta
 
+from app.core.rules import REVIEW_SLA_HOURS
 from app.schemas.review import ReviewCase, ReviewDecision
 
-REVIEW_SLA_HOURS = 48
 REVIEW_NOW = datetime(2026, 9, 21, 9, 0, tzinfo=UTC)  # 12:00 EAT
 
 REASON_META = {

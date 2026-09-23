@@ -33,7 +33,9 @@ export function isLink(value: string) {
 // validate → simulated upload → tracking ID → Status page.
 export function useSubmissionForm({ detectLinks = false }: { detectLinks?: boolean } = {}) {
   const router = useRouter()
-  const { user } = useSession()
+  // FR-AUTH-07: anyone may submit; only a real account skips the CAPTCHA, never a role preview.
+  const { source } = useSession()
+  const signedIn = source === "account"
   const [uploadProgress, setUploadProgress] = React.useState<number | undefined>()
 
   const form = useForm<SubmissionValues>({
@@ -54,7 +56,7 @@ export function useSubmissionForm({ detectLinks = false }: { detectLinks?: boole
   )
 
   async function onSubmit(values: SubmissionValues) {
-    if (!user && !values.captchaToken) {
+    if (!signedIn && !values.captchaToken) {
       toast.error("Please complete the human check first.")
       return
     }
@@ -104,5 +106,5 @@ export function useSubmissionForm({ detectLinks = false }: { detectLinks?: boole
     }
   }
 
-  return { form, control, type, text, body, submitting, uploadProgress, user, onToken, submit, onKeyDown }
+  return { form, control, type, text, body, submitting, uploadProgress, signedIn, onToken, submit, onKeyDown }
 }

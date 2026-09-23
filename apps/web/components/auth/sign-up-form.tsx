@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -8,6 +9,7 @@ import { Controller, useForm, useWatch } from "react-hook-form"
 import type { z } from "zod"
 
 import { AuthHeading } from "@/components/auth/auth-heading"
+import { FormError } from "@/components/auth/form-error"
 import { PasswordInput } from "@/components/auth/password-input"
 import { PasswordStrength } from "@/components/auth/password-strength"
 import { SocialButtons } from "@/components/auth/social-buttons"
@@ -17,7 +19,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
+import { useApiErrorMessage } from "@/hooks/use-api-error-message"
 import { useValidationMessage } from "@/hooks/use-validation-message"
+import { ApiError, authApi } from "@/lib/api"
 import { safeNext, setPendingAuth, signUpSchema } from "@/lib/auth"
 
 type Values = z.infer<typeof signUpSchema>
@@ -26,16 +30,39 @@ export function SignUpForm({ next }: { next?: string }) {
   const router = useRouter()
   const t = useTranslations("Auth")
   const v = useValidationMessage()
+  const apiMessage = useApiErrorMessage()
+  const [error, setError] = React.useState<string | null>(null)
   const form = useForm<Values>({
     resolver: zodResolver(signUpSchema),
     defaultValues: { name: "", identifier: "", password: "", confirm: "", consent: false },
   })
-  const { control, handleSubmit, formState } = form
+  const { control, handleSubmit, formState, setError: setFieldError } = form
   const password = useWatch({ control, name: "password" })
 
   async function onSubmit(values: Values) {
-    await new Promise((r) => setTimeout(r, 600)) // mock network
-    setPendingAuth({ role: "public", identifier: values.identifier, name: values.name, next: safeNext(next, "/") })
+    setError(null)
+    const identifier = values.identifier.trim()
+    let accepted
+    try {
+      // 202: the API holds the sign-up and sends a code; the account exists once it's verified.
+      accepted = await authApi.signUp({
+        name: values.name.trim(),
+        identifier,
+        password: values.password,
+        consent: values.consent,
+      })
+    } catch (e) {
+      // 409: that email or phone number already has an account.
+      if (e instanceof ApiError && e.code === "conflict") setFieldError("identifier", { message: e.message })
+      else setError(apiMessage(e))
+      return
+    }
+    setPendingAuth({
+      identifier,
+      name: values.name.trim(),
+      next: safeNext(next, "") || undefined,
+      maskedIdentifier: accepted?.maskedIdentifier,
+    })
     startNavigationProgress()
     router.push("/sign-up/verify")
   }
@@ -43,6 +70,8 @@ export function SignUpForm({ next }: { next?: string }) {
   return (
     <div className="flex flex-col gap-6">
       <AuthHeading title={t("signUp.title")} description={t("signUp.description")} />
+
+      <FormError message={error} />
 
       <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <Controller

@@ -3,33 +3,34 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { RiFlaskLine, RiMailSendLine } from "@remixicon/react"
+import { RiMailSendLine } from "@remixicon/react"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { AuthHeading } from "@/components/auth/auth-heading"
 import { CodeInput } from "@/components/auth/code-input"
-import { ResendCode } from "@/components/auth/resend-code"
 import { usePendingAuth } from "@/components/auth/use-pending-auth"
 import { useSession } from "@/components/providers/session-provider"
 import { startNavigationProgress } from "@/components/shell/route-progress"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
+import { useApiErrorMessage } from "@/hooks/use-api-error-message"
 import { useValidationMessage } from "@/hooks/use-validation-message"
-import { clearPendingAuth, identifierKind, isDemoCodeValid, maskIdentifier } from "@/lib/auth"
+import { authApi } from "@/lib/api"
+import { clearPendingAuth, homeFor, identifierKind, maskIdentifier, safeNext } from "@/lib/auth"
 
 // FR-AUTH-03: confirm the email or phone number with a one-time code.
 export function VerifyAccountForm() {
   const router = useRouter()
-  const { signInAs } = useSession()
+  const { setAccount } = useSession()
   const t = useTranslations("Auth")
   const v = useValidationMessage()
+  const apiMessage = useApiErrorMessage()
   const pending = usePendingAuth()
   const [code, setCode] = React.useState("")
-  // A Validation.* key.
+  // A Validation.* key, or the API's message.
   const [error, setError] = React.useState<string | null>(null)
   const [busy, setBusy] = React.useState(false)
 
@@ -45,7 +46,7 @@ export function VerifyAccountForm() {
     )
   }
 
-  const destination = maskIdentifier(pending.identifier)
+  const destination = pending.maskedIdentifier ?? maskIdentifier(pending.identifier)
   const channel = identifierKind(pending.identifier) === "phone" ? "sms" : "email"
 
   async function verify(value = code) {
@@ -55,21 +56,24 @@ export function VerifyAccountForm() {
     }
     setBusy(true)
     setError(null)
-    await new Promise((r) => setTimeout(r, 500))
-    if (!isDemoCodeValid(value)) {
+    let user
+    try {
+      // The API matches the code to this browser's sign-up by its HttpOnly zuula_signup cookie.
+      user = (await authApi.verifySignUp({ code: value })).user
+    } catch (e) {
       setBusy(false)
-      setError("codeInvalid")
+      setError(apiMessage(e))
       setCode("")
       return
     }
     clearPendingAuth()
-    signInAs("public")
-    const firstName = pending?.name?.split(" ")[0]
+    setAccount(user)
+    const firstName = user.name.split(" ")[0]
     toast.success(firstName ? t("verify.welcomeName", { name: firstName }) : t("verify.welcome"), {
       description: t("verify.ready"),
     })
     startNavigationProgress()
-    router.push(pending?.next ?? "/")
+    router.push(safeNext(pending?.next, homeFor(user.role)))
   }
 
   return (
@@ -83,10 +87,6 @@ export function VerifyAccountForm() {
           strong: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
         })}
       />
-      <Alert>
-        <RiFlaskLine aria-hidden />
-        <AlertDescription>{t("demo.code")}</AlertDescription>
-      </Alert>
       <form
         noValidate
         onSubmit={(e) => {
@@ -116,8 +116,8 @@ export function VerifyAccountForm() {
           {busy ? t("verify.submitting") : t("verify.submit")}
         </Button>
       </form>
+      {/* No resend here: the API has no endpoint for it yet. Starting over sends a new code. */}
       <div className="flex flex-col gap-1">
-        <ResendCode destination={destination} />
         <p className="text-sm text-muted-foreground">
           {t("verify.wrongAddress")}{" "}
           <Link href="/sign-up" className="text-primary underline-offset-4 hover:underline">

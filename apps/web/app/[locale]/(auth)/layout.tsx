@@ -21,15 +21,17 @@ export default function AuthLayout({
     <div className="relative isolate flex min-h-svh flex-col">
       <RouteBackdrop />
       <RoleSwitcher />
-      <div className="flex page-container justify-end pt-3 text-white">
+      {/* Phones: logo and theme toggle share one row so the card starts higher up. */}
+      <div className="flex page-container items-center justify-between pt-3 text-white sm:justify-end">
+        <Logo className="sm:hidden" />
         <ThemeToggle />
       </div>
 
       <main
         id="main"
-        className="flex page-container flex-1 flex-col items-center justify-center gap-6 pb-10"
+        className="flex page-container flex-1 flex-col items-center justify-center gap-6 pt-4 pb-10 sm:pt-0"
       >
-        <div className="flex flex-col items-center gap-1 text-white">
+        <div className="hidden flex-col items-center gap-1 text-white sm:flex">
           <Logo className="text-lg" />
           <p className="text-xs text-white/80">{tc("tagline")}</p>
         </div>

@@ -86,10 +86,11 @@ export function SignUpForm({ next }: { next?: string }) {
                 id="signup-password"
                 autoComplete="new-password"
                 aria-invalid={fieldState.invalid}
-                aria-describedby="signup-password-strength"
+                aria-describedby={password ? "signup-password-strength" : undefined}
                 className="h-10"
               />
-              <PasswordStrength id="signup-password-strength" password={password} />
+              {/* The meter and checklist appear once typing starts, not as four ✕ rows up front. */}
+              {password && <PasswordStrength id="signup-password-strength" password={password} />}
               <FieldError>{v(fieldState.error?.message)}</FieldError>
             </Field>
           )}

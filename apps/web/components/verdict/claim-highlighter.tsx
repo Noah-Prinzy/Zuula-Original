@@ -68,7 +68,7 @@ export function ClaimHighlighter({
                   }
                 }}
                 className={cn(
-                  "cursor-pointer px-0.5 box-decoration-clone underline decoration-2 underline-offset-4 transition-colors hover:brightness-95 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                  "press-tint cursor-pointer px-0.5 box-decoration-clone underline decoration-2 underline-offset-4 transition-colors hover:brightness-95 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                   tone.bg,
                   tone.decoration
                 )}

@@ -38,7 +38,7 @@ function ReportSlide({
 }) {
   const score = communityScore(report.community)
   return (
-    <div className="relative flex h-full flex-col justify-center gap-1 px-4 py-2.5 transition-colors hover:bg-muted/50 xl:flex-row xl:items-center xl:gap-3">
+    <div className="press-surface relative flex h-full flex-col justify-center gap-1 px-4 py-2.5 transition-colors [--surface-scale:1] hover:bg-muted/50 xl:flex-row xl:items-center xl:gap-3">
       <Link
         href={`/fact-checks/${report.id}`}
         className="line-clamp-1 text-sm font-medium after:absolute after:inset-0 hover:text-primary xl:min-w-0 xl:flex-1"
@@ -167,7 +167,7 @@ export default function HomePage() {
                   <li key={t.category}>
                     <Link
                       href={`/fact-checks?${toSearchParams({ category: t.category })}`}
-                      className="inline-flex items-center gap-1.5 border bg-card px-2 py-0.5 text-xs transition-colors hover:border-primary hover:text-primary"
+                      className="press inline-flex items-center gap-1.5 border bg-card px-2 py-0.5 text-xs [--press-scale:0.94] hover:border-primary hover:text-primary"
                     >
                       <RiFireLine
                         className="size-3.5 text-primary"
@@ -185,7 +185,7 @@ export default function HomePage() {
             {leaders.map(({ report, score }, i) => (
               <div
                 key={report.id}
-                className="relative flex h-full flex-col justify-center gap-1 px-4 py-2.5 transition-colors hover:bg-muted/50 xl:flex-row xl:items-center xl:gap-3"
+                className="press-surface relative flex h-full flex-col justify-center gap-1 px-4 py-2.5 transition-colors [--surface-scale:1] hover:bg-muted/50 xl:flex-row xl:items-center xl:gap-3"
               >
                 <Link
                   href={`/fact-checks/${report.id}`}

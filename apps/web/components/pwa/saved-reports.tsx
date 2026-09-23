@@ -138,7 +138,7 @@ export function SavedReports() {
             {reports.map((r) => (
               <li
                 key={r.href}
-                className="relative flex items-start gap-3 p-4 hover:bg-muted/50"
+                className="press-surface relative flex items-start gap-3 p-4 [--surface-scale:1] hover:bg-muted/50"
               >
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <Link

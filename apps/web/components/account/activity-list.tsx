@@ -117,7 +117,7 @@ function Ratings() {
         const accurate = r.vote === "accurate"
         const Icon = accurate ? RiThumbUpFill : RiThumbDownFill
         return (
-          <li key={r.reportId} className="relative flex flex-col gap-2 p-4 hover:bg-muted/40 md:flex-row md:items-start">
+          <li key={r.reportId} className="press-surface relative flex flex-col gap-2 p-4 [--surface-scale:1] hover:bg-muted/40 md:flex-row md:items-start">
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
               <Link href={`/fact-checks/${r.reportId}`} className="font-medium after:absolute after:inset-0 hover:text-primary">
                 {r.title}

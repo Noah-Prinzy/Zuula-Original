@@ -74,7 +74,7 @@ export function NotificationsList() {
       ) : (
         <ul className="flex flex-col divide-y border bg-card">
           {shown.map((n) => (
-            <li key={n.id} className={cn("relative flex gap-3 p-4", !n.read && "bg-primary/[0.03]")}>
+            <li key={n.id} className={cn("press-surface relative flex gap-3 p-4 [--surface-scale:1]", !n.read && "bg-primary/[0.03]")}>
               <NotificationIcon kind={n.kind} />
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <p className="text-xs text-muted-foreground">

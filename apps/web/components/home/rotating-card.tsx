@@ -92,7 +92,7 @@ export function RotatingCard({
             type="button"
             onClick={() => api?.scrollPrev()}
             aria-label="Previous"
-            className="grid size-6 place-items-center text-muted-foreground hover:text-foreground"
+            className="press grid size-6 place-items-center text-muted-foreground [--press-scale:0.85] hover:text-foreground"
           >
             <RiArrowLeftSLine className="size-4" aria-hidden />
           </button>
@@ -106,7 +106,7 @@ export function RotatingCard({
             type="button"
             onClick={() => api?.scrollNext()}
             aria-label="Next"
-            className="grid size-6 place-items-center text-muted-foreground hover:text-foreground"
+            className="press grid size-6 place-items-center text-muted-foreground [--press-scale:0.85] hover:text-foreground"
           >
             <RiArrowRightSLine className="size-4" aria-hidden />
           </button>

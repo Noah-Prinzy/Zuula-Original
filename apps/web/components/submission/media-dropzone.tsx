@@ -126,7 +126,7 @@ export function MediaDropzone({
               type="button"
               onClick={() => inputRef.current?.click()}
               disabled={disabled}
-              className="font-medium text-primary underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none"
+              className="press font-medium text-primary underline-offset-4 [--press-tint:transparent] hover:underline focus-visible:underline focus-visible:outline-none"
             >
               {chunks}
             </button>

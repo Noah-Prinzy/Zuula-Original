@@ -33,6 +33,8 @@ from app.db.seed import SAMPLE_PASSWORD
 from app.db.session import get_db
 from app.main import app as _app
 from app.services.auth import token_hash
+from app.services.broadcasts import deliver_channels
+from app.services.recompute import recompute_reports
 from app.worker import dispatch
 from app.worker.pipeline import run_pipeline
 
@@ -132,6 +134,18 @@ def _bound_client(app, db_url: str, *, base_url: str):
         ) as session:
             await run_pipeline(session, tracking_id)
 
+    async def inline_recompute(report_ids=None) -> None:
+        async with AsyncSession(
+            bind=state["conn"], join_transaction_mode="create_savepoint", expire_on_commit=False
+        ) as session:
+            await recompute_reports(session, report_ids)
+
+    async def inline_broadcast(broadcast_id: str) -> None:
+        async with AsyncSession(
+            bind=state["conn"], join_transaction_mode="create_savepoint", expire_on_commit=False
+        ) as session:
+            await deliver_channels(session, broadcast_id)
+
     async def run_db(fn):
         async with AsyncSession(
             bind=state["conn"], join_transaction_mode="create_savepoint", expire_on_commit=False
@@ -146,11 +160,19 @@ def _bound_client(app, db_url: str, *, base_url: str):
         # transaction (on the client's loop), for setup the API itself can't do.
         client.run_db = lambda fn: client.portal.call(run_db, fn)
         _app.dependency_overrides[get_db] = override_get_db
-        real_dispatch, dispatch.dispatch_pipeline = dispatch.dispatch_pipeline, inline_dispatch
+        inline = {
+            "dispatch_pipeline": inline_dispatch,
+            "dispatch_recompute": inline_recompute,
+            "dispatch_broadcast": inline_broadcast,
+        }
+        real = {name: getattr(dispatch, name) for name in inline}
+        for name, fn in inline.items():
+            setattr(dispatch, name, fn)
         try:
             yield client
         finally:
-            dispatch.dispatch_pipeline = real_dispatch
+            for name, fn in real.items():
+                setattr(dispatch, name, fn)
             _app.dependency_overrides.pop(get_db, None)
             client.portal.call(close_transaction)
 

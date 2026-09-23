@@ -1200,6 +1200,9 @@ paths:
               properties:
                 role: { $ref: "#/components/schemas/Role" }
                 status: { type: string, enum: [active, suspended, pending] }
+                excludeRatings:
+                  type: boolean
+                  description: "Drop (true) or restore (false) this user's past ratings from every community score, e.g. after suspending them for coordinated rating (§9.1). Recorded in the audit log."
       responses:
         "200":
           description: Updated.
@@ -1253,9 +1256,11 @@ paths:
                 note: { type: string }
       responses:
         "200": { description: Resolved. }
+        "400": { $ref: "#/components/responses/BadRequest" }
 
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /api/v1/admin/moderation/signals:
     get:
       operationId: listManipulationSignals
@@ -1312,6 +1317,7 @@ paths:
 
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
   /api/v1/admin/sources/{id}:
     patch:
       operationId: updateSource
@@ -1333,6 +1339,7 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
     delete:
       operationId: removeSource
       tags: [admin]
@@ -1344,6 +1351,7 @@ paths:
 
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /api/v1/admin/broadcasts:
     get:
       operationId: listBroadcasts
@@ -1384,6 +1392,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Broadcast" }
+        "400": { $ref: "#/components/responses/BadRequest" }
 
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -1460,6 +1469,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/PlatformSettings" }
+        "400": { $ref: "#/components/responses/BadRequest" }
 
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -1728,6 +1738,7 @@ components:
         - user.role_change
         - user.suspend
         - user.reinstate
+        - ratings.exclude
         - source.add
         - source.deactivate
         - broadcast.send
@@ -2240,7 +2251,7 @@ components:
         languages: { type: array, items: { type: string } }
         tier: { type: integer, enum: [1, 2, 3] }
         active: { type: boolean }
-        lastCrawled: { type: string, format: date-time }
+        lastCrawled: { type: string, format: date-time, description: "Last crawl. Until a source's first crawl, the time it was added." }
         crawlOk: { type: boolean }
 
     TrustedSourceInput:

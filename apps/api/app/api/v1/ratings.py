@@ -174,6 +174,7 @@ async def report_issue(
                 user_id=user.id,
                 reason=reason,
                 body=detail,
+                comment_id=comment_id or None,
                 created_at=now,
             )
         )

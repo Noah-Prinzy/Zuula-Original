@@ -114,6 +114,9 @@ class ContentFlag(Base):
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
     reason: Mapped[str] = mapped_column(Text)
     body: Mapped[str | None] = mapped_column(Text)
+    # Set when the flag is about a rating comment rather than the verdict: "remove" in
+    # moderation hides exactly these comments.
+    comment_id: Mapped[str | None] = mapped_column(ForeignKey("rating_comments.id"))
     created_at: Mapped[datetime] = created_at_column()
 
 

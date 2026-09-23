@@ -179,11 +179,9 @@ are still stubs (P3 PR 5), so codes are logged by the `zuula.adapters.sms` /
 
 ## What's real vs. stubbed (P2)
 
-**P3 in progress:** the database, migrations and seed exist, auth is real, and so is all
-content: submissions and the pipeline, fact-checks and search, ratings with escalation, review
-and notifications (ADR 0002 §4–§6). Most admin endpoints (overview, moderation, sources,
-broadcasts, settings, reports) still serve the in-memory stubs until P3 PR 4, and the adapters
-are stubs until PR 5. The bullets below describe P2 and are out of date where they conflict.
+**P3 in progress:** the database, migrations and seed exist, and auth, content and admin are
+all real (ADR 0002 §4–§6, §11). The external adapters are still stubs until P3 PR 5, and the
+AI verdicts until P4. The bullets below describe P2 and are out of date where they conflict.
 
 This is all documented more fully in the ADR, but briefly:
 - **Auth** is a stub: the core API reads an `X-Zuula-Role` header (mirrors the frontend's own

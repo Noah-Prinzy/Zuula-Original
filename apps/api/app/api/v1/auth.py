@@ -16,7 +16,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.oauth import get_oauth_provider
+from app.adapters.oauth import ProviderUnavailable, get_oauth_provider
 from app.core import rules
 from app.core.config import get_settings
 from app.core.errors import ApiError
@@ -377,9 +377,12 @@ def start_oauth(provider: str, request: Request, next: str | None = None):  # no
         raise ApiError("not_found", f"Unknown provider '{provider}'.")
     nonce = secrets.token_urlsafe(24)
     next_b64 = base64.urlsafe_b64encode(_safe_next(next).encode()).decode()
-    url = get_oauth_provider(provider).authorize_url(
-        redirect_uri=_callback_url(request, provider), state=nonce
-    )
+    try:
+        oauth = get_oauth_provider(provider)
+    except ProviderUnavailable:
+        # Production without this provider's credentials: back to the sign-in page.
+        return RedirectResponse(_web("/sign-in?error=oauth-unavailable"), status_code=302)
+    url = oauth.authorize_url(redirect_uri=_callback_url(request, provider), state=nonce)
     redirect = RedirectResponse(url, status_code=302)
     # CSRF for the OAuth round trip: the provider echoes `state` back, and it must match
     # this signed, short-lived cookie.

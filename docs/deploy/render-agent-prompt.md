@@ -42,6 +42,7 @@ Check each name against `app/core/config.py`; the `ZUULA_` prefix applies only t
 - `ZUULA_CORS_ORIGINS`: the web app's exact origin(s), comma-separated, no trailing slash (e.g. `https://zuula.vercel.app`). The API's CSRF check refuses cookie-authenticated writes (sign-out, and later every write) from any origin not listed. Vercel preview URLs change per deploy, so ask me which ones to allow.
 - `ZUULA_WEB_APP_URL`: the web app's URL (OAuth redirects back there).
 - `ANALYSIS_PROVIDER=stub`, `PIPELINE_STEP_SCALE=1.0`. Leave the other adapter vars empty unless I give you values.
+- `ZUULA_ALLOW_STUB_ADAPTERS`: with `ZUULA_ENV=production`, the API and worker **refuse to start** while any integration (OAuth, SMS, email, Turnstile, ClamAV, S3, WhatsApp, Telegram) lacks credentials, and the error names each missing variable. List every integration I haven't given you values for, comma-separated from `google,facebook,sms,email,turnstile,clamav,s3,whatsapp,telegram`, and tell me which ones you listed. For those, codes are only logged, uploads aren't virus-scanned or stored durably, the captcha accepts any token, Google/Facebook sign-in is unavailable, and the chat webhooks refuse every call.
 
 ## 3. First deploy and checks
 
@@ -64,7 +65,7 @@ With your own domain (`zuula.ug` + `api.zuula.ug`), the direct setup also works:
 
 ## 5. Known blockers and risks to report back on (don't paper over them)
 
-- **Verification codes aren't delivered.** Email/SMS adapters are stubs that only log the code at INFO level (P3 PR 5 builds the real ones). Real users can't finish sign-up or 2FA until then. To demo it, the code has to be read from the API's logs, and plain uvicorn doesn't print INFO from app loggers. Propose the smallest safe way to make those logs visible, but don't expose codes publicly.
+- **Verification codes aren't delivered without SMS/email credentials.** The real Africa's Talking and SMTP adapters exist (set `AFRICASTALKING_*` with a non-`sandbox` username, or `EMAIL_SMTP_*`); without them, the stubs only log the code at INFO level, and real users can't finish sign-up or 2FA. To demo it, the code has to be read from the API's logs, and plain uvicorn doesn't print INFO from app loggers. Propose the smallest safe way to make those logs visible, but don't expose codes publicly.
 - **Client IP behind two proxies (Vercel → Render).** Per-IP sign-in lockout (50 failures) uses `request.client`, which depends on `X-Forwarded-For` being passed and trusted. Check what the API actually sees. If every user shows up as a Vercel IP, they'd share one lockout counter; report it. Trusting `*` also lets clients spoof the header, which weakens only the per-IP limit; the per-identifier limit still holds.
 - **Local `next start` redirect loop.** On `main`, a local production server (`next start`) and `next dev` opened as `127.0.0.1` answer every page with a 307 to the same path. Vercel isn't affected. If you test locally, use `next dev` on `http://localhost:3000`, and don't try to fix this as part of the deploy.
 - Free-tier Render services sleep and Render's free Postgres expires. Say which plan you picked and what that means.

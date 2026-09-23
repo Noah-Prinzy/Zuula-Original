@@ -81,7 +81,7 @@ def parse_reply(reply: bytes) -> ScanResult:
 
 
 def get_clamav_scanner() -> ClamAvScanner:
-    if configured("Malware scanning (ClamAV)"):
+    if configured("clamav"):
         settings = get_adapters_settings()
         return ClamdScanner(host=settings.clamav_host, port=settings.clamav_port)
     return StubClamAvScanner()

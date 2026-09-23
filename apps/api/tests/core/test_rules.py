@@ -39,21 +39,14 @@ def test_settings_default_rate_limit_matches_rules():
     assert default == rules.PARTNER_RATE_LIMIT_PER_HOUR
 
 
-def test_scoring_stub_uses_rules_values():
-    from app.stubs import scoring
-
-    assert scoring.CCS_WEIGHTS is rules.CCS_WEIGHTS
-    assert scoring.CCS_STATUS_THRESHOLDS is rules.CCS_STATUS_THRESHOLDS
-
-
-def test_review_stub_uses_rules_sla():
-    from app.stubs import review
+def test_sample_review_cases_use_rules_sla():
+    from app.db.sample_data import review
 
     assert review.REVIEW_SLA_HOURS is rules.REVIEW_SLA_HOURS
 
 
-def test_admin_default_settings_reflect_rules():
-    from app.stubs.admin import DEFAULT_SETTINGS
+def test_sample_default_settings_reflect_rules():
+    from app.db.sample_data.admin import DEFAULT_SETTINGS
 
     assert DEFAULT_SETTINGS.sla_hours == rules.REVIEW_SLA_HOURS
     assert DEFAULT_SETTINGS.api_rate_limit == rules.PARTNER_RATE_LIMIT_PER_HOUR

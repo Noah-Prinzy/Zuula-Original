@@ -12,8 +12,8 @@ from dataclasses import dataclass, field
 from typing import Protocol
 
 from app.core.config import get_analysis_settings
+from app.db.sample_data.fact_checks import SAMPLE_REPORTS
 from app.schemas.fact_check import AISignal, Citation, Claim
-from app.stubs.fact_checks import SAMPLE_REPORTS
 
 
 @dataclass

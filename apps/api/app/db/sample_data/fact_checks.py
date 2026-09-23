@@ -13,7 +13,7 @@ from app.schemas.fact_check import (
     RatingComment,
     RatingCounts,
 )
-from app.stubs.scoring import community_score
+from app.services.community import community_score
 
 _TEXT_1 = (
     "BREAKING: The Ministry of ICT has announced that every Ugandan will get free unlimited "

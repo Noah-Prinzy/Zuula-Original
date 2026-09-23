@@ -1,15 +1,14 @@
 # ADR 0002: Backend and database (P3)
 
-**Status:** Approved by Noah (23 Sep 2026; decisions in §10). Being built in the PR sequence
-of §9. PR 1 (database foundation, #5), PR 2 (auth and roles, #8), PR 3 (content, #18) and
-PR 4 (admin, #20) are merged, and PR 5 (real adapters) is implemented; PR 6 (docs) is still
-to come.
-Once all six PRs have landed, this file becomes the record of what was actually decided
-(brief §3 step 5).
+**Status:** Accepted. Approved by Noah on 23 Sep 2026 (decisions in §10) and built in the six
+PRs of §9, all merged. This is the record of what P3 decided and built: where the build
+departed from the approved plan, the section says so, and §11 lists everything found along
+the way, PR by PR. What's left for P4 is summarised in §12.
 
 **Inputs:** the P3 row of `apps/web/README.md`'s phase table, [ADR 0001](0001-api-architecture.md),
 `apps/api/README.md`, `apps/api/openapi.yaml`, `app/core/security.py`, `app/core/config.py`,
-every `app/stubs/*.py`, and `apps/web/lib/{community,library,auth}.ts` + `lib/mock/admin.ts`.
+every `app/stubs/*.py` (P2's in-memory sample data, now `app/db/sample_data/`), and
+`apps/web/lib/{community,library,auth}.ts` + `lib/mock/admin.ts`.
 
 ## 1. Stack
 
@@ -48,7 +47,8 @@ human-readable. The seed data keeps the current stub ids, so every hard-coded id
   (`signup|two_factor|password_reset`), code_hash (HMAC-SHA256 keyed by `ZUULA_SECRET_KEY`),
   channel (`sms|email`), expires_at (10 min), attempts (max 5), last_sent_at (30 s resend
   cooldown, as the contract says), consumed_at.
-- `accreditation_applications`: user_id, status, organisation, document object key, submitted_at,
+- `accreditation_applications`: user_id, status, organisation, press_card_number, document_keys
+  (one object key per uploaded document), submitted_at,
   reviewed_at, reviewer_id, note. When an admin approves an application, the user's role changes to
   `journalist`, and that change is audited.
 - `api_keys`: id, user_id, name, prefix, secret_hash (SHA-256; the secret is 128 random bits, so it
@@ -88,10 +88,13 @@ human-readable. The seed data keeps the current stub ids, so every hard-coded id
 - `platform_settings`: a single row holding the `PlatformSettings` `jsonb`. When the row is first
   created, its values come from `app/core/rules.py`'s constants.
 - `audit_log`: id (bigserial), at, actor_id, actor_name (a copy of the name at the time of the
-  action), actor_role, action, target, detail, ip (`inet`). The table is **append-only**: a
-  trigger rejects UPDATE and DELETE, and the migration revokes those privileges from the app role.
-- `api_usage_hourly`: (api_key_id, hour) → count. This backs `/me/api-usage` and the admin
-  "partners" KPI. The hot-path counter lives in Redis and gets flushed to this table.
+  action), actor_role, action, target, detail, ip (stored truncated, as text: §11 PR 1). The
+  table is **append-only**: a trigger rejects UPDATE and DELETE. *As built:* there's no REVOKE
+  as well, because the app has no separate database role, and the trigger also binds the
+  table owner and superusers.
+- `api_usage_hourly`: (api_key_id, hour) → count. This backs `/me/api-usage`. *As built:*
+  each partner request upserts its hour's row directly; the Redis flush wasn't needed at
+  100 requests/hour per key. The rate limiter itself is Redis (§5).
 
 KPIs and monthly reports become SQL aggregates wherever the data exists: latency, ratings per
 verdict, expert turnaround, partners, MAU, languages. The two model-accuracy KPIs (F1 and deepfake
@@ -108,9 +111,11 @@ scores related reports by topic, word overlap, source, language and verdict. Her
   `vector_cosine_ops`. Suspended reports are excluded. Reports whose embedding is still NULL fall
   back to the `library.ts` lexical score, ported exactly, the same way `scoring.py` ported
   `community.ts`.
-- Computing the embeddings is AI-engine work (P4). P3 adds an `EmbeddingProvider` Protocol next to
-  `AnalysisProvider`, plus a stub, and a pipeline step that stores whatever the provider returns.
-  Like the analysis provider, it has to stay swappable for §10.1 data-protection reasons.
+- Computing the embeddings is AI-engine work (P4). *As built:* P3 did **not** add the planned
+  `EmbeddingProvider` stub or pipeline step. A stub would only have written placeholder
+  vectors that make "related" rankings meaningless, so every report keeps `embedding` NULL and
+  uses the lexical fallback until P4 adds the provider (swappable, like `AnalysisProvider`,
+  for §10.1 data-protection reasons) and the step that fills the column.
 - **The dimension is decided in P4, not here** (Noah, 23 Sep). P3 enables the extension and adds
   the column as an untyped `vector`, which pgvector allows. An HNSW index needs a fixed dimension,
   so P3 adds no index. P4's migration narrows the column to `vector(N)` once it picks a model and
@@ -140,8 +145,9 @@ yet. Nothing in the contract uses them, and they're easy to add in P4.
     direct link, which is how the page already behaves;
   - enough `content_flags` → a `user-reports` case;
   - pipeline confidence below the `rules.py` low-confidence threshold → a `low-confidence` case.
-  Every new case gets `sla_due_at = flagged_at + sla_hours` from settings. Relevant experts get a
-  notification.
+  Every new case gets `sla_due_at = flagged_at + sla_hours` from settings. *As built:* experts
+  aren't notified of new cases; the contract has no notification kind for it, so the review
+  queue is where they appear (§11 PR 3).
 - **Weight changes.** If an admin changes weights or thresholds, a Celery task recomputes every
   report's score and status in batches. Reports that newly cross a threshold **do** get review
   cases, exactly as if a vote had moved them (decision 6b): a suspended report is hidden, so
@@ -252,8 +258,9 @@ calls a real service in CI.
 ## 8. Tests and CI
 
 - CI adds service containers `pgvector/pgvector:pg16` and `redis:7`. The fixtures create a test
-  database, run `alembic upgrade head` once per session, and load the seed data (today's
-  `app/stubs/*` moved to `app/db/seed/`, which is also `python -m app.db.seed` for local dev).
+  database, run `alembic upgrade head` once per session, and load the seed data (P2's
+  `app/stubs/*`, moved to `app/db/sample_data/` in PR 6; `python -m app.db.seed` loads it for
+  local dev).
 - Isolation works like this: each test runs inside an outer transaction on one connection, and
   both the API's `get_db` and the eager Celery worker are bound to that connection, so pipeline
   tests see their own writes. Everything rolls back at teardown.
@@ -267,6 +274,8 @@ calls a real service in CI.
 
 ## 9. Delivery: PRs to `main`, in order
 
+All merged: #5, #8, #18, #20, #23 (plus the follow-up #24) and PR 6.
+
 1. **DB foundation:** deps, engine/session, Alembic, all models, migration 0001, seed, test
    fixtures, CI services. Routers stay untouched and the suite stays green.
 2. **Auth and roles:** sessions, bcrypt, OTP/2FA, OAuth wiring, the `security.py` internals,
@@ -275,7 +284,8 @@ calls a real service in CI.
    notifications (per-user SSE over Redis), and account endpoints.
 4. **Admin:** users, moderation, sources, broadcasts (fan-out), settings (with recompute),
    overview and reports aggregates, and audit-log reads. Every mutation writes an audit row.
-5. **Real adapters**, one commit each, plus webhook signatures and multipart upload.
+5. **Real adapters**, plus webhook signatures and multipart upload. *As built:* five grouped
+   commits rather than one per adapter, since the switch to async touched shared callers.
 6. **Docs:** this ADR rewritten as Accepted, `apps/api/README.md`, and deleting `app/stubs/`.
 
 ## 10. Decisions
@@ -297,6 +307,15 @@ Answered by Noah on 23 Sep 2026:
 
 ## 11. Found while building
 
+**PR 6 (docs and cleanup):**
+
+- **`app/stubs/` is gone.** The sample data moved to `app/db/sample_data/`, next to the seed
+  that loads it; the placeholder `AnalysisProvider` also reads it until P4. The unused
+  `fact_checks_public.py` and the `scoring.py` re-export were deleted.
+- **`/readyz` checks PostgreSQL and Redis** and answers 503, naming what's down, so a
+  deployment's readiness probe means something. Not part of the contract.
+- **`rules.py`'s comments** now say where each rule is enforced; several still described P2.
+
 **PR 5 (real adapters):**
 
 - **Every adapter Protocol became async**, apart from pure helpers (OAuth's `authorize_url`,
@@ -310,6 +329,13 @@ Answered by Noah on 23 Sep 2026:
 - **Real vs. stub** is decided per adapter by `app/adapters/readiness.py`. Production is
   guarded as planned, and the guard also rejects the Africa's Talking `sandbox` username
   and the development `ZUULA_SECRET_KEY`.
+- **Follow-up: `ZUULA_ALLOW_STUB_ADAPTERS`.** The Render guide (#21) deploys with
+  `ZUULA_ENV=production` and no integration credentials, which the all-or-nothing guard
+  refused. A deployment may now list adapters to run without (production only, with a
+  startup warning). The unsafe stubs are off even then: stub OAuth would sign anyone in as its
+  demo account, so an unconfigured provider redirects to `/sign-in?error=oauth-unavailable`,
+  and stub webhooks would accept unsigned calls, so they refuse every call. The secret key
+  check has no exception.
 - **`CLAMAV_HOST` now defaults to empty** (it was `clamav`), since "set" is what switches the
   scanner on. Compose sets it for the worker and adds a `clamav` service. clamd's
   `StreamMaxLength` defaults to 25 MB, below our 50 MB limit, so it has to be raised in
@@ -430,3 +456,18 @@ Answered by Noah on 23 Sep 2026:
 - **Audit log IPs are stored already truncated** (`196.43.x.x`), as text rather than `inet`:
   that's the only form the contract and admin screen use, and not keeping the full address is
   the §10.1 data-minimisation choice.
+
+## 12. Left for P4 and later
+
+- **The AI engine:** a real `AnalysisProvider` (verdicts, claims, citations, AI signals), the
+  `EmbeddingProvider` and its pipeline step, narrowing `embedding` to `vector(N)` with an HNSW
+  index (§3), and `model_evaluations` rows for the F1 and deepfake-accuracy KPIs.
+- **Integrations not built:** push notifications; photos and voice notes over WhatsApp and
+  Telegram; de-duplicating their redeliveries by message id.
+- **Worth adding:** virus-scanning accreditation documents before admins can download them;
+  regional broadcast targeting (a district → region mapping).
+- **Open contract questions:** `UserProfile.email` for phone-only accounts (§11 PR 2), and
+  the two open questions in `app/core/rules.py` (admin rating weight; escalation on total
+  ratings versus "dislikes").
+- **Frontend follow-ups:** a label for `ratings.exclude` in `AUDIT_ACTION_LABELS`, and a
+  message for `/sign-in?error=oauth-unavailable`.

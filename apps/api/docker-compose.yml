@@ -8,8 +8,12 @@ services:
     environment:
       ZUULA_CORS_ORIGINS: "http://localhost:3000"
     depends_on:
-      - redis
-      - postgres
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
       interval: 10s
@@ -22,16 +26,35 @@ services:
     env_file:
       - .env
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
+
+  # Runs `alembic upgrade head` once, then exits; api and worker wait for it. Load the sample
+  # data afterwards with: docker compose run --rm api python -m app.db.seed
+  migrate:
+    build: .
+    command: alembic upgrade head
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
 
-  # Placeholder until P3 (real auth, schema, migrations). Nothing reads DATABASE_URL yet.
+  # PostgreSQL 16 with the pgvector extension (fact_check_reports.embedding, ADR 0002 §3).
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zuula"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     environment:
       POSTGRES_USER: zuula
       POSTGRES_PASSWORD: zuula

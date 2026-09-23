@@ -1,11 +1,14 @@
-# Zuula API (P2 skeleton)
+# Zuula API
 
-FastAPI implementation of `openapi.yaml` — the core web-app API (`/api/v1/*`) and the
-public partner API (`/v1/*`, matching the `/developers` docs). Every operation in the
-contract has a route here returning schema-shaped stub data. There is still no database and
-no real auth, but submissions now run through a real Celery pipeline with live SSE progress
-(see [`docs/adr/0001-api-architecture.md`](../../docs/adr/0001-api-architecture.md) for
-what's stubbed and why, and what "real" means here).
+FastAPI implementation of `openapi.yaml`: the core web-app API (`/api/v1/*`) and the public
+partner API (`/v1/*`, matching the `/developers` docs). It runs on PostgreSQL + pgvector
+with a Celery worker and Redis. The design decisions are in two ADRs:
+[`0001`](../../docs/adr/0001-api-architecture.md) (P2: the contract, the pipeline, the adapter
+interfaces) and [`0002`](../../docs/adr/0002-p3-backend-and-database.md) (P3: the database,
+auth, scoring, admin and the real integrations).
+
+**What isn't real yet:** the AI verdict. `app/providers/analysis.py`'s stub returns one of the
+sample reports' analyses for every submission; P4 replaces it behind the same interface.
 
 ## Run it
 
@@ -15,176 +18,158 @@ python3.12 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 cp .env.example .env
 
-# PostgreSQL 16 with pgvector (P3). `docker compose up -d postgres` gives you one.
-alembic upgrade head          # create/upgrade the schema
-python -m app.db.seed         # load the sample data (empty database only)
+docker compose up -d postgres redis   # PostgreSQL 16 + pgvector, and Redis
+alembic upgrade head                  # create/upgrade the schema
+python -m app.db.seed                 # sample data (empty database only; never in production)
 
 uvicorn app.main:app --reload
+celery -A app.worker.celery_app worker --loglevel=INFO   # in a second shell
 ```
 
-Or via Docker Compose (`api` + `worker` + `redis` + `postgres` with pgvector, and a one-shot
-`migrate` service that runs `alembic upgrade head` before the other two start):
+Or everything through Docker Compose: `api`, `worker`, `beat` (periodic jobs), `redis`,
+`postgres`, `clamav`, and a one-shot `migrate` service that runs `alembic upgrade head`
+before the API and worker start:
 
 ```bash
 docker compose up --build
+docker compose run --rm api python -m app.db.seed   # optional sample data
 ```
 
-> Registry access to pull `python:3.12-slim` / `redis:7-alpine` / `postgres:16-alpine` was
-> blocked by this sandbox's network egress policy, so `docker compose up` is validated here
-> only via `docker compose config -q` (structural) — please confirm a real `up` on a machine
-> or CI runner with normal registry access.
+`GET /healthz` is liveness; `GET /readyz` is readiness and answers 503, naming what's down,
+until PostgreSQL and Redis both respond. Neither is part of the contract. Interactive docs at
+`/docs` are FastAPI's own, generated from the route signatures: see "Two OpenAPI documents".
 
-Once running: `GET /healthz` and `GET /readyz` are liveness/readiness probes (deliberately
-outside the OpenAPI contract). Interactive docs are at `/docs` (FastAPI's default Swagger UI,
-generated from the route signatures — **not** the same document as `openapi.yaml`; see
-"Two OpenAPI documents" below).
+**Local sign-in:** after seeding, the sample accounts (`mary@example.com` admin,
+`david@example.com` expert, `sarah@example.com` journalist, `amina@example.com` public, …)
+all use the password `zuula-sample-password`. Without SMS or SMTP credentials, verification
+and 2FA codes are logged by the `zuula.adapters.sms` / `zuula.adapters.email` loggers (in
+the worker) instead of sent.
 
 ## Test
 
 ```bash
 ruff check .
-pytest tests/ -q        # tests/db/ needs PostgreSQL + pgvector: see "Database" below
+ruff format --check app/db app/services app/adapters app/worker migrations tests/db tests/adapters
+pytest tests/ -q
 ```
 
-`tests/contract/test_openapi_contract.py` is the important one: it wraps the whole app in
-[`openapi-core`](https://github.com/python-openapi/openapi-core)'s `FastAPIOpenAPIMiddleware`
-and exercises essentially every operation in `openapi.yaml`, asserting both the request and
-the response validate against the spec — including a real `POST /api/v1/submissions` running
-its pipeline task to completion and its SSE endpoint replaying the result. A failing test
-there means the code and the contract have drifted — either fix the route or fix
-`openapi.yaml`, but don't skip the test.
+The tests need PostgreSQL with pgvector (`TEST_DATABASE_URL`, default
+`postgresql+asyncpg://zuula:zuula@localhost:5432/zuula_test`; the user needs permission to
+create databases). They don't need Redis, a worker or any external service: Redis is
+`fakeredis`, Celery runs eagerly, and pipeline step durations are scaled to 0.
 
-The contract tests run against the real test database (see "Database" below). Each test
-signs in for real: `tests/contract/conftest.py` gives every test a session per role and a
-partner key inside its own rolled-back transaction. `tests/contract/test_auth_flows.py`
-covers the security behaviour itself (sessions, 2FA, lockout, roles, keys, CSRF).
+- **`tests/contract/`** wraps the whole app in
+  [`openapi-core`](https://github.com/python-openapi/openapi-core)'s middleware and validates
+  every request and response against `openapi.yaml`. Every test signs in for real (a session
+  per role, a partner key) inside its own rolled-back transaction, and background work
+  (pipeline, recompute, broadcasts, messages) runs inline on that transaction. A failure here
+  means code and contract have drifted: fix one or the other, never skip the test. The
+  `*_flows.py` files cover behaviour: auth and security, content (ratings, escalation,
+  review, notifications), admin, and uploads/integrations.
+- **`tests/adapters/`** tests each real integration without calling it: HTTP through `respx`,
+  clamd through a fake local socket, S3 through botocore's `Stubber`, SMTP with
+  `aiosmtplib.send` captured.
+- **`tests/db/`** covers migrations (round trip, `alembic check`), the seed, and the rules the
+  database enforces itself.
+- **`tests/pipeline/`** covers the submission pipeline and realtime pub/sub;
+  **`tests/core/`** covers `app/core/rules.py`.
 
-`tests/pipeline/` tests `app/worker/pipeline.py`, `app/providers/analysis.py` and
-`app/realtime/` directly (step sequencing per submission type, the failure path, pub/sub).
-`tests/adapters/` tests each real `app/adapters/` implementation without calling the real
-service: HTTP through `respx` mocks, clamd through a fake local socket, S3 through botocore's
-`Stubber`, SMTP with `aiosmtplib.send` captured. All three suites run
-against a fake Redis (`tests/conftest.py`, `fakeredis`) with Celery in eager mode and
-pipeline step durations scaled to 0 — no live Redis server or worker process needed, and the
-suite doesn't spend real seconds sleeping through a text submission's ~8-second simulated
-pipeline.
+CI (`.github/workflows/api-ci.yml`) runs lint, format, `alembic upgrade head` + `alembic
+check`, and the whole suite against real PostgreSQL and Redis service containers, and
+validates `openapi.yaml`.
 
-## Database (P3)
+## The contract
 
-PostgreSQL 16 + pgvector, through async SQLAlchemy 2.0 on asyncpg, with Alembic migrations
-(`migrations/`). The design — every table, why, and what's still to come — is
-[`docs/adr/0002-p3-backend-and-database.md`](../../docs/adr/0002-p3-backend-and-database.md).
+`openapi.yaml` is the source of truth. `packages/shared`'s TypeScript types are generated
+from it (`npm run generate` there after any change), the partner docs follow it, and the
+contract tests enforce it. Change it deliberately, additively where possible, and say so in
+the PR.
 
-- **Models** live in `app/db/models/` (identity, content, review, platform). A model change
-  needs a migration: `alembic revision --autogenerate -m "..."`, then review the generated file
-  by hand. CI runs `alembic check`, which fails when the models and migrations disagree.
-- **Business-rule constants** (CCS weights and thresholds, review SLA, password minimum, OTP
-  and session lifetimes, media cap, partner rate limit) are in `app/core/rules.py`, each with
-  its spec citation. Import them; don't redefine them.
-- **Sample data**: `python -m app.db.seed` loads `app/stubs/*` into an empty database. The
-  sample reports only have aggregate rating counts, so the seed creates labelled sample
-  raters (`seed-p001`, `…@seed.zuula.invalid`) and casts individual votes that add up to
-  exactly those counts — scores are always derived from real vote rows.
-- **Tests**: `tests/db/conftest.py` recreates the database named by `TEST_DATABASE_URL`
-  (default `postgresql+asyncpg://zuula:zuula@localhost:5432/zuula_test`; the user needs
-  permission to create databases), migrates it with `alembic upgrade head` and seeds it once
-  per run. Each test's `db` session runs inside a transaction that's rolled back afterwards.
+### Two OpenAPI documents
 
-## Two OpenAPI documents
+- **`openapi.yaml`** is hand-authored and is the contract.
+- **FastAPI's generated schema** (`/openapi.json`, rendered at `/docs`) is derived from the
+  route signatures and isn't used for anything. Don't treat `/docs` as the contract.
 
-This repo has two things that could be called "the OpenAPI spec," and they're deliberately
-not the same:
+### `response_model_exclude_none`
 
-- **`openapi.yaml`** (repo root of `apps/api`) is the hand-authored source of truth — what
-  Step 1 designed, what the partner docs (`/developers`) and `packages/shared`'s generated
-  TypeScript types are built from, and what the contract tests validate against.
-- **FastAPI's own auto-generated schema** (visible at `/openapi.json`, rendered at `/docs`)
-  is derived from the Python route signatures and is *not* used for anything — it's just
-  FastAPI's built-in dev convenience. Don't treat `/docs` as the contract.
+`app.core.router.APIRouter` sets `response_model_exclude_none=True` on every route, matching
+how `apps/web/lib/types/*.ts` models optional fields (key absent when unset). A few fields
+are the opposite, required *and* nullable (`ApiKey.lastUsedAt`, `ReviewCase.assignee`,
+`FactCheckPublic.humanReview`, `CommunityScore.ccs`); those go through small `dump_*()`
+helpers in `app/schemas/` that restore the explicit `null`.
 
-## Architecture
+## Database
 
-```
-app/
-  main.py              FastAPI app assembly: CORS, error handlers, both routers, health checks
-  core/
-    config.py          Settings (env var driven, ZUULA_ prefix; also Celery/analysis settings, no prefix — see the ADR)
-    errors.py          ApiError -> ErrorEnvelope exception handling (matches openapi.yaml's ErrorEnvelope)
-    pagination.py       Shared {page, perPage, total} pagination helper
-    router.py           APIRouter subclass defaulting response_model_exclude_none=True
-    security.py         P2 stub auth (see the ADR) — X-Zuula-Role header (core), Bearer zl_live_* (partner)
-    rules.py             Business rules as documented constants (CCS weights/thresholds, review SLA, password/media limits, partner rate limit) — single source of truth for app/stubs/* and app/core/config.py; P3 adds its own section at the end
-  db/                    P3 persistence: models/, async session (session.py), report ids, sample-data seed
-  services/              Domain logic shared by routers, worker and seed (community.py: weighted CCS)
-  schemas/               Pydantic v2 models mirroring openapi.yaml's schemas, camelCase on the wire
-  stubs/                 In-memory sample data transliterated from apps/web/lib/mock/*.ts
-  providers/
-    analysis.py          AnalysisProvider interface + StubAnalysisProvider (the pipeline's AI step)
-  adapters/               One interface, one real implementation and one dev stub per integration (oauth, sms, turnstile, clamav, storage, email, whatsapp, telegram); readiness.py picks real vs. stub and guards production
-  realtime/
-    redis_client.py       Production get_redis()/get_async_redis() wiring
-    submissions.py         Shared submission state + pub/sub (worker <-> API process), redis-client-agnostic for tests
-  api/v1/                 Core API routers (auth, account, api-keys, submissions, fact-checks, ratings, review, notifications, admin)
-  partner/v1/             Partner API routers (checks, fact-checks)
-  webhooks/                Inbound WhatsApp/Telegram webhooks (FR-SUBMIT-04) — a message becomes a submission the same way a website POST does
-  worker/
-    __init__.py            Celery app + a `ping` task
-    pipeline.py             The real submission pipeline (PIPELINES/STEP_SECONDS mirror apps/web/lib/analysis.ts)
-tests/
-  contract/                 The openapi-core-backed contract test suite
-  pipeline/                 Direct tests of the pipeline task, AnalysisProvider, and realtime pub/sub
-  adapters/                 Direct tests of each app/adapters/ module
-  core/                     Direct tests of app/core/rules.py and its consumers
-  db/                       Migrations, seed and database-enforced rules, against a real PostgreSQL
-  dbutil.py                  Test-database helpers (recreate, migrate, seed)
-  conftest.py                Shared fake-Redis + eager-Celery fixture all suites use
-migrations/                  Alembic (async env); versions/0001 is the initial P3 schema
-```
+PostgreSQL 16 + pgvector through async SQLAlchemy 2.0 on asyncpg, with Alembic migrations.
 
-### A note on `response_model_exclude_none`
+- **Models** are in `app/db/models/` (identity, content, review, platform). A model change
+  needs a migration: `alembic revision --autogenerate -m "..."`, then review the file by
+  hand. CI's `alembic check` fails when models and migrations disagree.
+- **Business rules** (CCS weights and thresholds, review SLA, password and OTP rules,
+  lockout, media limits, partner rate limit) are constants in `app/core/rules.py`, each with
+  its spec citation. Import them; don't redefine them. The weights, thresholds, SLA and rate
+  limit are defaults: admins change the live values (`platform_settings`) at runtime.
+- **Scores are derived from vote rows.** A rating stores the rater's role at the time, and
+  `app/services/community.py` recomputes the weighted CCS and status from the rows, opening or
+  upgrading review cases when a report crosses a threshold.
+- **The audit log** (`audit_log`) is append-only, enforced by a trigger. Every admin mutation
+  and security event writes a row in the same transaction (`app/services/audit.py`).
+- **Search** uses PostgreSQL full-text search with the `simple` configuration (no stemmer
+  exists for Luganda, Acholi, Runyankole or Ateso) plus trigram matching on titles.
+  `fact_check_reports.embedding` (pgvector, untyped until P4 picks a model) powers related
+  reports where it's filled in.
+- **Sample data** lives in `app/db/sample_data/` (transliterated from
+  `apps/web/lib/mock/*.ts`); `python -m app.db.seed` loads it. The sample reports only carry
+  aggregate rating counts, so the seed casts individual votes from labelled sample raters
+  (`seed-p001`, `…@seed.zuula.invalid`) that add up to exactly those counts.
 
-`app.core.router.APIRouter` forces `response_model_exclude_none=True` on every route by
-default, matching how `apps/web/lib/types/*.ts` models most optional fields (`field?: T`,
-key absent when unset) and how `openapi.yaml` types them (plain, non-nullable). A handful of
-fields are the opposite — required *and* nullable (`ApiKey.lastUsedAt`, `ReviewCase.assignee`,
-`FactCheckPublic.humanReview`, `CommunityScore.ccs` — modeled as `oneOf: [T, null]` and
-always present, matching the frontend's `T | null` types and the partner docs' example
-payloads). Those bypass `response_model` entirely and are serialized through small
-`dump_*()` helpers (`app/schemas/fact_check.py`, `app/schemas/account.py`,
-`app/schemas/review.py`) that restore the key as an explicit `null` after `exclude_none`
-would otherwise have dropped it.
+## Auth
 
-## Auth (P3)
+- **Core API:** an opaque session token in the `zuula_session` cookie (HttpOnly, Secure,
+  SameSite=Lax), or the same token as `Authorization: Bearer …` for non-browser clients. Only
+  its SHA-256 is stored, so signing out takes effect on the next request, and roles are read
+  from the database on every request. Cookie-authenticated writes must come from an origin
+  in `ZUULA_CORS_ORIGINS`.
+- **Passwords:** bcrypt (cost 12) over a SHA-256 pre-hash, at least 12 characters.
+- **Codes and 2FA:** 6-digit codes by SMS, or email when there's no phone; 2FA is always on
+  for Expert Reviewers and Admins (FR-AUTH-05).
+- **Lockout:** 5 failures per account in 15 minutes gives `429`; wrong sign-up and reset codes
+  count too. The per-IP limit is 50, because many users share an IP.
+- **Google/Facebook sign-in:** authorization-code flow with a signed state cookie; an account
+  is linked by email only when the provider verified that email.
+- **Partner API:** `zl_live_…` keys, stored as SHA-256 and scoped (`POST` needs `submit`,
+  `GET` needs `read`). A key only works while its owner is a journalist or admin. The limit
+  is a Redis sliding window at the admin-configured rate (default 100/hour), reported in
+  `X-RateLimit-*`.
 
-Real since P3 PR 2 ([ADR 0002 §5](../../docs/adr/0002-p3-backend-and-database.md)):
+## Submissions and the worker
 
-- **Core API**: an opaque session token in the `zuula_session` cookie (HttpOnly, Secure,
-  SameSite=Lax), or the same token as `Authorization: Bearer …` for non-browser clients.
-  Stored only as a SHA-256 in `sessions`, so signing out or "sign out other devices" takes
-  effect on the next request. Roles are read from the database on every request.
-- **Passwords**: bcrypt (cost 12) over a SHA-256 pre-hash. **2FA**: 6-digit codes by SMS (or
-  email when there's no phone), always on for Expert Reviewers and Admins (FR-AUTH-05).
-- **Lockout**: 5 failures per account in 15 minutes → `429` on sign-in; wrong sign-up and
-  reset codes count too. The per-IP limit is 50, since many users share an IP.
-- **Partner API**: `zl_live_…` keys, stored as SHA-256, scoped (`POST` needs `submit`, `GET`
-  needs `read`), and only usable while the owner is a journalist or admin. Redis sliding
-  window at the admin-configured limit (default 100/hour).
-- **Audit log**: `app/services/audit.py`'s `record()`, written in the same transaction as the
-  action. IPs are stored truncated (`196.43.x.x`).
+Every channel (website, partner API, WhatsApp, Telegram) creates a submission the same way:
+the `submissions` row is committed, then the pipeline is dispatched to Celery
+(`app/worker/dispatch.py`). The worker runs the steps (`PIPELINES`/`STEP_SECONDS` mirror
+`apps/web/lib/analysis.ts`), publishes live progress over Redis for the SSE endpoint, writes
+the report, opens a low-confidence review case when needed, and notifies the submitter or
+replies in the chat.
 
-**Local dev sign-in**: after `python -m app.db.seed`, the sample accounts
-(`mary@example.com` admin, `david@example.com` expert, `sarah@example.com` journalist,
-`amina@example.com` public, …) all use the password `zuula-sample-password`. Without SMS or
-SMTP credentials in `.env`, codes are logged by the `zuula.adapters.sms` /
-`zuula.adapters.email` loggers instead of sent.
+Media submissions are `multipart/form-data` with a `file` (images, audio and video up to
+50 MB; `413`/`415` otherwise). The API stores the file, and the worker's "scan" step runs
+ClamAV on it before anything else reads it. The scan fails closed, and an infected file is
+deleted.
+
+The worker also sends every SMS and email (`zuula.send_message`, retried with backoff),
+recomputes scores after an admin changes weights or thresholds, delivers broadcasts, and,
+via `beat`, runs the brigading detector every 5 minutes.
 
 ## Integrations
 
 Every `app/adapters/` module has a real implementation and a logging stub. The real one is
 used as soon as its `.env` values are set (see `.env.example`); leave them empty for local
-dev. **With `ZUULA_ENV=production`, the API and the worker refuse to start while any of them
-is missing**, naming each missing variable, so production can't quietly run on a stub. A
-deployment that knowingly goes without some of them (a demo, or launching before the WhatsApp
+dev.
+
+**With `ZUULA_ENV=production`, the API and the worker refuse to start while any integration is
+missing its settings**, naming each missing variable, so production can't quietly run on a
+stub. A deployment that knowingly goes without some (a demo, or launching before the WhatsApp
 number exists) lists their ids in `ZUULA_ALLOW_STUB_ADAPTERS` (`google`, `facebook`, `sms`,
 `email`, `turnstile`, `clamav`, `s3`, `whatsapp`, `telegram`) and starts with a warning. Even
 then, an unconfigured Google/Facebook sign-in sends people back to the sign-in page instead of
@@ -197,47 +182,35 @@ the stub's demo account, and an unconfigured WhatsApp/Telegram webhook refuses e
 | SMS | Africa's Talking messaging API (`sandbox` → their simulator) | `AFRICASTALKING_USERNAME`, `AFRICASTALKING_API_KEY` |
 | Email | SMTP via `aiosmtplib` | `EMAIL_SMTP_*`, `EMAIL_FROM` |
 | Captcha | Cloudflare Turnstile `siteverify`, with the visitor's IP | `TURNSTILE_SECRET_KEY` |
-| Malware scan | clamd `INSTREAM` over TCP | `CLAMAV_HOST`, `CLAMAV_PORT` |
+| Malware scan | clamd `INSTREAM` over TCP; its `StreamMaxLength` must be at least 50M | `CLAMAV_HOST`, `CLAMAV_PORT` |
 | Media storage | `boto3`, any S3-compatible endpoint (AWS, R2, MinIO) | `S3_*` |
 | WhatsApp | Graph API messages; inbound calls must carry a valid `X-Hub-Signature-256` | `WHATSAPP_*` |
 | Telegram | `sendMessage`; inbound calls must carry `X-Telegram-Bot-Api-Secret-Token` | `TELEGRAM_*` |
 
-SMS and email always leave from the worker (`zuula.send_message`, retried with backoff), never
-inside a request. Media submissions are `multipart/form-data` with a `file` (images, audio,
-video up to 50 MB; `413`/`415` otherwise): the API stores the file, and the worker's "scan"
-step runs ClamAV on it before anything else reads it. The scan fails closed, and an infected
-file is deleted. clamd's `StreamMaxLength` must be at least 50M.
+The hosted AI provider (`ANALYSIS_PROVIDER`, `ANALYSIS_PROVIDER_REGION`) is P4's, and stays
+switchable because sending submissions to a model hosted outside Uganda is an open
+data-protection question (ADR 0001).
 
-## What's real vs. stubbed (P2)
+## Layout
 
-**P3 in progress:** the database, migrations and seed exist, and auth, content, admin and
-the external integrations are all real (ADR 0002 §4–§7, §11). The AI verdicts stay
-placeholders until P4. The bullets below describe P2 and are out of date where they conflict;
-P3 PR 6 rewrites this section.
-
-This is all documented more fully in the ADR, but briefly:
-- **Auth** is a stub: the core API reads an `X-Zuula-Role` header (mirrors the frontend's own
-  `zuula.mock-session` demo-role system), and the partner API accepts any bearer token shaped
-  like `zl_live_*`. No password hashing, no JWT signing, no persisted sessions or API keys.
-- **Data** is in-memory sample data (`app/stubs/`) for everything except live submissions.
-  Writes (ratings, review decisions, admin edits, etc.) don't persist across requests.
-- **The submission pipeline is real** (Celery, `app/worker/pipeline.py`): a submission
-  actually runs through named steps with real timing and live SSE progress, matching
-  `apps/web/lib/analysis.ts` exactly. The AI/verdict step (`app.providers.analysis`)
-  deterministically returns one of the existing sample reports' analysis rather than a
-  freshly generated one. Submission state lives in Redis with a 1-hour TTL, not a database —
-  there's no persisted submission history yet.
-- **Every integration adapter is a stub** (`app/adapters/`): OAuth, SMS, email, Turnstile,
-  ClamAV, S3 storage, WhatsApp and Telegram all have a real interface wired into a real call
-  site (see the ADR's table), but none of them call the actual service — no request to
-  Google/Meta, no SMS or email actually sent, no file actually scanned or stored. Submitting
-  by WhatsApp/Telegram works end to end (parses the real payload shape, creates a real
-  submission through the same pipeline a website POST uses) except that no reply is actually
-  sent back.
-- **Rate limiting** (partner API) is an in-memory per-process counter, not the real
-  Redis-backed limiter.
-- **Business rules are centralized but only partly enforced** (`app/core/rules.py`): CCS
-  weights/thresholds and the review SLA are real (used by the stub data's computed scores);
-  the password minimum and media upload cap are documented (and declared in the contract)
-  but not checked anywhere yet — real enforcement needs real password storage and real file
-  uploads, both P3's job.
+```
+app/
+  main.py            App assembly: CORS, error handlers, routers, /healthz and /readyz
+  core/              Settings (config.py), business rules (rules.py), auth dependencies
+                     (security.py), the error envelope, pagination, the router default
+  db/                Models, async session, Alembic-facing base, report ids, seed and sample_data/
+  services/          Domain logic shared by routers, worker and seed: auth, audit, community
+                     (weighted CCS), escalation, reports and search, ratings, submissions,
+                     notifications, broadcasts, recompute, brigading, admin metrics
+  schemas/           Pydantic v2 models mirroring openapi.yaml, camelCase on the wire
+  api/v1/            Core API routers
+  partner/v1/        Partner API routers
+  webhooks/          Inbound WhatsApp/Telegram webhooks
+  adapters/          The integrations: one interface, a real implementation and a dev stub
+                     each; readiness.py picks between them and guards production
+  providers/         AnalysisProvider (the pipeline's AI step; a stub until P4)
+  realtime/          Redis clients and submission pub/sub
+  worker/            Celery app, the pipeline, messaging, admin tasks, dispatch
+migrations/          Alembic (async env)
+tests/               contract/, adapters/, db/, pipeline/, core/; conftest.py and dbutil.py
+```

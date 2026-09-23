@@ -8,6 +8,11 @@ documented constants) is this revision's addition — see the new Business rules
 below. Several decisions here are explicitly P2-only and are expected to be superseded in
 P3 — each says so.
 
+**Superseded in part by [ADR 0002](0002-p3-backend-and-database.md) (P3):** stub auth, the
+in-memory data, the TTL'd Redis submission state, the in-process rate limiter and the stub
+adapters are all replaced there. The contract-first approach, the pipeline's shape and the
+adapter/provider interfaces still stand.
+
 ## Context
 
 The P2 brief asked for a contract-first API design (`openapi.yaml`) followed by a FastAPI

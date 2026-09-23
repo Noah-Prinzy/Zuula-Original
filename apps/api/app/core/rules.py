@@ -127,9 +127,13 @@ OTP_TTL_SECONDS = 10 * 60  # ADR 0002
 OTP_MAX_ATTEMPTS = 5  # ADR 0002
 OTP_RESEND_COOLDOWN_SECONDS = 30  # openapi.yaml resendTwoFactor: "30 s cooldown"
 
-# Failed sign-ins per identifier (and per IP) before a 429 (ADR 0002, decision 2).
+# Failures per identifier before a 429 (ADR 0002, decision 2): wrong passwords, and wrong
+# sign-up or password-reset codes, all count — so no flow allows unlimited code guessing.
 SIGN_IN_MAX_FAILURES = 5
 SIGN_IN_LOCKOUT_WINDOW_SECONDS = 15 * 60
+# Per client IP the threshold is far higher: mobile carriers and schools put many people
+# behind one address (carrier-grade NAT), and one person's typos mustn't lock them all out.
+SIGN_IN_MAX_FAILURES_PER_IP = 50
 
 SESSION_TTL_REMEMBER_SECONDS = 30 * 24 * 3600  # ADR 0002
 SESSION_TTL_SECONDS = 12 * 3600  # ADR 0002, `remember: false`

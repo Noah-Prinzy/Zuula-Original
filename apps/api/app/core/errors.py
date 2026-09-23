@@ -14,6 +14,7 @@ ErrorCode = Literal[
     "unauthorized",
     "forbidden",
     "not_found",
+    "conflict",
     "file_too_large",
     "unsupported_media",
     "invalid_content",
@@ -26,6 +27,7 @@ _STATUS_FOR_CODE: dict[ErrorCode, int] = {
     "unauthorized": 401,
     "forbidden": 403,
     "not_found": 404,
+    "conflict": 409,
     "file_too_large": 413,
     "unsupported_media": 415,
     "invalid_content": 422,
@@ -37,10 +39,19 @@ _STATUS_FOR_CODE: dict[ErrorCode, int] = {
 class ApiError(Exception):
     """Raise this from any route/dependency; the handler below turns it into an ErrorEnvelope."""
 
-    def __init__(self, code: ErrorCode, message: str, *, retry_after: int | None = None):
+    def __init__(
+        self,
+        code: ErrorCode,
+        message: str,
+        *,
+        retry_after: int | None = None,
+        headers: dict[str, str] | None = None,
+    ):
         self.code = code
         self.message = message
         self.retry_after = retry_after
+        # Extra response headers, e.g. the partner API's X-RateLimit-* on a 429.
+        self.headers = headers or {}
         self.status_code = _STATUS_FOR_CODE[code]
         super().__init__(message)
 
@@ -63,8 +74,12 @@ def _envelope(err: ApiError) -> dict:
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(ApiError)
     async def _handle_api_error(_: Request, exc: ApiError) -> JSONResponse:
-        headers = {"Retry-After": str(exc.retry_after)} if exc.retry_after is not None else None
-        return JSONResponse(status_code=exc.status_code, content=_envelope(exc), headers=headers)
+        headers = dict(exc.headers)
+        if exc.retry_after is not None:
+            headers["Retry-After"] = str(exc.retry_after)
+        return JSONResponse(
+            status_code=exc.status_code, content=_envelope(exc), headers=headers or None
+        )
 
     @app.exception_handler(RequestValidationError)
     async def _handle_validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:

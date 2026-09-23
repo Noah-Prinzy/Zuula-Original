@@ -21,6 +21,18 @@ class Settings(BaseSettings):
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
 
+class DatabaseSettings(BaseSettings):
+    """PostgreSQL (+ pgvector). Same no-prefix convention as the settings classes below —
+    field names match .env.example's var names. The URL must use the asyncpg driver
+    (`postgresql+asyncpg://`); the worker runs its DB work through the same async engine."""
+
+    model_config = SettingsConfigDict(extra="ignore")
+
+    database_url: str = "postgresql+asyncpg://zuula:zuula@localhost:5432/zuula"
+    database_pool_size: int = 5
+    database_echo: bool = False
+
+
 class CelerySettings(BaseSettings):
     model_config = SettingsConfigDict(extra="ignore")
 
@@ -92,6 +104,11 @@ class AdaptersSettings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+@lru_cache
+def get_database_settings() -> DatabaseSettings:
+    return DatabaseSettings()
 
 
 @lru_cache

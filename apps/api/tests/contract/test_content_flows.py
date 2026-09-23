@@ -361,3 +361,26 @@ class TestNotifications:
         assert r["topics"] == ["Elections"] and r["notifyOn"]["emergencyBroadcasts"] is True
         again = core_client.get("/api/v1/me/alert-settings", headers=PUBLIC).json()
         assert again["topics"] == ["Elections"]
+
+
+class TestLeaderboard:
+    def test_ranked_like_the_frontend(self, core_client):
+        """apps/web/lib/library.ts's leaderboard(): the Wilson lower bound on the weighted CCS
+        share, at least 25 ratings, suspended excluded."""
+        import math
+
+        def bound(score, z=1.96):
+            n = score["total"]
+            weighted = score["weightedAccurate"] + score["weightedInaccurate"]
+            p = score["weightedAccurate"] / weighted
+            z2 = z * z
+            return (p + z2 / (2 * n) - z * math.sqrt((p * (1 - p) + z2 / (4 * n)) / n)) / (
+                1 + z2 / n
+            )
+
+        leaders = core_client.get("/api/v1/fact-checks/home-feed").json()["leaderboard"]
+        assert leaders
+        scores = [entry["score"] for entry in leaders]
+        assert all(s["total"] >= 25 and s["status"] != "suspended" for s in scores)
+        ranks = [bound(s) for s in scores]
+        assert ranks == sorted(ranks, reverse=True)

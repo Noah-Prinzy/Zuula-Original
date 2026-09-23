@@ -1,8 +1,8 @@
 # ADR 0002: Backend and database (P3)
 
 **Status:** Approved by Noah (23 Sep 2026; decisions in §10). Being built in the PR sequence
-of §9. PR 1 (database foundation, #5) and PR 2 (auth and roles, #8) are merged; the rest
-describes what's still to come.
+of §9. PR 1 (database foundation, #5) and PR 2 (auth and roles, #8) are merged, and PR 3
+(content) is implemented; the rest describes what's still to come.
 Once all six PRs have landed, this file becomes the record of what was actually decided
 (brief §3 step 5).
 
@@ -207,13 +207,23 @@ yet. Nothing in the contract uses them, and they're easy to add in P4.
 
 ## 6. Submission state moves to Postgres
 
-`app/realtime/submissions.py`'s `load_state` and `save_state` keep their names, but their first
-argument becomes a DB session instead of a Redis client. The ADR 0001 interface was the pair of
-functions, and only the handle type changes. Redis keeps the pub/sub half (`publish_*`,
-`subscribe`) unchanged. When the pipeline finishes, it writes a real `fact_check_reports` row, and
-the report-id stub (`fc-new-…`) is replaced by the sequence. The multipart upload path the contract
-already declares (`file`, with 413/415 responses) gets built: the file streams to S3 under
-`MAX_MEDIA_BYTES` from `rules.py`, and the worker gets real bytes for ClamAV.
+As built in PR 3 (this replaces the plan's "load_state/save_state take a DB session"):
+
+- **A submission is a `submissions` row from the moment it's accepted.** Every channel (web,
+  partner, WhatsApp, Telegram) goes through one `enqueue_submission()`: validate, insert,
+  **commit**, then dispatch. The worker can only see committed rows.
+- **The pipeline is one async function over a DB session**, `run_pipeline(db, tracking_id)`.
+  It runs each step, writes the `fact_check_reports` row (id from the sequence), opens a
+  low-confidence case when the AI's confidence is under the threshold, notifies a signed-in
+  submitter, and replies on WhatsApp/Telegram. The Celery task is a thin wrapper
+  (`asyncio.run` on the worker's own connection). A redelivered task finds the submission no
+  longer `queued` and does nothing.
+- **Redis keeps only live pub/sub.** The TTL'd Redis state and `load_state`/`save_state`/
+  `new_state` are gone; the status endpoint and the SSE replay read the row.
+- **Dispatch is swappable** (`app/worker/dispatch.py`): the contract tests run the pipeline
+  inline on the test's own connection instead of through Celery.
+- **Multipart uploads** (the contract's `file`, 413/415) move to PR 5 with the real storage
+  and ClamAV adapters: without them there's nowhere real to put the bytes.
 
 ## 7. Real adapters
 
@@ -286,14 +296,37 @@ Answered by Noah on 23 Sep 2026:
 
 ## 11. Found while building
 
+**PR 3 (content):**
+
+- **Contract additions** (additive): `404` on `rateFactCheck`, `retractRating`,
+  `listComments`, `addComment` and `reportFactCheckIssue`. Rating or commenting on a report
+  that doesn't exist returned an undeclared 404 already in P2.
+- **The notification stream is bounded per connection** (`ZUULA_NOTIFICATION_STREAM_SECONDS`,
+  default 300). Every event carries an `id`, and a reconnect with `Last-Event-ID` replays only
+  what came after it, so `EventSource`'s automatic reconnect loses and duplicates nothing.
+  (An unbounded stream also can't be tested: the client never sees the end of the response.)
+- **Notifications are published after their transaction commits**, never before.
+- **Experts aren't notified of new cases.** The contract's notification kinds have no fit
+  (`review-outcome` is for raters); the review queue is where cases appear.
+- **A changed vote counts with the voter's current role.** Decision 6a is "the role when they
+  voted", and changing a vote is voting again. An admin's exclusion of the user's ratings
+  still applies.
+- **The FR-RATE-10 leaderboard follows the frontend** (#16): ranked by the lower bound of the
+  95% Wilson interval on the weighted CCS, at least 25 ratings. It's computed in SQL.
+- **Search keeps its contract defaults:** `perPage` defaults to 12 (max 50) on
+  `/fact-checks`, and to 10 on the partner search, not the generic 20.
+- **Partner check status:** a partner sees its own checks at every stage, and anyone's once
+  the report is published. Someone else's in-flight submission is a 404.
+- **Chat submissions** (WhatsApp/Telegram): a bare link is checked as a URL, anything else as
+  text, with no minimum length. There's no form to show a validation error on.
+
 **PR 2 (auth and roles):**
 
 - **Contract additions** (all additive, none change an existing shape):
   - `429` on `signIn` (decision 2).
   - `conflict` in `ErrorEnvelope.code`: `409 Conflict` was declared with no code for it.
   - `user.reinstate` in `AuditAction`: lifting a suspension had no action to be audited
-    under. **The frontend's `AUDIT_ACTION_LABELS` (`apps/web/lib/mock/admin.ts`) needs one
-    label for it**; `apps/web` is out of this phase's scope, so that's left to its owner.
+    under. The frontend's `AUDIT_ACTION_LABELS` got its label in #15.
   - Error responses that real validation now returns and the contract didn't declare:
     - `400` on `changePassword`, `setTwoFactor`, `createApiKey` and `updateAdminUser`
     - `404` on `revokeApiKey`

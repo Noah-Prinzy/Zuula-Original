@@ -45,6 +45,27 @@ def parse_date(value: str | None, name: str) -> date | None:
         raise ApiError("bad_request", f"{name} must be a date (YYYY-MM-DD).") from exc
 
 
+# FR-RATE-10 leaderboard: at least this many ratings to qualify (apps/web/lib/library.ts).
+LEADERBOARD_MIN_RATINGS = 25
+
+
+def _agreement_lower_bound(settings, z: float = 1.96):
+    """apps/web/lib/library.ts's agreementLowerBound(), in SQL: the lower bound of the 95%
+    Wilson interval around the weighted CCS share over the number of people who rated. It
+    rewards agreement and volume together, so 26 ratings at 100% don't outrank 424 at 99%."""
+    w = settings.weights
+    r = FactCheckReport
+    accurate = r.accurate_public * w.public + r.accurate_journalist * w.journalist
+    accurate = accurate + r.accurate_expert * w.expert
+    inaccurate = r.inaccurate_public * w.public + r.inaccurate_journalist * w.journalist
+    inaccurate = inaccurate + r.inaccurate_expert * w.expert
+    n = func.nullif(_TOTAL_RATINGS, 0) * 1.0
+    p = accurate * 1.0 / func.nullif(accurate + inaccurate, 0)
+    z2 = z * z
+    bound = (p + z2 / (2 * n) - z * func.sqrt((p * (1 - p) + z2 / (4 * n)) / n)) / (1 + z2 / n)
+    return func.coalesce(bound, 0)
+
+
 def text_match(q: str):
     """Every word must match (the P2/Library behaviour): full-text over title, summary,
     category and submitted text, with a fuzzy title match for typos and partial words."""
@@ -130,7 +151,8 @@ async def get_facets(db: AsyncSession = Depends(get_db)):  # noqa: B008
 @router.get("/home-feed", response_model=None)
 async def get_home_feed(db: AsyncSession = Depends(get_db)):  # noqa: B008
     """The Home page (FR-RATE-10): newest checks, the most debated (many ratings, CCS near
-    50), trending categories this week, and the community leaderboard."""
+    50), trending categories this week, and the community leaderboard (the verdicts the
+    community most confidently agrees with — apps/web/lib/library.ts's leaderboard())."""
     settings = await get_platform_settings(db)
 
     recent = list(
@@ -153,8 +175,12 @@ async def get_home_feed(db: AsyncSession = Depends(get_db)):  # noqa: B008
 
     leaders = await db.scalars(
         select(FactCheckReport)
-        .where(rep.LISTED, FactCheckReport.ccs.is_not(None), _TOTAL_RATINGS >= 25)
-        .order_by(FactCheckReport.ccs.desc(), _TOTAL_RATINGS.desc())
+        .where(
+            rep.LISTED,
+            FactCheckReport.ccs.is_not(None),
+            _TOTAL_RATINGS >= LEADERBOARD_MIN_RATINGS,
+        )
+        .order_by(_agreement_lower_bound(settings).desc(), _TOTAL_RATINGS.desc())
         .limit(5)
     )
 

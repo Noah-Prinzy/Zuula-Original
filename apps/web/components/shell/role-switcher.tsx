@@ -20,7 +20,7 @@ export function RoleSwitcher() {
   return (
     // A labelled landmark, so screen-reader users can find (or skip) the demo controls.
     <aside
-      aria-label={t("previewAs")}
+      aria-label={t("barLabel")}
       className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 border-b bg-muted px-4 py-1 text-xs text-muted-foreground"
     >
       <RiFlaskLine className="size-3.5" aria-hidden />

@@ -90,6 +90,7 @@
     "admin": "Administrator"
   },
   "Demo": {
+    "barLabel": "Role preview",
     "viewAs": "Demo: view as",
     "signedOut": "Signed out",
     "previewAs": "Preview as",

@@ -776,6 +776,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/CommunityScore" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
     delete:
       operationId: retractRating
       tags: [ratings]
@@ -790,6 +791,7 @@ paths:
               schema: { $ref: "#/components/schemas/CommunityScore" }
 
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /api/v1/fact-checks/{id}/comments:
     get:
       operationId: listComments
@@ -812,6 +814,7 @@ paths:
                       data:
                         type: array
                         items: { $ref: "#/components/schemas/RatingComment" }
+        "404": { $ref: "#/components/responses/NotFound" }
     post:
       operationId: addComment
       tags: [ratings]
@@ -836,6 +839,7 @@ paths:
               schema: { $ref: "#/components/schemas/RatingComment" }
 
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /api/v1/fact-checks/{id}/report-issue:
     post:
       operationId: reportFactCheckIssue
@@ -857,6 +861,7 @@ paths:
         "202": { description: Reported. }
 
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
   # ---------------------------------------------------------------------------------------
   # Review (FR-REVIEW-01…06) — Expert, Admin
   # ---------------------------------------------------------------------------------------

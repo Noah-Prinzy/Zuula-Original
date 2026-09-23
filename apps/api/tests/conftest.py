@@ -24,7 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.pool import NullPool
 
 from app.adapters import email, sms
-from app.core.config import get_analysis_settings
+from app.core.config import get_analysis_settings, get_settings
 from app.realtime import redis_client
 from app.worker import celery_app
 from tests.dbutil import TEST_DATABASE_URL, alembic_config, recreate_database, seed_database
@@ -62,6 +62,9 @@ def _fake_redis_and_eager_celery():
     # exercises every branch of app/worker/pipeline.py without the wait.
     get_analysis_settings.cache_clear()
     get_analysis_settings().pipeline_step_scale = 0.0
+    # The notification stream replays and closes instead of staying open for live events,
+    # so a test's GET of it returns.
+    get_settings().notification_stream_seconds = 0
 
     yield
 

@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { getTranslations } from "next-intl/server"
 import { RiFireLine, RiThumbUpLine, RiTrophyLine } from "@remixicon/react"
 
 import { PhotoHero } from "@/components/decor/photo-hero"
@@ -33,9 +34,11 @@ const delay = (d: number) => ({ "--d": d }) as React.CSSProperties
 function ReportSlide({
   report,
   tag,
+  ccsTitle,
 }: {
   report: FactCheckReport
   tag: string
+  ccsTitle: string
 }) {
   const score = communityScore(report.community)
   return (
@@ -58,7 +61,7 @@ function ReportSlide({
         {score.ccs !== null && (
           <span
             className="ml-auto inline-flex shrink-0 items-center gap-1 tabular-nums"
-            title="Community Confidence Score"
+            title={ccsTitle}
           >
             <RiThumbUpLine className="size-3.5" aria-hidden />
             {score.ccs}% · {score.total.toLocaleString()}
@@ -82,7 +85,26 @@ export default function HomePage() {
 
 // The hero text and composer, with two short status cards right below whose slides rotate.
 // FR-SEARCH-05: recent and most debated checks.
-function HomeHero() {
+async function HomeHero() {
+  const t = await getTranslations("Home")
+  // Word lists are keyed objects ("0", "1", …) because next-intl messages can't be arrays.
+  // next-intl only types leaf keys, so the object key is cast for t.raw.
+  const words = (key: "line1Words" | "line2Words") =>
+    Object.values(
+      t.raw(`headline.${key}` as Parameters<typeof t.raw>[0]) as Record<
+        string,
+        string
+      >
+    )
+  const carousel = {
+    previous: t("carousel.previous"),
+    next: t("carousel.next"),
+    stop: t("carousel.stop"),
+    start: t("carousel.start"),
+    slides: t.raw("carousel.slides") as string,
+    slide: t.raw("carousel.slide") as string,
+  }
+
   const recent = latest(SAMPLE_REPORTS, 5)
   const debated = mostDebated(SAMPLE_REPORTS, 5)
     .filter((r) => !recent.some((x) => x.id === r.id))
@@ -107,36 +129,51 @@ function HomeHero() {
             variant="outline"
             className="enter hidden border-white/40 bg-black/20 text-white backdrop-blur-sm sm:inline-flex"
           >
-            Uganda Fact-Guard · Victoria University CIT
+            {t("badge")}
           </Badge>
           <h1 className="max-w-4xl font-heading text-4xl font-bold tracking-tight text-balance drop-shadow-sm [--kinetic-accent:var(--chart-1)] md:text-5xl xl:text-6xl">
-            <KineticText text="Check a" delay={120} />{" "}
+            <KineticText text={t("headline.line1Before")} delay={120} />{" "}
             <WordRotator
-              words={["claim", "rumour", "photo", "video", "voice note"]}
+              words={words("line1Words")}
               delay={230}
               marker
               className="em-mark-solid"
             />
+            {t("headline.line1After") && (
+              <>
+                {" "}
+                <KineticText
+                  text={t("headline.line1After")}
+                  delay={120}
+                  offset={2}
+                />
+              </>
+            )}
             <br />
-            <KineticText text="before you" delay={120} offset={3} />{" "}
+            <KineticText
+              text={t("headline.line2Before")}
+              delay={120}
+              offset={3}
+            />{" "}
             {/* Rotates like the word above, without the highlighter stroke. */}
             <WordRotator
-              words={["share", "believe"]}
+              words={words("line2Words")}
               interval={3200}
               delay={380}
             />{" "}
-            <KineticText text="it" delay={120} offset={5} />
+            <KineticText text={t("headline.line2After")} delay={120} offset={5} />
           </h1>
           <p
             className="enter max-w-3xl text-[0.9375rem] text-balance text-white/85 sm:text-base md:text-lg xl:text-xl"
             style={delay(4)}
           >
-            Paste a message, a link or upload media. Zuula tells you whether it
-            is authentic, false or AI-generated — and{" "}
-            <Emphasis variant="scribble" tone="light" delay={900}>
-              shows you the sources
-            </Emphasis>
-            .
+            {t.rich("subtitle", {
+              scribble: (chunks) => (
+                <Emphasis variant="scribble" tone="light" delay={900}>
+                  {chunks}
+                </Emphasis>
+              ),
+            })}
           </p>
         </div>
 
@@ -151,51 +188,63 @@ function HomeHero() {
         <div className="grid w-full max-w-7xl gap-4 lg:grid-cols-2 [@media(max-height:52rem)]:-mt-2">
           <RotatingCard
             id="feed-title"
-            eyebrow="Recent"
-            title="Fact-checks"
+            eyebrow={t("feed.eyebrow")}
+            title={t("feed.title")}
             live
             href="/fact-checks"
-            linkLabel="Library"
+            linkLabel={t("feed.link")}
+            labels={carousel}
             style={delay(8)}
           >
             {recent.map((r) => (
-              <ReportSlide key={r.id} report={r} tag="New" />
+              <ReportSlide
+                key={r.id}
+                report={r}
+                tag={t("feed.tagNew")}
+                ccsTitle={t("feed.ccsTitle")}
+              />
             ))}
             {debated.map((r) => (
-              <ReportSlide key={r.id} report={r} tag="Debated" />
+              <ReportSlide
+                key={r.id}
+                report={r}
+                tag={t("feed.tagDebated")}
+                ccsTitle={t("feed.ccsTitle")}
+              />
             ))}
           </RotatingCard>
 
           <RotatingCard
             id="community-title"
-            eyebrow="Community"
-            title="What Uganda is checking"
+            eyebrow={t("community.eyebrow")}
+            title={t("community.title")}
             href="/fact-checks"
-            linkLabel="Explore"
+            linkLabel={t("community.link")}
+            labels={carousel}
             interval={6000}
             style={delay(9)}
           >
             <div className="flex h-full flex-col justify-center gap-1.5 px-4 py-2.5 xl:flex-row xl:items-center xl:justify-start xl:gap-3">
               <p className="shrink-0 text-xs font-semibold">
-                Trending this week
+                {t("community.trending")}
               </p>
               <ul
                 className="flex flex-wrap gap-1.5 overflow-hidden"
                 style={{ maxHeight: "1.75rem" }}
               >
-                {topics.map((t) => (
-                  <li key={t.category}>
+                {topics.map((topic) => (
+                  <li key={topic.category}>
                     <Link
-                      href={`/fact-checks?${toSearchParams({ category: t.category })}`}
+                      href={`/fact-checks?${toSearchParams({ category: topic.category })}`}
                       className="press inline-flex items-center gap-1.5 border bg-card px-2 py-0.5 text-xs [--press-scale:0.94] hover:border-primary hover:text-primary"
                     >
                       <RiFireLine
                         className="size-3.5 text-primary"
                         aria-hidden
                       />
-                      {t.category}
+                      {topic.category}
                       <span className="font-mono text-muted-foreground">
-                        {t.count}
+                        {topic.count}
                       </span>
                     </Link>
                   </li>
@@ -219,11 +268,14 @@ function HomeHero() {
                       className="size-3.5 text-primary"
                       aria-hidden
                     />
-                    #{i + 1} agreed verdict
+                    {t("community.rank", { rank: i + 1 })}
                   </span>
                   <VerdictBadge verdict={report.verdict} size="sm" />
                   <span className="ml-auto shrink-0 tabular-nums">
-                    {score.ccs}% agree · {score.total.toLocaleString()} ratings
+                    {t("community.agree", {
+                      ccs: score.ccs ?? 0,
+                      total: score.total.toLocaleString(),
+                    })}
                   </span>
                 </div>
               </div>

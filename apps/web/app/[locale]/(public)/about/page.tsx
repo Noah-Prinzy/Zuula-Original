@@ -1,4 +1,6 @@
+import type { Metadata } from "next"
 import Link from "next/link"
+import { getTranslations } from "next-intl/server"
 import {
   RiArrowRightLine,
   RiFileSearchLine,
@@ -26,117 +28,58 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { VerdictBadge } from "@/components/verdict/verdict-badge"
 import { VERDICTS } from "@/lib/types/fact-check"
-import { VERDICT_META } from "@/lib/verdicts"
 
-export const metadata = {
-  title: "About",
-  description: "Zuula's mission, methodology, editorial independence and FAQ.",
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("About")
+  return { title: t("metaTitle"), description: t("metaDescription") }
 }
 
-// "Why Zuula" band, moved here from Home.
+// "Why Zuula" band, moved here from Home. Text under About.why.features.
 const FEATURES = [
-  {
-    icon: RiShieldCheckLine,
-    title: "Trusted sources",
-    body: "Claims are cross-referenced against Ugandan and international outlets and fact-checkers.",
-  },
-  {
-    icon: RiRobot2Line,
-    title: "AI content detection",
-    body: "Flags AI-generated text, deepfake images, synthetic audio and manipulated video.",
-  },
-  {
-    icon: RiGlobalLine,
-    title: "Ugandan languages",
-    body: "English, Luganda, Acholi, Runyankole and Ateso.",
-  },
-]
+  { key: "sources", icon: RiShieldCheckLine },
+  { key: "ai", icon: RiRobot2Line },
+  { key: "languages", icon: RiGlobalLine },
+] as const
 
-const STEPS = [
-  {
-    title: "You submit a claim",
-    body: "Paste text, share a link or upload media (up to 50 MB). You get a tracking ID and can follow the analysis live.",
-  },
-  {
-    title: "We check it",
-    body: "The claim is cross-referenced against trusted Ugandan and international sources, and screened for AI-generated text, deepfakes and manipulated audio or video.",
-  },
-  {
-    title: "A verdict is published",
-    body: "You see the verdict, the evidence behind it and which sources agree or disagree — never just a label.",
-  },
-  {
-    title: "The community and our reviewers weigh in",
-    body: "Readers rate the verdict. If enough people disagree, an accredited Expert reviews the case and can confirm or override it — the report is then marked “Human Verified.”",
-  },
-]
+const STEPS = ["submit", "check", "publish", "review"] as const
 
 const PRINCIPLES = [
-  {
-    icon: RiShieldCheckLine,
-    title: "We label, we don't delete",
-    body: "Zuula never removes anyone's post. We publish an independent verdict and evidence alongside it.",
-  },
-  {
-    icon: RiScales3Line,
-    title: "Every rating carries the same rules",
-    body: "Public, Journalist and Expert ratings feed the same Community Confidence Score, just weighted by track record — nobody's vote is discounted without a reason.",
-  },
-  {
-    icon: RiGroupLine,
-    title: "Reviewers are accountable",
-    body: "Expert overrides require a written justification and are recorded in an append-only audit log that Admins can inspect.",
-  },
-  {
-    icon: RiFileSearchLine,
-    title: "Sources are shown, not hidden",
-    body: "Every report links the evidence it was checked against, so you can verify our reasoning yourself.",
-  },
-]
+  { key: "label", icon: RiShieldCheckLine },
+  { key: "rules", icon: RiScales3Line },
+  { key: "accountable", icon: RiGroupLine },
+  { key: "sources", icon: RiFileSearchLine },
+] as const
 
+// "verdicts" has no text answer; it renders the verdict list instead.
 const FAQS = [
-  {
-    q: "Is Zuula free to use?",
-    a: "Checking a claim and reading the Library is free for everyone. Journalist and Expert accounts need accreditation, since they carry more weight in the community score and can review flagged cases.",
-  },
-  {
-    q: "What can I submit?",
-    a: "Text (like a WhatsApp forward), a link, a full article, or media — photos, voice notes and video up to 50 MB.",
-  },
-  {
-    q: "How long does a check take?",
-    a: "Text usually takes about 10 seconds. Media can take up to a minute. Cases escalated to an Expert reviewer follow a review deadline instead.",
-  },
-  {
-    q: "What do the verdicts mean?",
-    a: null, // rendered as a verdict list below
-  },
-  {
-    q: "What if I disagree with a verdict?",
-    a: "Rate it. Ratings from the Public, Journalists and Experts are combined into a Community Confidence Score. If a verdict's score drops low enough with enough ratings, it's flagged for an Expert to review and confirm or override.",
-  },
-  {
-    q: "Which languages does Zuula support?",
-    a: "Claims can be checked in English, Luganda, Acholi, Runyankole and Ateso. Translating the interface itself into those languages is still in progress — today the language switcher only remembers your preference.",
-  },
-  {
-    q: "How is my data protected?",
-    a: "Under Uganda's Data Protection and Privacy Act, 2019. See our ",
-    link: { href: "/legal/privacy", label: "Privacy Policy" },
-  },
-  {
-    q: "Who builds and funds Zuula?",
-    a: "Zuula (“Uganda Fact-Guard”) is developed by the Centre for Intelligent Technologies at Victoria University Kampala as an academic and public-interest project. Verdicts are reached independently of any funder or advertiser.",
-  },
-]
+  "free",
+  "submit",
+  "time",
+  "verdicts",
+  "disagree",
+  "languages",
+  "data",
+  "who",
+] as const
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const t = await getTranslations("About")
+  const tv = await getTranslations("Verdicts")
+  const link = (href: string) =>
+    function RichLink(chunks: React.ReactNode) {
+      return (
+        <Link href={href} className="link-grow text-foreground">
+          {chunks}
+        </Link>
+      )
+    }
+
   return (
     <>
       <PageHero
-        eyebrow="About Zuula"
-        title="About"
-        description="Our mission, methodology and editorial independence."
+        eyebrow={t("banner.eyebrow")}
+        title={t("banner.title")}
+        description={t("banner.description")}
       />
 
       <PageSheet>
@@ -145,34 +88,38 @@ export default function AboutPage() {
           <div className="flex page-container flex-col gap-12 py-16">
             <div data-reveal className="flex max-w-3xl flex-col gap-3">
               <p className="font-heading text-xs font-semibold tracking-widest text-primary uppercase">
-                <ScrambleText text="Why Zuula" />
+                <ScrambleText text={t("why.eyebrow")} />
               </p>
               <h2
                 id="why-title"
                 className="font-heading text-3xl font-bold tracking-tight text-balance md:text-5xl"
               >
                 <KineticText
-                  text="Built for the way news travels in Uganda."
-                  highlight={["Uganda"]}
+                  text={t("why.title")}
+                  highlight={[t("why.highlight")]}
                 />
               </h2>
             </div>
             <div data-reveal="stagger" className="grid gap-4 md:grid-cols-3">
               {FEATURES.map((f) => (
                 <div
-                  key={f.title}
+                  key={f.key}
                   className="hover-lift flex flex-col gap-3 border bg-card p-6 text-card-foreground"
                 >
                   <f.icon className="size-7 text-primary" aria-hidden />
-                  <h3 className="font-heading text-lg font-bold">{f.title}</h3>
-                  <p className="text-sm text-muted-foreground">{f.body}</p>
+                  <h3 className="font-heading text-lg font-bold">
+                    {t(`why.features.${f.key}.title`)}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {t(`why.features.${f.key}.body`)}
+                  </p>
                 </div>
               ))}
             </div>
             <div data-reveal>
               <Button size="lg" asChild>
                 <Link href="/verify">
-                  Check a claim <RiArrowRightLine aria-hidden />
+                  {t("why.cta")} <RiArrowRightLine aria-hidden />
                 </Link>
               </Button>
             </div>
@@ -186,21 +133,17 @@ export default function AboutPage() {
             className="flex flex-col gap-4"
           >
             <Badge variant="outline" className="w-fit">
-              Victoria University CIT
+              {t("mission.badge")}
             </Badge>
+            {/* PageHero holds the page's only <h1>. */}
             <h2
               id="mission-title"
               className="max-w-3xl font-heading text-2xl font-bold text-balance md:text-3xl"
             >
-              Uganda sees a flood of forwarded claims every day. Zuula checks
-              them before you share.
+              {t("mission.title")}
             </h2>
             <p className="max-w-2xl text-base text-muted-foreground">
-              Zuula (branded from Uganda Fact-Guard) is an AI-assisted
-              fact-checking platform built for how news actually travels here —
-              on WhatsApp, in group chats and on social media, often faster than
-              any newsroom can verify it. Submit a claim and get a verdict
-              backed by evidence, not just an opinion.
+              {t("mission.body")}
             </p>
           </section>
 
@@ -210,22 +153,26 @@ export default function AboutPage() {
             className="flex scroll-mt-24 flex-col gap-8"
           >
             <SectionTitle
-              eyebrow="Methodology"
-              title="How we reach a verdict"
-              description="Every check follows the same four steps, whether it's automated or escalated to a human reviewer."
+              eyebrow={t("methodology.eyebrow")}
+              title={t("methodology.title")}
+              description={t("methodology.description")}
             />
             <ol data-reveal="stagger" className="grid gap-4 sm:grid-cols-2">
               {STEPS.map((s, i) => (
                 <li
-                  key={s.title}
+                  key={s}
                   className="hover-lift flex gap-3 border bg-card p-4"
                 >
                   <span className="flex size-6 shrink-0 items-center justify-center bg-primary font-heading text-xs font-bold text-primary-foreground">
                     {i + 1}
                   </span>
                   <div className="flex flex-col gap-1">
-                    <p className="text-sm font-medium">{s.title}</p>
-                    <p className="text-sm text-muted-foreground">{s.body}</p>
+                    <p className="text-sm font-medium">
+                      {t(`methodology.steps.${s}.title`)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {t(`methodology.steps.${s}.body`)}
+                    </p>
                   </div>
                 </li>
               ))}
@@ -238,14 +185,14 @@ export default function AboutPage() {
             className="flex scroll-mt-24 flex-col gap-8"
           >
             <SectionTitle
-              eyebrow="Editorial independence"
-              title="Rules we hold ourselves to"
-              description="Zuula's verdicts aren't for sale, and they aren't final without a way to challenge them."
+              eyebrow={t("independence.eyebrow")}
+              title={t("independence.title")}
+              description={t("independence.description")}
             />
             <div data-reveal="stagger" className="grid gap-4 md:grid-cols-2">
               {PRINCIPLES.map((p) => (
                 <div
-                  key={p.title}
+                  key={p.key}
                   className="hover-lift flex gap-3 border bg-card p-4"
                 >
                   <p.icon
@@ -253,8 +200,12 @@ export default function AboutPage() {
                     aria-hidden
                   />
                   <div className="flex flex-col gap-1">
-                    <p className="text-sm font-medium">{p.title}</p>
-                    <p className="text-sm text-muted-foreground">{p.body}</p>
+                    <p className="text-sm font-medium">
+                      {t(`independence.principles.${p.key}.title`)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {t(`independence.principles.${p.key}.body`)}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -267,9 +218,9 @@ export default function AboutPage() {
             className="flex scroll-mt-24 flex-col gap-6"
           >
             <SectionTitle
-              eyebrow="Coming soon"
-              title="Check a claim from WhatsApp"
-              description="No app, no data bundle for a browser — forward the message and get a verdict back in the chat."
+              eyebrow={t("whatsapp.eyebrow")}
+              title={t("whatsapp.title")}
+              description={t("whatsapp.description")}
             />
             <div className="hover-lift flex flex-col gap-3 border bg-card p-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex gap-3">
@@ -278,18 +229,11 @@ export default function AboutPage() {
                   aria-hidden
                 />
                 <p className="max-w-xl text-sm text-muted-foreground">
-                  A WhatsApp and Telegram bot is planned for the platform&apos;s
-                  API phase, so you&apos;ll be able to forward a message
-                  straight to Zuula the way you already forward it to friends.
-                  It isn&apos;t live yet — for now, use{" "}
-                  <Link href="/verify" className="link-grow text-foreground">
-                    Verify
-                  </Link>{" "}
-                  on the web.
+                  {t.rich("whatsapp.body", { link: link("/verify") })}
                 </p>
               </div>
               <Badge variant="outline" className="w-fit shrink-0">
-                Planned
+                {t("whatsapp.badge")}
               </Badge>
             </div>
           </section>
@@ -299,35 +243,28 @@ export default function AboutPage() {
             data-reveal
             className="flex scroll-mt-24 flex-col gap-8"
           >
-            <SectionTitle eyebrow="FAQ" title="Frequently asked questions" />
+            <SectionTitle eyebrow={t("faq.eyebrow")} title={t("faq.title")} />
             <Accordion type="single" collapsible className="max-w-3xl border-t">
               {FAQS.map((f) => (
-                <AccordionItem key={f.q} value={f.q}>
+                <AccordionItem key={f} value={f}>
                   <AccordionTrigger className="py-4 text-sm">
-                    {f.q}
+                    {t(`faq.items.${f}.q`)}
                   </AccordionTrigger>
                   <AccordionContent className="text-sm text-muted-foreground">
-                    {f.a === null ? (
+                    {f === "verdicts" ? (
                       <ul className="flex flex-col gap-2">
                         {VERDICTS.map((v) => (
                           <li key={v} className="flex items-center gap-2">
                             <VerdictBadge verdict={v} size="sm" />
-                            <span>{VERDICT_META[v].description}</span>
+                            <span>{tv(`descriptions.${v}`)}</span>
                           </li>
                         ))}
                       </ul>
                     ) : (
                       <p>
-                        {f.a}
-                        {f.link && (
-                          <Link
-                            href={f.link.href}
-                            className="link-grow text-foreground"
-                          >
-                            {f.link.label}
-                          </Link>
-                        )}
-                        {f.link && "."}
+                        {t.rich(`faq.items.${f}.a`, {
+                          link: link("/legal/privacy"),
+                        })}
                       </p>
                     )}
                   </AccordionContent>
@@ -342,17 +279,19 @@ export default function AboutPage() {
             className="flex scroll-mt-24 flex-col gap-6 border-t pt-14"
           >
             <SectionTitle
-              eyebrow="Contact"
-              title="Get in touch"
-              description="Questions about a verdict, the platform or a partnership."
+              eyebrow={t("contact.eyebrow")}
+              title={t("contact.title")}
+              description={t("contact.description")}
             />
             <div data-reveal="stagger" className="grid gap-4 sm:grid-cols-2">
               <div className="hover-lift flex flex-col gap-3 border bg-card p-6">
                 <RiMailLine className="size-5 text-primary" aria-hidden />
                 <div>
-                  <p className="text-sm font-medium">General enquiries</p>
+                  <p className="text-sm font-medium">
+                    {t("contact.general.title")}
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    Media, partnerships and platform questions.
+                    {t("contact.general.body")}
                   </p>
                 </div>
                 <a
@@ -366,14 +305,14 @@ export default function AboutPage() {
                 <RiGovernmentLine className="size-5 text-primary" aria-hidden />
                 <div>
                   <p className="text-sm font-medium">
-                    Centre for Intelligent Technologies
+                    {t("contact.cit.title")}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Victoria University, Kampala.
+                    {t("contact.cit.body")}
                   </p>
                 </div>
                 <Button variant="outline" size="sm" asChild className="w-fit">
-                  <Link href="/developers">API &amp; developer access</Link>
+                  <Link href="/developers">{t("contact.cit.cta")}</Link>
                 </Button>
               </div>
             </div>

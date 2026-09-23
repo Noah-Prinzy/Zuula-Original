@@ -12,6 +12,7 @@ export const REVIEW_NOW = new Date("2026-09-21T12:00:00+03:00")
 // Why a verdict is in the queue.
 export type ReviewReason = "community-escalation" | "suspended" | "user-reports" | "low-confidence"
 
+// Labels and descriptions live in Review.reasons.<reason>; English copies stay for non-UI use.
 export const REASON_META: Record<ReviewReason, { label: string; description: string }> = {
   "community-escalation": {
     label: "Community escalation",

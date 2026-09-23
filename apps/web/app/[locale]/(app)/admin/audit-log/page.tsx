@@ -1,12 +1,20 @@
+import type { Metadata } from "next"
+import { useTranslations } from "next-intl"
+import { getTranslations } from "next-intl/server"
+
 import { PageHeader } from "@/components/shell/page-header"
 import { AuditLog } from "@/components/admin/audit-log"
 
-export const metadata = { title: "Audit Log" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Pages.auditLog")
+  return { title: t("title") }
+}
 
 export default function Page() {
+  const t = useTranslations("Pages.auditLog")
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Audit Log" description="Every administrative and expert action, with who, when and why." />
+      <PageHeader title={t("title")} description={t("description")} />
       <AuditLog />
     </div>
   )

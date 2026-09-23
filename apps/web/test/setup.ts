@@ -17,3 +17,9 @@ class ResizeObserverStub {
   disconnect() {}
 }
 vi.stubGlobal("ResizeObserver", ResizeObserverStub)
+
+// jsdom can't make object URLs (image previews in MediaDropzone).
+if (typeof URL !== "undefined") {
+  URL.createObjectURL = () => "blob:test"
+  URL.revokeObjectURL = () => {}
+}

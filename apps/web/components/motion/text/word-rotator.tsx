@@ -68,6 +68,9 @@ export function WordRotator({
     <span
       className={cn("word-rotator", marker && "word-rotator-marker", className)}
       style={{ width, "--base": previous === null ? `${delay}ms` : "0ms" } as React.CSSProperties}
+      // Until the first rotation the word is part of the first paint: it settles into place
+      // rather than fading in (globals.css), so it never delays Largest Contentful Paint.
+      data-initial={previous === null || undefined}
       onPointerEnter={() => setPaused(true)}
       onPointerLeave={() => setPaused(false)}
     >

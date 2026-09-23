@@ -3,11 +3,13 @@
 import * as React from "react"
 import Link from "next/link"
 import { RiArrowRightLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { Badge } from "@/components/ui/badge"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { VerdictBadge } from "@/components/verdict/verdict-badge"
+import { useFormat } from "@/lib/format"
 import { SAMPLE_DECISIONS, REVIEW_SLA_HOURS } from "@/lib/mock/review"
 import { cn } from "@/lib/utils"
 
@@ -16,6 +18,9 @@ type Filter = "all" | "confirmed" | "overridden"
 // FR-REVIEW-03: the reviewer's own logged decisions.
 export function ReviewHistory() {
   const [filter, setFilter] = React.useState<Filter>("all")
+  const t = useTranslations("Review.history")
+  const to = useTranslations("Review.outcomes")
+  const f = useFormat()
   const shown = filter === "all" ? SAMPLE_DECISIONS : SAMPLE_DECISIONS.filter((d) => d.outcome === filter)
   const count = (f: Filter) => (f === "all" ? SAMPLE_DECISIONS.length : SAMPLE_DECISIONS.filter((d) => d.outcome === f).length)
 
@@ -27,12 +32,12 @@ export function ReviewHistory() {
         size="sm"
         value={filter}
         onValueChange={(v) => v && setFilter(v as Filter)}
-        aria-label="Filter decisions"
+        aria-label={t("filterLabel")}
         className="w-fit"
       >
-        {(["all", "confirmed", "overridden"] as const).map((f) => (
-          <ToggleGroupItem key={f} value={f} className="capitalize">
-            {f} ({count(f)})
+        {(["all", "confirmed", "overridden"] as const).map((v) => (
+          <ToggleGroupItem key={v} value={v}>
+            {t(`filters.${v}`, { count: count(v) })}
           </ToggleGroupItem>
         ))}
       </ToggleGroup>
@@ -40,8 +45,8 @@ export function ReviewHistory() {
       {shown.length === 0 ? (
         <Empty className="border">
           <EmptyHeader>
-            <EmptyTitle>No decisions</EmptyTitle>
-            <EmptyDescription>Nothing matches this filter.</EmptyDescription>
+            <EmptyTitle>{t("emptyTitle")}</EmptyTitle>
+            <EmptyDescription>{t("emptyBody")}</EmptyDescription>
           </EmptyHeader>
         </Empty>
       ) : (
@@ -55,23 +60,24 @@ export function ReviewHistory() {
                     {d.title}
                   </Link>
                   <Badge variant={d.outcome === "overridden" ? "default" : "secondary"}>
-                    {d.outcome === "overridden" ? "Overridden" : "Confirmed"}
+                    {to(d.outcome)}
                   </Badge>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <VerdictBadge verdict={d.from} size="sm" />
                   {d.outcome === "overridden" && (
                     <>
-                      <RiArrowRightLine className="size-3.5" aria-label="changed to" />
+                      <RiArrowRightLine className="size-3.5" aria-label={t("changedTo")} />
                       <VerdictBadge verdict={d.to} size="sm" />
                     </>
                   )}
                   <span className="font-mono">{d.caseId}</span>
                   <time dateTime={d.decidedAt}>
-                    {new Date(d.decidedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}
+                    {f.dateTime(d.decidedAt)}
                   </time>
                   <span className={cn(late && "text-verdict-false")}>
-                    Turnaround {d.turnaroundHours} h{late && " (over SLA)"}
+                    {t("turnaround", { hours: d.turnaroundHours })}
+                    {late && ` ${t("overSla")}`}
                   </span>
                 </div>
                 <p className="border-l-2 pl-3 text-sm text-muted-foreground">{d.justification}</p>

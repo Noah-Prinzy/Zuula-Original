@@ -770,6 +770,528 @@
       "deletedBody": "Your personal data has been removed."
     }
   },
+  "Review": {
+    "reasons": {
+      "community-escalation": {
+        "label": "Community escalation",
+        "description": "Fewer than 40% of over 100 ratings agree with the verdict (§9.2)."
+      },
+      "suspended": {
+        "label": "Suspended",
+        "description": "Fewer than 20% of over 200 ratings agree. The verdict is hidden until reviewed."
+      },
+      "user-reports": {
+        "label": "User reports",
+        "description": "Readers reported a problem with this verdict."
+      },
+      "low-confidence": {
+        "label": "Low AI confidence",
+        "description": "The AI was less than 60% confident."
+      }
+    },
+    "sla": {
+      "overdue": "Overdue",
+      "due-soon": "Due soon",
+      "on-track": "On track",
+      "tooltip": "{status} · due {time}",
+      "minutes": "{minutes} min",
+      "hoursMinutes": "{hours} h {minutes} min",
+      "left": "{time} left",
+      "late": "{time} overdue"
+    },
+    "outcomes": {
+      "confirmed": "Confirmed",
+      "overridden": "Overridden"
+    },
+    "highPriority": "High priority",
+    "overview": {
+      "inQueue": "In the queue",
+      "unassignedCount": "{count} unassigned",
+      "overdue": "Overdue",
+      "overdueHint": "Past the {hours}-hour SLA",
+      "dueSoon": "Due in 12 hours",
+      "avgTurnaround": "Your average turnaround",
+      "hours": "{value} h",
+      "decisionsSoFar": "{count, plural, one {# decision so far} other {# decisions so far}}",
+      "needsAttention": "Needs attention",
+      "fullQueue": "Full queue",
+      "assignedToYou": "Assigned to you",
+      "assignedTo": "Assigned to {name}",
+      "unassigned": "Unassigned",
+      "byReason": "Why cases are flagged",
+      "recent": "Your recent decisions",
+      "recentEmpty": "Decisions you make appear here.",
+      "allDecisions": "All decisions"
+    },
+    "history": {
+      "filterLabel": "Filter decisions",
+      "filters": {
+        "all": "All ({count})",
+        "confirmed": "Confirmed ({count})",
+        "overridden": "Overridden ({count})"
+      },
+      "emptyTitle": "No decisions",
+      "emptyBody": "Nothing matches this filter.",
+      "changedTo": "changed to",
+      "turnaround": "Turnaround {hours} h",
+      "overSla": "(over SLA)"
+    },
+    "queue": {
+      "assigned": "Assigned to you",
+      "columns": {
+        "content": "Content",
+        "verdict": "AI verdict",
+        "ccs": "CCS",
+        "sla": "SLA",
+        "assignee": "Assignee",
+        "action": "Action"
+      },
+      "ratings": "{count, plural, one {# rating} other {# ratings}}",
+      "you": "You",
+      "assignToMe": "Assign to me",
+      "review": "Review",
+      "searchPlaceholder": "Search by title, case ID or category…",
+      "searchLabel": "Search the queue",
+      "reason": "Reason",
+      "allReasons": "All reasons",
+      "scopeLabel": "Assignment",
+      "scopes": {
+        "all": "All",
+        "mine": "Mine",
+        "unassigned": "Unassigned"
+      },
+      "summary": "{count, plural, one {# case} other {# cases}} · sorted by {sort, select, ccs {community score} other {time left}}",
+      "emptyTitle": "Nothing to review",
+      "emptyBody": "No cases match these filters."
+    },
+    "case": {
+      "communitySignals": "Community signals",
+      "rater": "Rater",
+      "accurate": "Accurate",
+      "inaccurate": "Inaccurate",
+      "yourDecision": "Your decision",
+      "confirmOption": "Confirm the AI verdict",
+      "overrideOption": "Override the verdict",
+      "chooseCorrect": "Choose the correct one",
+      "correctVerdict": "Correct verdict",
+      "errors": {
+        "verdict": "Choose the correct verdict.",
+        "overrideShort": "Explain the override in at least {min} characters.",
+        "confirmShort": "Add a short reason (at least {min} characters)."
+      },
+      "confirmedToast": "Verdict confirmed",
+      "overriddenToast": "Verdict overridden",
+      "loggedAs": "{caseId} · logged under {name}. The report now shows “Human Verified”.",
+      "yourName": "your name",
+      "justification": "Justification",
+      "required": "(required)",
+      "justificationPlaceholder": "What evidence did you check? Who did you contact?",
+      "justificationHint": "Internal. Stored in the audit log with your name and the time.",
+      "publicNote": "Note for readers (optional)",
+      "publicNotePlaceholder": "Adds context to the report as an expert note.",
+      "showOnReport": "Show on the public report",
+      "submitDecision": "Submit decision",
+      "backToQueue": "Back to queue",
+      "confirmTitle": "Confirm this verdict?",
+      "overrideTitle": "Override this verdict?",
+      "confirmBody": "The report gets a Human Verified badge. Your decision counts 5× in the Community Confidence Score and is logged in the audit trail.",
+      "submit": "Submit",
+      "publicReport": "Public report",
+      "aiFindings": "AI findings",
+      "auditNote": "Every decision is recorded with reviewer, time and justification (FR-REVIEW-03)."
+    }
+  },
+  "Admin": {
+    "loggedInAudit": "Logged in the audit trail.",
+    "table": {
+      "emptyTitle": "Nothing here",
+      "emptyBody": "No rows match these filters."
+    },
+    "overview": {
+      "kpis": {
+        "f1": "Text detection F1",
+        "deepfake": "Deepfake accuracy",
+        "mau": "Monthly active users",
+        "latency": "Avg text verdict time",
+        "ratings": "Ratings per verdict",
+        "turnaround": "Expert turnaround",
+        "partners": "API partners",
+        "languages": "Languages supported"
+      },
+      "onTarget": "On target",
+      "belowTarget": "Below target",
+      "target": "{status} · target {direction, select, min {≥} other {≤}} {value}",
+      "checksTitle": "Checks per day",
+      "checksTotal": "{count} in the last 14 days",
+      "checksLabel": "Checks",
+      "showTable": "Show as table",
+      "date": "Date",
+      "mixTitle": "Verdicts this month",
+      "mixTotal": "{count} verdicts",
+      "healthTitle": "System health",
+      "ok": "OK",
+      "needsAttention": "Needs attention",
+      "targetsTitle": "Year-one targets",
+      "targetsMet": "{met} of {total} on target"
+    },
+    "audit": {
+      "actions": {
+        "verdict": {
+          "override": "Verdict overridden",
+          "confirm": "Verdict confirmed"
+        },
+        "user": {
+          "role_change": "Role changed",
+          "suspend": "User suspended",
+          "reinstate": "User reinstated"
+        },
+        "source": {
+          "add": "Source added",
+          "deactivate": "Source deactivated"
+        },
+        "broadcast": {
+          "send": "Broadcast sent"
+        },
+        "settings": {
+          "update": "Settings changed"
+        },
+        "moderation": {
+          "remove": "Content removed"
+        }
+      },
+      "columns": {
+        "time": "Time",
+        "actor": "Actor",
+        "action": "Action",
+        "target": "Target and detail",
+        "ip": "IP"
+      },
+      "searchPlaceholder": "Search targets and details…",
+      "searchLabel": "Search the audit log",
+      "actor": "Actor",
+      "everyone": "Everyone",
+      "action": "Action",
+      "allActions": "All actions",
+      "exported": "{count, plural, one {Exported # entry} other {Exported # entries}}",
+      "exportCsv": "Export CSV",
+      "summary": "{count, plural, one {# entry} other {# entries}}. The log is append-only: entries can't be edited or deleted, including by administrators.",
+      "emptyTitle": "No entries"
+    },
+    "broadcasts": {
+      "channels": {
+        "In-app": "In-app",
+        "Push": "Push",
+        "Email": "Email",
+        "SMS": "SMS",
+        "WhatsApp": "WhatsApp"
+      },
+      "audiences": {
+        "everyone": "Everyone",
+        "central": "Central region",
+        "northern": "Northern region",
+        "eastern": "Eastern region",
+        "western": "Western region",
+        "health": "Followers of Health",
+        "elections": "Followers of Elections"
+      },
+      "errors": {
+        "title": "Write a clear headline (at least 8 characters).",
+        "message": "Explain what's false and what to do (at least 30 characters).",
+        "channels": "Choose at least one channel."
+      },
+      "administrator": "Administrator",
+      "sent": "Broadcast sent",
+      "sentSummary": "{count} people · {channels}",
+      "composeTitle": "New emergency broadcast",
+      "composeDescription": "For high-priority misinformation that is spreading fast. Sent to everyone in the audience, whatever their alert settings.",
+      "reviewAndSend": "Review and send",
+      "headline": "Headline",
+      "headlinePlaceholder": "e.g. Scam alert: fake free-data links",
+      "message": "Message",
+      "messagePlaceholder": "What's false, what's true, and what people should do.",
+      "messageCount": "{count}/{max} · fits in two SMS",
+      "linkReport": "Link to a fact-check (optional)",
+      "none": "None",
+      "audience": "Audience",
+      "audienceEstimate": "About {count} people.",
+      "severity": "Severity",
+      "severities": {
+        "high": "High",
+        "critical": "Critical"
+      },
+      "severityHigh": "High: notify",
+      "severityCritical": "Critical: notify and pin a banner on every page",
+      "channelsLegend": "Channels",
+      "preview": "Preview",
+      "previewTitle": "Your headline",
+      "previewBody": "Your message appears here.",
+      "confirmTitle": "Send to {count} people?",
+      "confirmBody": "{audience} · {channels} · {severity}. Broadcasts can't be recalled once SMS and push messages go out.",
+      "send": "Send broadcast",
+      "sentTitle": "Sent broadcasts",
+      "reached": "{audience} · {channels} · reached {count}",
+      "opened": " · opened {percent}%"
+    },
+    "moderation": {
+      "doneBody": "New items appear here as they come in.",
+      "resolvedBody": "Logged in the audit trail.",
+      "recalculatedBody": "Scores recalculated. Logged in the audit trail.",
+      "noReports": "No open reports",
+      "readers": "{count, plural, one {# reader} other {# readers}}",
+      "sendToReview": "Send to review",
+      "sentToReview": "Sent to expert review",
+      "dismiss": "Dismiss",
+      "dismissed": "Report dismissed",
+      "removeComment": "Remove comment",
+      "commentRemoved": "Comment removed",
+      "noManipulation": "No suspicious rating activity",
+      "likelyCoordinated": "{percent}% likely coordinated",
+      "burst": "{count} {direction, select, accurate {“accurate”} other {“inaccurate”}} ratings in {window}",
+      "discount": "Discount ratings",
+      "discounted": "{count} ratings discounted",
+      "suspendAccounts": "Suspend accounts",
+      "suspended": "Accounts suspended and ratings discounted",
+      "notManipulation": "Not manipulation",
+      "genuine": "Marked as genuine",
+      "reportsTab": "Reported content ({count})",
+      "manipulationTab": "Rating manipulation ({count})"
+    },
+    "settings": {
+      "errors": {
+        "suspended": "The suspended ceiling must be below the escalation ceiling.",
+        "escalated": "The escalation ceiling must be below the “questioned” range.",
+        "inverted": "The “questioned” range is inverted.",
+        "verified": "The “questioned” range must end below Community Verified.",
+        "ratings": "Minimum ratings should increase: questioned ≤ escalated ≤ suspended."
+      },
+      "unsaved": "{count, plural, one {# unsaved change} other {# unsaved changes}}",
+      "specDefaults": "Spec defaults",
+      "save": "Save settings",
+      "thresholdsTitle": "Escalation thresholds",
+      "thresholdsDescription": "When community ratings change a verdict's status (§9.2). Applies to new ratings immediately.",
+      "verifiedAt": "Community Verified at or above",
+      "questionedFrom": "“Questioned” from",
+      "questionedTo": "“Questioned” up to",
+      "withMoreThan": "with more than",
+      "ratings": "ratings",
+      "escalateAt": "Send to expert review at or below",
+      "suspendAt": "Suspend the verdict at or below",
+      "weightsTitle": "Rating weights",
+      "weightsDescription": "How much each role counts in the Community Confidence Score (§9.1).",
+      "operationsTitle": "Operations",
+      "operationsDescription": "Review deadlines, API limits and model retraining (§9.3).",
+      "sla": "Expert review SLA",
+      "hours": "hours",
+      "slaHint": "Spec: 48 hours.",
+      "rateLimit": "Default API rate limit",
+      "perHour": "req / hour",
+      "rateHint": "Per key. Spec: 100.",
+      "retraining": "Retraining cadence",
+      "weekly": "Weekly (spec)",
+      "monthly": "Monthly",
+      "minCcs": "Training data from CCS above",
+      "minCcsHint": "Only high-agreement verdicts become training examples. Spec: 85%.",
+      "confirmTitle": "{count, plural, one {Save # change?} other {Save # changes?}}",
+      "confirmBody": "These apply to the whole platform and are recorded in the audit log.",
+      "saved": "Settings saved"
+    },
+    "sources": {
+      "types": {
+        "media": "Media house",
+        "government": "Government",
+        "fact-checker": "Fact-checker",
+        "international": "International",
+        "academic": "Academic"
+      },
+      "errors": {
+        "name": "Enter the source name.",
+        "domain": "Enter a domain like monitor.co.ug."
+      },
+      "editTitle": "Edit {name}",
+      "addTitle": "Add a trusted source",
+      "dialogDescription": "Claims are cross-referenced against every active source.",
+      "name": "Name",
+      "domain": "Domain",
+      "type": "Type",
+      "languages": "Languages",
+      "languagesHint": "Comma-separated.",
+      "tier": "Trust tier",
+      "tiers": {
+        "1": "Tier 1: primary, highest weight",
+        "2": "Tier 2: reputable secondary",
+        "3": "Tier 3: context only"
+      },
+      "addSource": "Add source",
+      "columns": {
+        "source": "Source",
+        "type": "Type",
+        "languages": "Languages",
+        "tier": "Tier",
+        "crawl": "Last crawl",
+        "actions": "Actions"
+      },
+      "inactive": "Inactive",
+      "ok": "OK",
+      "failing": "Failing",
+      "actionsFor": "Actions for {name}",
+      "edit": "Edit",
+      "recrawl": "Re-crawl now",
+      "recrawlQueued": "Re-crawl of {name} queued",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "deactivated": "{name} deactivated",
+      "reactivated": "{name} reactivated",
+      "active": "Active sources",
+      "activeCount": "{active} / {target} target",
+      "activeLabel": "{active} of {target} sources",
+      "targetNote": "The spec requires at least {target} Ugandan and international source databases (FR-DETECT-06).",
+      "crawlsFailing": "Crawls failing",
+      "searchPlaceholder": "Search by name or domain…",
+      "searchLabel": "Search sources",
+      "allTypes": "All types",
+      "updated": "{name} updated",
+      "added": "{name} added"
+    },
+    "trends": {
+      "checksLabel": "Checks",
+      "chartTitle": "Checks per month",
+      "downloaded": "CSV downloaded",
+      "exportAll": "Export all as CSV",
+      "soFar": "{latest} so far: {latestCount} checks. {previous}: {previousCount}.",
+      "monthlyTitle": "Monthly reports",
+      "columns": {
+        "month": "Month",
+        "checks": "Checks",
+        "false": "False or likely false",
+        "ai": "AI-generated",
+        "topics": "Top topics",
+        "time": "Avg time",
+        "export": "Export"
+      },
+      "monthDownloaded": "{month} downloaded",
+      "csv": "CSV",
+      "pdfNote": "PDF reports with charts and commentary for partners are generated by the reporting service (Phase 3)."
+    },
+    "users": {
+      "statuses": {
+        "active": "Active",
+        "suspended": "Suspended",
+        "pending": "Pending accreditation"
+      },
+      "columns": {
+        "user": "User",
+        "role": "Role",
+        "status": "Status",
+        "ratings": "Ratings",
+        "lastActive": "Last active",
+        "actions": "Actions"
+      },
+      "joined": "joined {date}",
+      "actionsFor": "Actions for {name}",
+      "approve": "Approve accreditation",
+      "approved": "{name} is now a Verified Journalist",
+      "changeRole": "Change role",
+      "reactivate": "Reactivate",
+      "reactivated": "{name} reactivated",
+      "suspend": "Suspend",
+      "roleChanged": "{name} is now {role}",
+      "suspendedToast": "{name} suspended",
+      "suspendedBody": "Their ratings no longer count. Logged in the audit trail.",
+      "searchPlaceholder": "Search by name or email…",
+      "searchLabel": "Search users",
+      "role": "Role",
+      "allRoles": "All roles",
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "summary": "{shown} of {total} users · {pending} pending accreditation · {suspended} suspended",
+      "roleTitle": "Make {name} {role}?",
+      "suspendTitle": "Suspend {name}?",
+      "roleTfa": "They'll need to set up two-factor authentication at next sign-in.",
+      "roleNow": "Their access changes immediately.",
+      "suspendBody": "They can't sign in, and their ratings stop counting towards scores.",
+      "reasonPlaceholder": "Reason (recorded in the audit log)",
+      "reason": "Reason"
+    }
+  },
+  "Pages": {
+    "activity": {
+      "title": "Activity",
+      "description": "Everything you've submitted and rated."
+    },
+    "alerts": {
+      "title": "Alerts",
+      "description": "Choose the topics you follow and how alerts reach you."
+    },
+    "apiKeys": {
+      "title": "API Keys",
+      "description": "Check content from your own newsroom tools."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Results of your checks, topic alerts and announcements."
+    },
+    "profile": {
+      "title": "Profile",
+      "description": "Your details, security and personal data."
+    },
+    "accreditation": {
+      "title": "Accreditation",
+      "description": "Verified Journalists help the community judge verdicts."
+    },
+    "auditLog": {
+      "title": "Audit Log",
+      "description": "Every administrative and expert action, with who, when and why."
+    },
+    "broadcasts": {
+      "title": "Broadcasts",
+      "description": "Emergency alerts about high-priority misinformation."
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Escalation thresholds, rating weights, review SLA and retraining."
+    },
+    "moderation": {
+      "title": "Moderation",
+      "description": "Reported content and suspected rating manipulation."
+    },
+    "adminOverview": {
+      "title": "Admin overview",
+      "description": "Year-one targets, platform activity and system health."
+    },
+    "reports": {
+      "title": "Reports",
+      "description": "Monthly misinformation trends in Uganda."
+    },
+    "sources": {
+      "title": "Sources",
+      "description": "The trusted sources claims are cross-referenced against."
+    },
+    "users": {
+      "title": "Users",
+      "description": "Activate, suspend, approve accreditations and change roles."
+    },
+    "reviewHistory": {
+      "title": "Review history",
+      "description": "Every decision you've made, as recorded in the audit log."
+    },
+    "reviewOverview": {
+      "title": "Review overview",
+      "description": "Flagged verdicts, review deadlines and your recent decisions."
+    },
+    "reviewQueue": {
+      "title": "Review queue",
+      "description": "Verdicts flagged by the community, readers or low AI confidence. Most urgent first."
+    },
+    "caseReview": {
+      "title": "Case review",
+      "description": "Check the evidence, then confirm or override the verdict.",
+      "metaTitle": "Case {id}"
+    },
+    "site": {
+      "title": "Zuula — Uganda Fact-Guard",
+      "description": "AI-powered fake news and misinformation detection for Uganda. Developed by Victoria University CIT."
+    }
+  },
   "Community": {
     "status": {
       "verified": {
@@ -1213,11 +1735,14 @@
     "carousel": {
       "previous": "Previous",
       "next": "Next",
+      "stop": "Stop rotating slides",
+      "start": "Start rotating slides",
+      "slides": "{title}: slides",
       "slide": "{current} of {total}"
     },
     "feed": {
-      "eyebrow": "Live status",
-      "title": "Recent fact-checks",
+      "eyebrow": "Recent",
+      "title": "Fact-checks",
       "link": "Library",
       "tagNew": "New",
       "tagDebated": "Debated",
@@ -1344,7 +1869,7 @@
         },
         "languages": {
           "q": "Which languages does Zuula support?",
-          "a": "Claims can be checked in English, Luganda, Acholi, Runyankole and Ateso. Translating the interface itself into those languages is still in progress — today the language switcher only remembers your preference."
+          "a": "Claims can be checked in English, Luganda, Acholi, Runyankole and Ateso. The interface is being translated into those languages too; anything not yet translated appears in English."
         },
         "data": {
           "q": "How is my data protected?",

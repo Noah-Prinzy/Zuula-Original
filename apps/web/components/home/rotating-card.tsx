@@ -5,7 +5,12 @@ import Link from "next/link"
 import { RiArrowLeftSLine, RiArrowRightLine, RiArrowRightSLine, RiPauseLine, RiPlayLine } from "@remixicon/react"
 
 import { ScrambleText } from "@/components/motion/text/scramble-text"
-import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel"
 import { cn } from "@/lib/utils"
 
 // A short, wide card whose slides rotate on their own (Home status cards). Rotation pauses while
@@ -18,6 +23,14 @@ export function RotatingCard({
   href,
   linkLabel,
   interval = 5000,
+  labels = {
+    previous: "Previous",
+    next: "Next",
+    stop: "Stop rotating slides",
+    start: "Start rotating slides",
+    slides: "{title}: slides",
+    slide: "{current} of {total}",
+  },
   className,
   style,
   children,
@@ -29,6 +42,8 @@ export function RotatingCard({
   href: string
   linkLabel: string
   interval?: number
+  /** Translated labels; `slides` takes {title}, `slide` takes {current} and {total}. */
+  labels?: { previous: string; next: string; stop: string; start: string; slides: string; slide: string }
   className?: string
   style?: React.CSSProperties
   children: React.ReactNode
@@ -93,7 +108,7 @@ export function RotatingCard({
           <button
             type="button"
             onClick={() => setStopped((s) => !s)}
-            aria-label={stopped ? "Start rotating slides" : "Stop rotating slides"}
+            aria-label={stopped ? labels.start : labels.stop}
             className="press grid size-6 place-items-center text-muted-foreground [--press-scale:0.85] hover:text-foreground"
           >
             {stopped ? <RiPlayLine className="size-3.5" aria-hidden /> : <RiPauseLine className="size-3.5" aria-hidden />}
@@ -104,12 +119,13 @@ export function RotatingCard({
               setStopped(true)
               api?.scrollPrev()
             }}
-            aria-label="Previous slide"
+            aria-label={labels.previous}
             className="press grid size-6 place-items-center text-muted-foreground [--press-scale:0.85] hover:text-foreground"
           >
             <RiArrowLeftSLine className="size-4" aria-hidden />
           </button>
-          <span className="w-8 text-center text-xs text-muted-foreground tabular-nums"
+          <span
+            className="w-8 text-center text-xs text-muted-foreground tabular-nums"
             // Announce only user-driven changes, not every automatic rotation.
             aria-live={paused || stopped ? "polite" : "off"}
           >
@@ -121,7 +137,7 @@ export function RotatingCard({
               setStopped(true)
               api?.scrollNext()
             }}
-            aria-label="Next slide"
+            aria-label={labels.next}
             className="press grid size-6 place-items-center text-muted-foreground [--press-scale:0.85] hover:text-foreground"
           >
             <RiArrowRightSLine className="size-4" aria-hidden />
@@ -135,12 +151,14 @@ export function RotatingCard({
         </div>
       </div>
 
-      <Carousel setApi={setApi} opts={{ loop: true }} aria-label={`${title}: slides`} className="overflow-hidden">
+      <Carousel setApi={setApi} opts={{ loop: true }} aria-label={labels.slides.replace("{title}", title)} className="overflow-hidden">
         <CarouselContent className="ml-0">
           {slides.map((slide, i) => (
             <CarouselItem
               key={i}
-              aria-label={`${i + 1} of ${slides.length}`}
+              aria-label={labels.slide
+                .replace("{current}", String(i + 1))
+                .replace("{total}", String(slides.length))}
               className="pl-0"
             >
               {slide}

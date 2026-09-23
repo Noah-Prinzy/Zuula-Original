@@ -4,6 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { RiFileList3Line, RiShieldUserLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { CCSMeter } from "@/components/community/ccs-meter"
@@ -35,12 +36,12 @@ import { VerdictBadge } from "@/components/verdict/verdict-badge"
 import { VerdictSummary } from "@/components/verdict/verdict-summary"
 import { WhatIsTrueCard } from "@/components/verdict/what-is-true-card"
 import { communityScore, RATING_WEIGHTS } from "@/lib/community"
-import { REASON_META, type ReviewCase } from "@/lib/mock/review"
-import { ROLE_LABELS } from "@/lib/roles"
+import type { ReviewCase } from "@/lib/mock/review"
 import { VERDICTS, type FactCheckReport, type RaterRole, type Verdict } from "@/lib/types/fact-check"
 import { cn } from "@/lib/utils"
 
 const MIN_JUSTIFICATION = 30
+const MIN_REASON = 10
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
@@ -56,23 +57,25 @@ function Section({ id, title, children }: { id: string; title: string; children:
 function CommunitySignals({ report }: { report: FactCheckReport }) {
   const score = communityScore(report.community)
   const roles: RaterRole[] = ["public", "journalist", "expert"]
+  const t = useTranslations("Review.case")
+  const tRoles = useTranslations("Roles")
   return (
     <div className="flex flex-col gap-4 border bg-card p-4">
-      <h2 className="font-heading text-sm font-bold">Community signals</h2>
+      <h2 className="font-heading text-sm font-bold">{t("communitySignals")}</h2>
       <CCSMeter score={score} />
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Rater</TableHead>
-            <TableHead className="text-right">Accurate</TableHead>
-            <TableHead className="text-right">Inaccurate</TableHead>
+            <TableHead>{t("rater")}</TableHead>
+            <TableHead className="text-right">{t("accurate")}</TableHead>
+            <TableHead className="text-right">{t("inaccurate")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {roles.map((r) => (
             <TableRow key={r}>
               <TableCell className="text-xs">
-                {ROLE_LABELS[r]} <span className="text-muted-foreground">· {RATING_WEIGHTS[r]}×</span>
+                {tRoles(r)} <span className="text-muted-foreground">· {RATING_WEIGHTS[r]}×</span>
               </TableCell>
               <TableCell className="text-right font-mono tabular-nums">{report.community.accurate[r]}</TableCell>
               <TableCell className="text-right font-mono tabular-nums">{report.community.inaccurate[r]}</TableCell>
@@ -85,7 +88,7 @@ function CommunitySignals({ report }: { report: FactCheckReport }) {
           {report.community.comments.slice(0, 3).map((c) => (
             <li key={c.id} className="text-xs">
               <span className={cn("font-medium", c.vote === "accurate" ? "text-verdict-authentic" : "text-verdict-false")}>
-                {c.vote === "accurate" ? "Accurate" : "Inaccurate"}
+                {c.vote === "accurate" ? t("accurate") : t("inaccurate")}
               </span>{" "}
               · {c.author}: <span className="text-muted-foreground">“{c.body}”</span>
             </li>
@@ -109,24 +112,26 @@ function DecisionForm({ report, caseId }: { report: FactCheckReport; caseId: str
   const [publishNote, setPublishNote] = React.useState(true)
   const [errors, setErrors] = React.useState<Record<string, string>>({})
   const [confirmOpen, setConfirmOpen] = React.useState(false)
+  const t = useTranslations("Review.case")
+  const tc = useTranslations("Common")
 
   const finalVerdict = decision === "confirm" ? report.verdict : verdict
 
   function validate(e: React.FormEvent) {
     e.preventDefault()
     const next: Record<string, string> = {}
-    if (decision === "override" && !verdict) next.verdict = "Choose the correct verdict."
+    if (decision === "override" && !verdict) next.verdict = t("errors.verdict")
     if (decision === "override" && justification.trim().length < MIN_JUSTIFICATION)
-      next.justification = `Explain the override in at least ${MIN_JUSTIFICATION} characters.`
-    if (decision === "confirm" && justification.trim().length < 10)
-      next.justification = "Add a short reason (at least 10 characters)."
+      next.justification = t("errors.overrideShort", { min: MIN_JUSTIFICATION })
+    if (decision === "confirm" && justification.trim().length < MIN_REASON)
+      next.justification = t("errors.confirmShort", { min: MIN_REASON })
     setErrors(next)
     if (Object.keys(next).length === 0) setConfirmOpen(true)
   }
 
   function submit() {
-    toast.success(decision === "confirm" ? "Verdict confirmed" : "Verdict overridden", {
-      description: `${caseId} · logged under ${user?.name ?? "your name"}. The report now shows “Human Verified”.`,
+    toast.success(decision === "confirm" ? t("confirmedToast") : t("overriddenToast"), {
+      description: t("loggedAs", { caseId, name: user?.name ?? t("yourName") }),
     })
     startNavigationProgress()
     router.push("/review/queue")
@@ -134,13 +139,13 @@ function DecisionForm({ report, caseId }: { report: FactCheckReport; caseId: str
 
   return (
     <form noValidate onSubmit={validate} className="flex flex-col gap-4 border bg-card p-4">
-      <h2 className="font-heading text-sm font-bold">Your decision</h2>
+      <h2 className="font-heading text-sm font-bold">{t("yourDecision")}</h2>
 
       <RadioGroup value={decision} onValueChange={(v) => setDecision(v as Decision)} className="gap-2">
         {(
           [
-            { value: "confirm", label: "Confirm the AI verdict", hint: <VerdictBadge verdict={report.verdict} size="sm" /> },
-            { value: "override", label: "Override the verdict", hint: <span className="text-xs text-muted-foreground">Choose the correct one</span> },
+            { value: "confirm", label: t("confirmOption"), hint: <VerdictBadge verdict={report.verdict} size="sm" /> },
+            { value: "override", label: t("overrideOption"), hint: <span className="text-xs text-muted-foreground">{t("chooseCorrect")}</span> },
           ] as const
         ).map((o) => (
           <label
@@ -159,8 +164,8 @@ function DecisionForm({ report, caseId }: { report: FactCheckReport; caseId: str
 
       {decision === "override" && (
         <Field data-invalid={!!errors.verdict}>
-          <FieldLabel>Correct verdict</FieldLabel>
-          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Correct verdict">
+          <FieldLabel>{t("correctVerdict")}</FieldLabel>
+          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("correctVerdict")}>
             {VERDICTS.filter((v) => v !== report.verdict).map((v) => (
               <button
                 key={v}
@@ -183,48 +188,48 @@ function DecisionForm({ report, caseId }: { report: FactCheckReport; caseId: str
 
       <Field data-invalid={!!errors.justification}>
         <FieldLabel htmlFor="justification">
-          Justification {decision === "override" && <span className="text-destructive">(required)</span>}
+          {t("justification")} {decision === "override" && <span className="text-destructive">{t("required")}</span>}
         </FieldLabel>
         <Textarea
           id="justification"
           rows={4}
           value={justification}
           onChange={(e) => setJustification(e.target.value)}
-          placeholder="What evidence did you check? Who did you contact?"
+          placeholder={t("justificationPlaceholder")}
           aria-invalid={!!errors.justification}
         />
-        <FieldDescription>Internal. Stored in the audit log with your name and the time.</FieldDescription>
+        <FieldDescription>{t("justificationHint")}</FieldDescription>
         {errors.justification && <FieldError>{errors.justification}</FieldError>}
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="public-note">Note for readers (optional)</FieldLabel>
+        <FieldLabel htmlFor="public-note">{t("publicNote")}</FieldLabel>
         <Textarea
           id="public-note"
           rows={3}
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="Adds context to the report as an expert note."
+          placeholder={t("publicNotePlaceholder")}
         />
         <div className="flex items-center gap-2">
           <Checkbox id="publish-note" checked={publishNote} onCheckedChange={(c) => setPublishNote(c === true)} />
           <label htmlFor="publish-note" className="text-xs text-muted-foreground">
-            Show on the public report
+            {t("showOnReport")}
           </label>
         </div>
       </Field>
 
       <div className="flex flex-wrap gap-2">
-        <Button type="submit">Submit decision</Button>
+        <Button type="submit">{t("submitDecision")}</Button>
         <Button type="button" variant="ghost" asChild>
-          <Link href="/review/queue">Back to queue</Link>
+          <Link href="/review/queue">{t("backToQueue")}</Link>
         </Button>
       </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{decision === "confirm" ? "Confirm this verdict?" : "Override this verdict?"}</AlertDialogTitle>
+            <AlertDialogTitle>{decision === "confirm" ? t("confirmTitle") : t("overrideTitle")}</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="flex flex-col gap-3">
                 <span className="flex flex-wrap items-center gap-2">
@@ -236,16 +241,13 @@ function DecisionForm({ report, caseId }: { report: FactCheckReport; caseId: str
                     </>
                   )}
                 </span>
-                <span>
-                  The report gets a Human Verified badge. Your decision counts 5× in the Community Confidence
-                  Score and is logged in the audit trail.
-                </span>
+                <span>{t("confirmBody")}</span>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Go back</AlertDialogCancel>
-            <AlertDialogAction onClick={submit}>Submit</AlertDialogAction>
+            <AlertDialogCancel>{tc("goBack")}</AlertDialogCancel>
+            <AlertDialogAction onClick={submit}>{t("submit")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -255,6 +257,8 @@ function DecisionForm({ report, caseId }: { report: FactCheckReport; caseId: str
 
 export function CaseReview({ reviewCase, report }: { reviewCase: ReviewCase; report: FactCheckReport }) {
   const score = communityScore(report.community)
+  const t = useTranslations("Review")
+  const tRep = useTranslations("Report")
 
   return (
     <div className="flex flex-col gap-6">
@@ -262,11 +266,11 @@ export function CaseReview({ reviewCase, report }: { reviewCase: ReviewCase; rep
         <span className="font-mono text-sm">{reviewCase.id}</span>
         <ReasonBadge reason={reviewCase.reason} reports={reviewCase.reports} />
         <SlaBadge flaggedAt={reviewCase.flaggedAt} />
-        {reviewCase.priority === "high" && <Badge variant="destructive">High priority</Badge>}
-        <span className="text-xs text-muted-foreground">{REASON_META[reviewCase.reason].description}</span>
+        {reviewCase.priority === "high" && <Badge variant="destructive">{t("highPriority")}</Badge>}
+        <span className="text-xs text-muted-foreground">{t(`reasons.${reviewCase.reason}.description`)}</span>
         <Button variant="outline" size="sm" asChild className="ml-auto">
           <Link href={`/fact-checks/${report.id}`} target="_blank">
-            <RiFileList3Line aria-hidden /> Public report
+            <RiFileList3Line aria-hidden /> {t("case.publicReport")}
           </Link>
         </Button>
       </div>
@@ -275,20 +279,20 @@ export function CaseReview({ reviewCase, report }: { reviewCase: ReviewCase; rep
         <div className="flex min-w-0 flex-col gap-8">
           <VerdictSummary report={report} headingLevel={2} className="enter [--d:1]" />
           <CommunityStatusBanner status={score.status} className="enter [--d:2]" />
-          <Section id="checked" title="What was checked">
+          <Section id="checked" title={tRep("checked")}>
             <div className="border bg-card p-4">
               <ClaimHighlighter text={report.submittedText} claims={report.claims} citations={report.citations} />
             </div>
           </Section>
-          <Section id="findings" title="AI findings">
+          <Section id="findings" title={t("case.aiFindings")}>
             <WhatIsTrueCard whatIsFalse={report.whatIsFalse} whatIsTrue={report.whatIsTrue} />
           </Section>
           {report.aiSignals.length > 0 && (
-            <Section id="signals" title="AI detection signals">
+            <Section id="signals" title={tRep("signals")}>
               <AISignalsList signals={report.aiSignals} />
             </Section>
           )}
-          <Section id="sources" title="Sources">
+          <Section id="sources" title={tRep("sources")}>
             <div className="grid gap-2 md:grid-cols-2">
               {report.citations.map((c, i) => (
                 <CitationCard key={c.id} citation={c} index={i + 1} />
@@ -302,7 +306,7 @@ export function CaseReview({ reviewCase, report }: { reviewCase: ReviewCase; rep
           <CommunitySignals report={report} />
           <p className="flex gap-2 text-xs text-muted-foreground">
             <RiShieldUserLine className="size-4 shrink-0" aria-hidden />
-            Every decision is recorded with reviewer, time and justification (FR-REVIEW-03).
+            {t("case.auditNote")}
           </p>
         </aside>
       </div>

@@ -1,12 +1,20 @@
+import type { Metadata } from "next"
+import { useTranslations } from "next-intl"
+import { getTranslations } from "next-intl/server"
+
 import { PageHeader } from "@/components/shell/page-header"
 import { ReviewQueue } from "@/components/review/review-queue"
 
-export const metadata = { title: "Review queue" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Pages.reviewQueue")
+  return { title: t("title") }
+}
 
 export default function Page() {
+  const t = useTranslations("Pages.reviewQueue")
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Review queue" description="Verdicts flagged by the community, readers or low AI confidence. Most urgent first." />
+      <PageHeader title={t("title")} description={t("description")} />
       <ReviewQueue />
     </div>
   )

@@ -2,7 +2,7 @@ import { Suspense } from "react"
 import type { Metadata, Viewport } from "next"
 import { notFound } from "next/navigation"
 import { locale as rootLocale } from "next/root-params"
-import { getMessages } from "next-intl/server"
+import { getMessages, getTranslations } from "next-intl/server"
 import { Geist, Geist_Mono, Lora, Raleway } from "next/font/google"
 
 import "../globals.css"
@@ -39,11 +39,13 @@ const fontMono = Geist_Mono({
   variable: "--font-mono",
 })
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Pages.site")
   // Page titles name the site too (WCAG 2.4.2), e.g. "Verify · Zuula".
-  title: { default: "Zuula — Uganda Fact-Guard", template: "%s · Zuula" },
-  description:
-    "AI-powered fake news and misinformation detection for Uganda. Developed by Victoria University CIT.",
+  return {
+    title: { default: t("title"), template: "%s · Zuula" },
+    description: t("description"),
+  }
 }
 
 // viewport-fit=cover lets the phone tab bar pad itself clear of the home indicator
@@ -68,6 +70,7 @@ export default async function RootLayout({
   const locale = await rootLocale()
   if (!isLocale(locale)) notFound()
   const messages = await getMessages()
+  const tc = await getTranslations("Common")
 
   return (
     <html
@@ -90,7 +93,7 @@ export default async function RootLayout({
           href="#main"
           className="sr-only z-50 bg-primary px-3 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
         >
-          Skip to content
+          {tc("skipToContent")}
         </a>
         <Suspense fallback={null}>
           <RouteProgress />

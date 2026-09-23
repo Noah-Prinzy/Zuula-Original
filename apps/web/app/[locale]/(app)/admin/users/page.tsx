@@ -1,12 +1,20 @@
+import type { Metadata } from "next"
+import { useTranslations } from "next-intl"
+import { getTranslations } from "next-intl/server"
+
 import { PageHeader } from "@/components/shell/page-header"
 import { UserManagement } from "@/components/admin/user-management"
 
-export const metadata = { title: "Users" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Pages.users")
+  return { title: t("title") }
+}
 
 export default function Page() {
+  const t = useTranslations("Pages.users")
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Users" description="Activate, suspend, approve accreditations and change roles." />
+      <PageHeader title={t("title")} description={t("description")} />
       <UserManagement />
     </div>
   )

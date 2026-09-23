@@ -19,6 +19,7 @@ import {
   type TableFeatures,
 } from "@tanstack/react-table"
 import { RiArrowDownSLine, RiArrowUpDownLine, RiArrowUpSLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
@@ -62,8 +63,8 @@ export function DataTable<T extends RowData>({
   columns,
   initialSorting = [],
   rowClassName,
-  emptyTitle = "Nothing here",
-  emptyDescription = "No rows match these filters.",
+  emptyTitle,
+  emptyDescription,
   getRowId,
 }: {
   data: T[]
@@ -75,6 +76,7 @@ export function DataTable<T extends RowData>({
   getRowId?: (row: T) => string
 }) {
   const [sorting, setSorting] = React.useState<SortingState>(initialSorting)
+  const t = useTranslations("Admin.table")
   const isMobile = useIsMobile()
   const table = useTable({
     features: adminTableFeatures,
@@ -89,8 +91,8 @@ export function DataTable<T extends RowData>({
     return (
       <Empty className="border">
         <EmptyHeader>
-          <EmptyTitle>{emptyTitle}</EmptyTitle>
-          <EmptyDescription>{emptyDescription}</EmptyDescription>
+          <EmptyTitle>{emptyTitle ?? t("emptyTitle")}</EmptyTitle>
+          <EmptyDescription>{emptyDescription ?? t("emptyBody")}</EmptyDescription>
         </EmptyHeader>
       </Empty>
     )

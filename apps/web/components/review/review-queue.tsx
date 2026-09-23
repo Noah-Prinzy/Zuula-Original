@@ -13,6 +13,7 @@ import {
   type SortingState,
 } from "@tanstack/react-table"
 import { RiArrowDownSLine, RiArrowUpDownLine, RiArrowUpSLine, RiSearchLine, RiUserAddLine } from "@remixicon/react"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { TableCards } from "@/components/admin/data-table"
@@ -62,15 +63,18 @@ export function ReviewQueue() {
   const [reason, setReason] = React.useState<ReviewReason | "">("")
   const [scope, setScope] = React.useState<Scope>("all")
   const [sorting, setSorting] = React.useState<SortingState>([{ id: "sla", desc: false }])
+  const t = useTranslations("Review.queue")
+  const tr = useTranslations("Review.reasons")
+  const tReview = useTranslations("Review")
   const isMobile = useIsMobile()
 
   const assign = React.useCallback(
     (id: string) => {
       if (!user) return
       setCases((cs) => cs.map((c) => (c.id === id ? { ...c, assignee: user.name } : c)))
-      toast.success("Assigned to you")
+      toast.success(t("assigned"))
     },
-    [user]
+    [user, t]
   )
 
   const rows = React.useMemo<Row[]>(() => {
@@ -90,7 +94,7 @@ export function ReviewQueue() {
     () => [
       {
         id: "content",
-        header: "Content",
+        header: () => t("columns.content"),
         cell: ({ row: { original: r } }) => (
           <div className="flex min-w-64 flex-col gap-1">
             <Link href={`/review/cases/${r.id}`} className="font-medium hover:text-primary">
@@ -99,14 +103,14 @@ export function ReviewQueue() {
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="font-mono text-xs text-muted-foreground">{r.id}</span>
               <ReasonBadge reason={r.reason} reports={r.reports} />
-              {r.priority === "high" && <Badge variant="destructive">High priority</Badge>}
+              {r.priority === "high" && <Badge variant="destructive">{tReview("highPriority")}</Badge>}
             </div>
           </div>
         ),
       },
       {
         id: "verdict",
-        header: "AI verdict",
+        header: () => t("columns.verdict"),
         cell: ({ row: { original: r } }) => <VerdictBadge verdict={r.report.verdict} size="sm" />,
       },
       {
@@ -114,13 +118,13 @@ export function ReviewQueue() {
         accessorFn: (r) => r.ccs ?? -1,
         sortFn: "basic",
         header: ({ column }) => (
-          <SortHeader label="CCS" dir={column.getIsSorted()} onClick={() => column.toggleSorting()} />
+          <SortHeader label={t("columns.ccs")} dir={column.getIsSorted()} onClick={() => column.toggleSorting()} />
         ),
-        meta: { label: "Community score" },
+        meta: { label: t("columns.ccs") },
         cell: ({ row: { original: r } }) => (
           <div className="flex flex-col gap-1">
             <span className="font-mono tabular-nums">{r.ccs === null ? "—" : `${r.ccs}%`}</span>
-            <span className="text-xs text-muted-foreground">{r.ratings} ratings</span>
+            <span className="text-xs text-muted-foreground">{t("ratings", { count: r.ratings })}</span>
             <CommunityBadge status={communityScore(r.report.community).status} />
           </div>
         ),
@@ -130,34 +134,34 @@ export function ReviewQueue() {
         accessorFn: (r) => r.hoursLeft,
         sortFn: "basic",
         header: ({ column }) => (
-          <SortHeader label="SLA" dir={column.getIsSorted()} onClick={() => column.toggleSorting()} />
+          <SortHeader label={t("columns.sla")} dir={column.getIsSorted()} onClick={() => column.toggleSorting()} />
         ),
-        meta: { label: "Time left" },
+        meta: { label: t("columns.sla") },
         cell: ({ row: { original: r } }) => <SlaBadge flaggedAt={r.flaggedAt} />,
       },
       {
         id: "assignee",
-        header: "Assignee",
+        header: () => t("columns.assignee"),
         cell: ({ row: { original: r } }) =>
           r.assignee ? (
-            <span className="text-sm whitespace-nowrap">{r.assignee === user?.name ? "You" : r.assignee}</span>
+            <span className="text-sm whitespace-nowrap">{r.assignee === user?.name ? t("you") : r.assignee}</span>
           ) : (
             <Button variant="ghost" size="xs" onClick={() => assign(r.id)}>
-              <RiUserAddLine aria-hidden /> Assign to me
+              <RiUserAddLine aria-hidden /> {t("assignToMe")}
             </Button>
           ),
       },
       {
         id: "action",
-        header: () => <span className="sr-only">Action</span>,
+        header: () => <span className="sr-only">{t("columns.action")}</span>,
         cell: ({ row: { original: r } }) => (
           <Button size="sm" asChild>
-            <Link href={`/review/cases/${r.id}`}>Review</Link>
+            <Link href={`/review/cases/${r.id}`}>{t("review")}</Link>
           </Button>
         ),
       },
     ],
-    [assign, user]
+    [assign, user, t, tReview]
   )
 
   const table = useTable({
@@ -177,19 +181,19 @@ export function ReviewQueue() {
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by title, case ID or category…"
-            aria-label="Search the queue"
+            placeholder={t("searchPlaceholder")}
+            aria-label={t("searchLabel")}
             className="pl-9"
           />
         </div>
         <label htmlFor="queue-reason" className="sr-only">
-          Reason
+          {t("reason")}
         </label>
         <NativeSelect id="queue-reason" value={reason} onChange={(e) => setReason(e.target.value as ReviewReason | "")}>
-          <NativeSelectOption value="">All reasons</NativeSelectOption>
+          <NativeSelectOption value="">{t("allReasons")}</NativeSelectOption>
           {(Object.keys(REASON_META) as ReviewReason[]).map((r) => (
             <NativeSelectOption key={r} value={r}>
-              {REASON_META[r].label}
+              {tr(`${r}.label`)}
             </NativeSelectOption>
           ))}
         </NativeSelect>
@@ -199,24 +203,23 @@ export function ReviewQueue() {
           size="sm"
           value={scope}
           onValueChange={(v) => v && setScope(v as Scope)}
-          aria-label="Assignment"
+          aria-label={t("scopeLabel")}
         >
-          <ToggleGroupItem value="all">All</ToggleGroupItem>
-          <ToggleGroupItem value="mine">Mine</ToggleGroupItem>
-          <ToggleGroupItem value="unassigned">Unassigned</ToggleGroupItem>
+          <ToggleGroupItem value="all">{t("scopes.all")}</ToggleGroupItem>
+          <ToggleGroupItem value="mine">{t("scopes.mine")}</ToggleGroupItem>
+          <ToggleGroupItem value="unassigned">{t("scopes.unassigned")}</ToggleGroupItem>
         </ToggleGroup>
       </div>
 
       <p className="text-sm text-muted-foreground" aria-live="polite">
-        {rows.length} {rows.length === 1 ? "case" : "cases"} · sorted by{" "}
-        {sorting[0]?.id === "ccs" ? "community score" : "time left"}
+        {t("summary", { count: rows.length, sort: sorting[0]?.id === "ccs" ? "ccs" : "sla" })}
       </p>
 
       {rows.length === 0 ? (
         <Empty className="border">
           <EmptyHeader>
-            <EmptyTitle>Nothing to review</EmptyTitle>
-            <EmptyDescription>No cases match these filters.</EmptyDescription>
+            <EmptyTitle>{t("emptyTitle")}</EmptyTitle>
+            <EmptyDescription>{t("emptyBody")}</EmptyDescription>
           </EmptyHeader>
         </Empty>
       ) : isMobile ? (

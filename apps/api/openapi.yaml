@@ -139,6 +139,7 @@ paths:
                   - $ref: "#/components/schemas/Session"
                   - $ref: "#/components/schemas/TwoFactorChallenge"
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
 
   /api/v1/auth/two-factor/verify:
     post:
@@ -325,6 +326,7 @@ paths:
                 newPassword: { type: string, minLength: 12 }
       responses:
         "200": { description: Changed. }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
   /api/v1/me/two-factor:
@@ -342,6 +344,7 @@ paths:
               properties: { enabled: { type: boolean } }
       responses:
         "200": { description: Updated. }
+        "400": { $ref: "#/components/responses/BadRequest" }
 
         "401": { $ref: "#/components/responses/Unauthorized" }
   /api/v1/me/sessions:
@@ -417,6 +420,7 @@ paths:
                   items: { type: string, format: binary }
       responses:
         "202": { description: Submitted for review. }
+        "409": { $ref: "#/components/responses/Conflict" }
 
         "401": { $ref: "#/components/responses/Unauthorized" }
   /api/v1/me/submissions:
@@ -511,6 +515,7 @@ paths:
                     required: [secret]
                     properties:
                       secret: { type: string, description: "Shown only in this response.", example: "zl_live_4f7a9c2e1b8d4a6f9c0e2b7a1d3f5e8c" }
+        "400": { $ref: "#/components/responses/BadRequest" }
 
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -523,6 +528,7 @@ paths:
         - { name: id, in: path, required: true, schema: { type: string } }
       responses:
         "204": { description: Revoked. }
+        "404": { $ref: "#/components/responses/NotFound" }
 
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -1192,6 +1198,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/AdminUser" }
+        "400": { $ref: "#/components/responses/BadRequest" }
 
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -1604,7 +1611,7 @@ components:
       type: apiKey
       in: cookie
       name: zuula_session
-      description: "Core API. A bearer JWT (`Authorization: Bearer <jwt>`) is also accepted for non-browser core clients."
+      description: "Core API. An opaque, server-side session token, set as this cookie on sign-in. Non-browser core clients may send the same token as `Authorization: Bearer <token>` instead (ADR 0002 §5)."
     partnerApiKey:
       type: http
       scheme: bearer
@@ -1729,6 +1736,7 @@ components:
                 - unauthorized
                 - forbidden
                 - not_found
+                - conflict
                 - file_too_large
                 - unsupported_media
                 - invalid_content

@@ -1,4 +1,4 @@
-"""Loads the P2 sample data (app/stubs/*, itself transliterated from apps/web/lib/mock/*) into a
+"""Loads the sample data (app/db/sample_data/*, transliterated from apps/web/lib/mock/*) into a
 freshly migrated database: for local dev (`python -m app.db.seed`) and for the test suite
 (tests/db/conftest.py). Never run against production.
 
@@ -7,7 +7,7 @@ the schema stores individual votes and derives counts from them (ADR 0002 §4). 
 creates a pool of clearly-labelled sample raters (`seed-p001`, `…@seed.zuula.invalid`) and
 casts exactly as many votes as each sample report's counts, after the named votes the sample
 data does carry (rating comments, Amina's rating history). The seeded scores therefore come
-out identical to the P2 stub scores — tests/db/test_seed.py checks that.
+out identical to the sample data's own scores — tests/db/test_seed.py checks that.
 """
 
 import asyncio
@@ -22,14 +22,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import rules
 from app.db import models as m
+from app.db.sample_data import account as stub_account
+from app.db.sample_data import admin as stub_admin
+from app.db.sample_data import notifications as stub_notifications
+from app.db.sample_data import review as stub_review
+from app.db.sample_data.fact_checks import SAMPLE_REPORTS
 from app.schemas.fact_check import FactCheckReport as FactCheckReportSchema
 from app.services.auth import hash_password
 from app.services.community import recompute_report_community
-from app.stubs import account as stub_account
-from app.stubs import admin as stub_admin
-from app.stubs import notifications as stub_notifications
-from app.stubs import review as stub_review
-from app.stubs.fact_checks import SAMPLE_REPORTS
 from app.worker.pipeline import PIPELINES, STEP_SECONDS
 
 # The sample data is pinned to 21 Sep 2026 (apps/web/lib/mock/*); relative seed timestamps

@@ -1,13 +1,13 @@
 """The seeded database reproduces the P2 sample data: same ids, and community scores that
-come out identical to the stub scores even though they're now derived from individual votes."""
+come out identical to the sample data's scores even though they're now derived from individual votes."""
 
 from sqlalchemy import func, select
 
 from app.db import models as m
+from app.db.sample_data.admin import SAMPLE_AUDIT, SAMPLE_SOURCES, SAMPLE_USERS
+from app.db.sample_data.fact_checks import SAMPLE_REPORTS
+from app.db.sample_data.review import SAMPLE_CASES
 from app.services.community import community_score, report_counts
-from app.stubs.admin import SAMPLE_AUDIT, SAMPLE_SOURCES, SAMPLE_USERS
-from app.stubs.fact_checks import SAMPLE_REPORTS
-from app.stubs.review import SAMPLE_CASES
 
 
 async def test_every_sample_report_is_seeded_with_its_stub_score(db):

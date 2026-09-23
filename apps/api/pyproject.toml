@@ -44,6 +44,10 @@ dev = [
 line-length = 100
 target-version = "py312"
 
+[tool.ruff.format]
+# Sample data stays one object per line (see the E501 ignore below), so the formatter skips it.
+exclude = ["app/db/sample_data/*.py"]
+
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 # UP047: stick to typing.TypeVar rather than PEP 695 `def f[T](...)` syntax for now — this
@@ -52,9 +56,9 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 ignore = ["UP047"]
 
 [tool.ruff.lint.per-file-ignores]
-# Stub data files are intentionally one-object-per-line for reviewability against the TS
+# Sample data files are intentionally one-object-per-line for reviewability against the TS
 # mocks they're transliterated from; wrapping each one would make the diff harder to audit.
-"app/stubs/*.py" = ["E501"]
+"app/db/sample_data/*.py" = ["E501"]
 # Contract test cases are one-request-per-line for readability against the endpoints they
 # exercise; wrapping each json= payload would make the test list harder to scan.
 "tests/contract/*.py" = ["E501"]

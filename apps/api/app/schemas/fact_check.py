@@ -191,7 +191,7 @@ def dump_report(model: FactCheckReport | FactCheckPublic) -> dict:
       present.
     - `community.score.ccs` (FactCheckReport only — FactCheckPublic's community field is the
       simplified PublicCommunityCounts, with no `score` at all): null until a report has its
-      first rating (community_score() in app/stubs/scoring.py), which every pre-seeded sample
+      first rating (community_score() in app/services/community.py), which every seeded sample
       report already has, but a freshly created one (app/worker/pipeline.py) doesn't.
     """
     data = model.model_dump(by_alias=True, mode="json", exclude_none=True)

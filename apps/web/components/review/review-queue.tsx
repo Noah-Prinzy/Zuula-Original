@@ -15,6 +15,7 @@ import {
 import { RiArrowDownSLine, RiArrowUpDownLine, RiArrowUpSLine, RiSearchLine, RiUserAddLine } from "@remixicon/react"
 import { toast } from "sonner"
 
+import { TableCards } from "@/components/admin/data-table"
 import { CommunityBadge } from "@/components/community/community-status"
 import { useSession } from "@/components/providers/session-provider"
 import { ReasonBadge, SlaBadge } from "@/components/review/review-badges"
@@ -27,6 +28,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { VerdictBadge } from "@/components/verdict/verdict-badge"
 import { communityScore } from "@/lib/community"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { getSampleReport } from "@/lib/mock/fact-checks"
 import { REASON_META, SAMPLE_CASES, slaFor, type ReviewCase, type ReviewReason } from "@/lib/mock/review"
 import type { FactCheckReport } from "@/lib/types/fact-check"
@@ -60,6 +62,7 @@ export function ReviewQueue() {
   const [reason, setReason] = React.useState<ReviewReason | "">("")
   const [scope, setScope] = React.useState<Scope>("all")
   const [sorting, setSorting] = React.useState<SortingState>([{ id: "sla", desc: false }])
+  const isMobile = useIsMobile()
 
   const assign = React.useCallback(
     (id: string) => {
@@ -113,6 +116,7 @@ export function ReviewQueue() {
         header: ({ column }) => (
           <SortHeader label="CCS" dir={column.getIsSorted()} onClick={() => column.toggleSorting()} />
         ),
+        meta: { label: "Community score" },
         cell: ({ row: { original: r } }) => (
           <div className="flex flex-col gap-1">
             <span className="font-mono tabular-nums">{r.ccs === null ? "—" : `${r.ccs}%`}</span>
@@ -128,6 +132,7 @@ export function ReviewQueue() {
         header: ({ column }) => (
           <SortHeader label="SLA" dir={column.getIsSorted()} onClick={() => column.toggleSorting()} />
         ),
+        meta: { label: "Time left" },
         cell: ({ row: { original: r } }) => <SlaBadge flaggedAt={r.flaggedAt} />,
       },
       {
@@ -214,6 +219,8 @@ export function ReviewQueue() {
             <EmptyDescription>No cases match these filters.</EmptyDescription>
           </EmptyHeader>
         </Empty>
+      ) : isMobile ? (
+        <TableCards table={table} rowClassName={(r) => (r.hoursLeft < 0 ? "bg-verdict-false/[0.04]" : undefined)} />
       ) : (
         <div className="overflow-x-auto border bg-card">
           <Table>

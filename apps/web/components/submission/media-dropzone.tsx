@@ -57,6 +57,17 @@ export function MediaDropzone({
     if (preview) URL.revokeObjectURL(preview)
   }, [preview])
 
+  const browse = (chunks: React.ReactNode) => (
+    <button
+      type="button"
+      onClick={() => inputRef.current?.click()}
+      disabled={disabled}
+      className="press font-medium text-primary underline-offset-4 [--press-tint:transparent] hover:underline focus-visible:underline focus-visible:outline-none"
+    >
+      {chunks}
+    </button>
+  )
+
   function pick(files: FileList | null) {
     const file = files?.[0]
     if (file) onChange(file)
@@ -119,20 +130,9 @@ export function MediaDropzone({
       )}
     >
       <RiUploadCloud2Line className="size-8 text-muted-foreground" aria-hidden />
-      <p className="text-sm">
-        {t.rich("dragOr", {
-          browse: (chunks) => (
-            <button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              disabled={disabled}
-              className="press font-medium text-primary underline-offset-4 [--press-tint:transparent] hover:underline focus-visible:underline focus-visible:outline-none"
-            >
-              {chunks}
-            </button>
-          ),
-        })}
-      </p>
+      {/* Touch screens can't drag files in, so they get a plain "choose" prompt instead. */}
+      <p className="text-sm pointer-coarse:hidden">{t.rich("dragOr", { browse })}</p>
+      <p className="hidden text-sm pointer-coarse:block">{t.rich("tapToChoose", { browse })}</p>
       <p className="text-xs text-muted-foreground">
         {t("accepts", { size: formatBytes(MAX_FILE_BYTES) })}
       </p>

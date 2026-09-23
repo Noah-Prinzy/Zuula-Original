@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/pagination"
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -47,6 +48,7 @@ import {
 } from "@/lib/library"
 import { VERDICTS, type FactCheckReport, type Verdict } from "@/lib/types/fact-check"
 import { useContentLabels } from "@/hooks/use-content-labels"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { useFormat } from "@/lib/format"
 
 export function LibraryBrowser({
@@ -63,6 +65,7 @@ export function LibraryBrowser({
   const params = useSearchParams()
   const query = React.useMemo(() => parseQuery(new URLSearchParams(params.toString())), [params])
   const [text, setText] = React.useState(query.q)
+  const isMobile = useIsMobile()
 
   // Keep the box in sync when the URL's q changes elsewhere (header search, back button).
   const [syncedQ, setSyncedQ] = React.useState(query.q)
@@ -192,16 +195,23 @@ export function LibraryBrowser({
                   {filterCount > 0 ? t("filtersCount", { count: filterCount }) : t("filters")}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-80 overflow-y-auto">
+              {/* Phones: a bottom sheet in thumb reach, closed by "Show N results". */}
+              <SheetContent
+                side={isMobile ? "bottom" : "left"}
+                className={isMobile ? "max-h-[85svh] overflow-y-auto pb-[env(safe-area-inset-bottom)]" : "w-80 overflow-y-auto"}
+              >
                 <SheetHeader>
                   <SheetTitle>{t("filters")}</SheetTitle>
                   <SheetDescription>{t("results", { count: result.total })}</SheetDescription>
                 </SheetHeader>
                 <div className="px-4">{filters}</div>
-                <SheetFooter>
+                <SheetFooter className="grid grid-cols-2">
                   <Button variant="outline" onClick={clearAll} disabled={filterCount === 0}>
                     {t("clearAll")}
                   </Button>
+                  <SheetClose asChild>
+                    <Button>{t("showResults", { count: result.total })}</Button>
+                  </SheetClose>
                 </SheetFooter>
               </SheetContent>
             </Sheet>

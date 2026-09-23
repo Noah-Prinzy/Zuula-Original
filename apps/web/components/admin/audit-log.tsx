@@ -50,6 +50,7 @@ export function AuditLog() {
         accessorFn: (e) => e.at,
         sortFn: "alphanumeric",
         header: ({ column }) => <SortableHeader column={column} label="Time" />,
+        meta: { label: "Time" },
         cell: ({ row: { original: e } }) => (
           <time dateTime={e.at} className="font-mono text-xs whitespace-nowrap">
             {new Date(e.at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}

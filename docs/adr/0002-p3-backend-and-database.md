@@ -1,7 +1,8 @@
 # ADR 0002: Backend and database (P3)
 
 **Status:** Approved by Noah (23 Sep 2026; decisions in §10). Being built in the PR sequence
-of §9. PR 1 (database foundation) is implemented; the rest describes what's still to come.
+of §9. PR 1 (database foundation, #5) is merged and PR 2 (auth and roles) is implemented; the
+rest describes what's still to come.
 Once all six PRs have landed, this file becomes the record of what was actually decided
 (brief §3 step 5).
 
@@ -168,7 +169,9 @@ yet. Nothing in the contract uses them, and they're easy to add in P4.
 - **Cookie scope:** the API lives on `api.zuula.ug` and the web app on `zuula.ug`. They're
   same-site, so `SameSite=Lax` works, and the cookie is set with `Domain=zuula.ug`.
 - **CSRF:** SameSite=Lax, plus an `Origin` check against `ZUULA_CORS_ORIGINS` on every
-  cookie-authenticated request that isn't GET/HEAD.
+  cookie-authenticated request that isn't GET/HEAD. A foreign Origin gets `401`: the cookie
+  doesn't count as authentication for that request. (`403` would be more precise, but the
+  contract declares `401` on every authenticated operation and `403` on few of them.)
 - **`security.py` keeps its public API.** `get_current_user`, `require_roles(*roles)`,
   `require_partner_key`, `PartnerPrincipal` and `rate_limit_headers` keep their names and
   signatures. Only their internals change: they resolve the cookie or bearer token to a
@@ -187,8 +190,11 @@ yet. Nothing in the contract uses them, and they're easy to add in P4.
   `zuula_signup` cookie that points at the challenge. The JSON shape doesn't change.
 - **Password reset** uses the same challenge table, and completing it revokes every session.
   `forgot-password` always returns 202, so it doesn't reveal which identifiers have accounts.
-- **Brute force:** a Redis counter per identifier and per IP allows 5 failed sign-ins per 15 min.
-  After that, sign-in returns `429` with `Retry-After`. `openapi.yaml` gains `"429": RateLimited` on
+- **Brute force:** a Redis counter per identifier allows 5 failures per 15 min. After that,
+  sign-in returns `429` with `Retry-After`. Wrong sign-up and password-reset codes count
+  towards the same counter, since restarting either flow issues a fresh challenge and would
+  otherwise allow unlimited guessing. The per-IP counter's threshold is 50, not 5: mobile
+  carriers and schools put many people behind one address. `openapi.yaml` gains `"429": RateLimited` on
   `signIn` (approved by Noah, 23 Sep). This is the only contract response addition.
 - **OAuth:** a real authorization-code flow with a signed `state` cookie (CSRF plus `next`),
   matched to `oauth_identities`, and a new account for a new identity. OAuth accounts whose role
@@ -279,6 +285,32 @@ Answered by Noah on 23 Sep 2026:
 | 9 | Hosting | API on `api.zuula.ug`. Cookie `Domain=zuula.ug`, `SameSite=Lax`. |
 
 ## 11. Found while building
+
+**PR 2 (auth and roles):**
+
+- **Contract additions** (all additive, none change an existing shape):
+  - `429` on `signIn` (decision 2).
+  - `conflict` in `ErrorEnvelope.code`: `409 Conflict` was declared with no code for it.
+  - `user.reinstate` in `AuditAction`: lifting a suspension had no action to be audited
+    under. **The frontend's `AUDIT_ACTION_LABELS` (`apps/web/lib/mock/admin.ts`) needs one
+    label for it**; `apps/web` is out of this phase's scope, so that's left to its owner.
+  - Error responses that real validation now returns and the contract didn't declare:
+    - `400` on `changePassword`, `setTwoFactor`, `createApiKey` and `updateAdminUser`
+    - `404` on `revokeApiKey`
+    - `400`/`409`/`413`/`415` on `applyForVerification`
+    - `403` (missing scope) on the four partner operations
+- **`UserProfile.email` is required**, but an account can be phone-only. Such accounts return
+  `""`. If the frontend needs to tell them apart, the contract should make `email` optional.
+- **P2 query-parameter bug:** `page_params` read `per_page`, while the contract's parameter
+  is `perPage`, so every core list endpoint ignored the page size. The audit log likewise
+  ignored `actorRole` (it read `actor_role`). Both are fixed.
+- **`packages/shared/src/openapi.ts` was stale.** P2 Step 4's webhook paths had never been
+  regenerated; it's now regenerated from the current contract.
+- **Admin exclusion of a user's past ratings** (decision 6a) needs a way to trigger it. The
+  schema supports it (`ratings.excluded_at`), but the contract's `updateAdminUser` body has no
+  field for it. That's PR 4 (admin), where it'll be proposed as an additive request field.
+
+**PR 1 (database foundation):**
 
 - **Sample data tracking-id collision.** `apps/web/lib/mock/quick-reports.ts` (and its P2
   transliteration) derive tracking ids with `n.replace(/[01]/g, "7")`, which maps both

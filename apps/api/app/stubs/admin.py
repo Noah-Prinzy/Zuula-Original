@@ -2,7 +2,12 @@
 
 from datetime import date, timedelta
 
-from app.core import rules
+from app.core.rules import (
+    CCS_STATUS_THRESHOLDS,
+    CCS_WEIGHTS,
+    PARTNER_RATE_LIMIT_PER_HOUR,
+    REVIEW_SLA_HOURS,
+)
 from app.schemas.admin import (
     AdminOverview,
     AdminUser,
@@ -135,19 +140,20 @@ SAMPLE_AUDIT: list[AuditEntry] = [
     AuditEntry(id="a3", at="2026-09-10T12:00:00+03:00", actor="Mary Akello", actor_role="admin", action="source.deactivate", target="Makerere University AI Lab", detail="Feed discontinued", ip="196.43.x.x"),
 ]
 
+_t = CCS_STATUS_THRESHOLDS
 DEFAULT_SETTINGS = PlatformSettings(
     thresholds=Thresholds(
-        verified_min=rules.CCS_THRESHOLDS["verified"]["min_score"],
-        questioned_min=rules.CCS_THRESHOLDS["questioned"]["min_score"],
-        questioned_max=rules.CCS_THRESHOLDS["questioned"]["max_score"],
-        questioned_ratings=rules.CCS_THRESHOLDS["questioned"]["min_ratings"],
-        escalated_max=rules.CCS_THRESHOLDS["escalated"]["max_score"],
-        escalated_ratings=rules.CCS_THRESHOLDS["escalated"]["min_ratings"],
-        suspended_max=rules.CCS_THRESHOLDS["suspended"]["max_score"],
-        suspended_ratings=rules.CCS_THRESHOLDS["suspended"]["min_ratings"],
+        verified_min=_t["verified"]["min_score"],
+        questioned_min=_t["questioned"]["min_score"],
+        questioned_max=_t["questioned"]["max_score"],
+        questioned_ratings=_t["questioned"]["min_ratings"],
+        escalated_max=_t["escalated"]["max_score"],
+        escalated_ratings=_t["escalated"]["min_ratings"],
+        suspended_max=_t["suspended"]["max_score"],
+        suspended_ratings=_t["suspended"]["min_ratings"],
     ),
-    weights=Weights(**rules.RATING_WEIGHTS),
-    sla_hours=rules.REVIEW_SLA_HOURS,
-    api_rate_limit=rules.PARTNER_RATE_LIMIT_PER_HOUR,
-    retraining=Retraining(cadence=rules.RETRAINING_CADENCE, min_ccs=rules.RETRAINING_MIN_CCS),
+    weights=Weights(**CCS_WEIGHTS),
+    sla_hours=REVIEW_SLA_HOURS,
+    api_rate_limit=PARTNER_RATE_LIMIT_PER_HOUR,
+    retraining=Retraining(cadence="weekly", min_ccs=85),
 )

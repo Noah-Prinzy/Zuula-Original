@@ -15,7 +15,7 @@ from datetime import UTC, datetime
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.rules import CCS_THRESHOLDS, RATING_WEIGHTS
+from app.core.rules import CCS_STATUS_THRESHOLDS, CCS_WEIGHTS
 from app.db.models import FactCheckReport, Rating
 from app.schemas.fact_check import CommunityScore, RatingCounts
 
@@ -35,7 +35,9 @@ def _weighted(c: RatingCounts, weights: Weights) -> float:
     )
 
 
-def status_for(ccs: float | None, total: int, thresholds: Thresholds = CCS_THRESHOLDS) -> str:
+def status_for(
+    ccs: float | None, total: int, thresholds: Thresholds = CCS_STATUS_THRESHOLDS
+) -> str:
     if ccs is None:
         return "standard"
     t = thresholds
@@ -56,8 +58,8 @@ def status_for(ccs: float | None, total: int, thresholds: Thresholds = CCS_THRES
 def community_score(
     accurate: RatingCounts,
     inaccurate: RatingCounts,
-    weights: Weights = RATING_WEIGHTS,
-    thresholds: Thresholds = CCS_THRESHOLDS,
+    weights: Weights = CCS_WEIGHTS,
+    thresholds: Thresholds = CCS_STATUS_THRESHOLDS,
 ) -> CommunityScore:
     wa = _weighted(accurate, weights)
     wi = _weighted(inaccurate, weights)
@@ -95,8 +97,8 @@ def report_counts(report: FactCheckReport) -> tuple[RatingCounts, RatingCounts]:
 async def recompute_report_community(
     session: AsyncSession,
     report: FactCheckReport,
-    weights: Weights = RATING_WEIGHTS,
-    thresholds: Thresholds = CCS_THRESHOLDS,
+    weights: Weights = CCS_WEIGHTS,
+    thresholds: Thresholds = CCS_STATUS_THRESHOLDS,
 ) -> tuple[CommunityScore, str | None]:
     """Re-count `report`'s ratings, store counts/ccs/status on it, and return the new score
     plus the previous status if it changed (None otherwise) — escalation hooks key off that.

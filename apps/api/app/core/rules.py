@@ -1,88 +1,147 @@
-"""Business-rule constants, in one place, each citing where it comes from.
+"""Business rules as documented constants (P2 Step 5). Every value here is cited against the
+CIT System Development Plan & Functional Requirements Specification v1.0. Two are explicitly
+open questions the spec doesn't fully resolve — each is flagged where it's defined, and the
+app's current behavior for it is documented rather than left implicit.
 
-Two kinds of values live here:
-
-- **Spec values** cite the CIT System Development Plan & Functional Requirements
-  Specification v1.0 (FR-* / §* ids, the same ids used across apps/web and openapi.yaml).
-  Where the frontend already encodes the rule, the file is named too — those two must agree.
-- **Design values** are marked "ADR 0002" — the spec doesn't set them, so P3 chose them
-  (docs/adr/0002-p3-backend-and-database.md). Change them there first, then here.
-
-Everything else imports from this module; nothing redefines these numbers. Values admins can
-change at runtime (weights, thresholds, SLA, rate limit — FR-ADMIN-06) are only the *defaults*
-here: the live values are the `platform_settings` row, seeded from these.
+This module is P2's single source of truth for these numbers: nothing here does anything by
+itself (no validation, no enforcement) — see the docstring on each constant for where it's
+actually used today, and note that real enforcement of the ones not yet wired anywhere
+(PASSWORD_MIN_LENGTH, MAX_MEDIA_BYTES) is P3's job, per the brief's own Step 5 framing
+("implement them in P3").
 """
 
-from typing import Final
+# ---------------------------------------------------------------------------------------
+# Community Credibility Score (CCS) — §9.1 (weights), §9.2 (status thresholds)
+# ---------------------------------------------------------------------------------------
 
-# ---- Community rating (§9.1, FR-RATE-03; apps/web/lib/community.ts) ----
+# §9.1: how much one rating counts toward a report's CCS, by the rater's role. "Reviewer" in
+# the spec's own language is the `expert` role here (FR-REVIEW's reviewers rate as experts).
+# Used by app/stubs/scoring.py's community_score().
+CCS_WEIGHTS: dict[str, int] = {
+    "public": 1,
+    "journalist": 2,
+    "expert": 5,
+}
 
-# Weighted CCS = weighted "accurate" / (weighted "accurate" + weighted "inaccurate") × 100.
-RATING_WEIGHTS: Final = {"public": 1, "journalist": 2, "expert": 5}
+# OPEN QUESTION (carried since the Step 1 contract PR, unresolved): §9.1 is silent on
+# whether admins get their own weight. Current behavior (app/api/v1/ratings.py's
+# add_comment): an admin's rating counts at the `public` weight above, not a bespoke admin
+# weight — a disclosed choice, not an oversight. Change CCS_WEIGHTS and that call site
+# together if Noah answers this differently.
 
-# §9.1 gives admins no weight: they rate as standard users (community.ts's raterRole()).
-ADMIN_RATER_ROLE: Final = "public"
-
-# A rating is weighted by the rater's role *when they voted*, stored on the rating row, not
-# re-derived from their current role (ADR 0002 §4, approved by Noah 23 Sep 2026).
-
-# ---- Escalation (§9.2; apps/web/lib/community.ts CCS_THRESHOLDS) ----
-# `min_ratings` comparisons are strict (`total > min_ratings`), matching community.ts.
-
-CCS_THRESHOLDS: Final = {
+# §9.2: the CCS-and-total-ratings bands that decide a report's community status. Used by
+# app/stubs/scoring.py's status_for() and mirrored in app/stubs/admin.py's platform-settings
+# stub (the admin-facing view of these same numbers).
+CCS_STATUS_THRESHOLDS: dict[str, dict[str, int]] = {
     "verified": {"min_score": 90},
     "questioned": {"min_score": 40, "max_score": 69, "min_ratings": 50},
     "escalated": {"max_score": 39, "min_ratings": 100},
     "suspended": {"max_score": 19, "min_ratings": 200},
 }
 
+# OPEN QUESTION (carried since the Step 1 contract PR, unresolved): §9.2 escalates a report
+# once its total rating count exceeds this figure; FR-RATE-05 instead talks about
+# "dislikes," a different (and not currently modeled) count. This implementation follows
+# §9.2's total-ratings reading — CCS_STATUS_THRESHOLDS["escalated"]["min_ratings"] above is
+# the number in question, repeated here as its own name since it's the one Step 5's brief
+# calls out by name.
+ESCALATION_RATING_THRESHOLD = CCS_STATUS_THRESHOLDS["escalated"]["min_ratings"]
+
+# ---------------------------------------------------------------------------------------
+# Review SLA
+# ---------------------------------------------------------------------------------------
+
+# Hours a flagged report has before its review case is "overdue" (FR-REVIEW). Used by
+# app/stubs/review.py's _sla() to compute each stub case's sla_due_at/sla_state, and
+# mirrored in app/stubs/admin.py's platform-settings stub.
+REVIEW_SLA_HOURS = 48
+
+# ---------------------------------------------------------------------------------------
+# Auth
+# ---------------------------------------------------------------------------------------
+
+# FR-AUTH: minimum password length. Declared today at the contract level (openapi.yaml's
+# SignUp/ResetPassword/ChangePassword request schemas all set `minLength: 12`) but not
+# enforced by app code — P2's routes accept an untyped dict body (see app/api/v1/auth.py)
+# and don't validate it themselves. Real enforcement is P3's job, once real password
+# storage exists to enforce it against.
+PASSWORD_MIN_LENGTH = 12
+
+# ---------------------------------------------------------------------------------------
+# Submissions
+# ---------------------------------------------------------------------------------------
+
+# FR-SUBMIT-05: media upload size cap. Declared today at the contract level (openapi.yaml's
+# SubmissionInput.file description) and on the frontend (apps/web/lib/submission.ts's
+# MAX_FILE_BYTES), but not enforced by app code — P2's create_submission takes a JSON body,
+# not a multipart file upload, so there's no file to size-check yet. Real enforcement is
+# P3's job, alongside real multipart upload handling.
+MAX_MEDIA_BYTES = 50 * 1024 * 1024
+
+# ---------------------------------------------------------------------------------------
+# Partner API
+# ---------------------------------------------------------------------------------------
+
+# FR-API-01: requests per hour, per partner API key. Already enforced for real today (an
+# in-memory per-process counter — see docs/adr/0001-api-architecture.md for why that's a
+# P2-only simplification, not the real Redis-backed limiter) — this is the one rule in this
+# module that isn't waiting on P3. app/core/config.py's Settings.partner_rate_limit_per_hour
+# defaults to this value but stays independently overridable via
+# ZUULA_PARTNER_RATE_LIMIT_PER_HOUR, since it's the kind of number an operator may
+# legitimately want to tune per environment without a code change.
+PARTNER_RATE_LIMIT_PER_HOUR = 100
+
+# =======================================================================================
+# P3 additions (docs/adr/0002-p3-backend-and-database.md). Values the spec or frontend sets
+# cite them; values the spec leaves open are marked "ADR 0002" — P3's choice, approved by
+# Noah on 23 Sep 2026. Admins can change weights, thresholds, SLA and rate limit at runtime
+# (FR-ADMIN-06): the constants above are the defaults the `platform_settings` row is seeded
+# from, not the live values.
+# =======================================================================================
+
+# §9.1 / the open question above: admins rate at the public weight. Ratings also store the
+# role they were cast with and keep it — a later promotion doesn't re-weight old votes
+# (ADR 0002 §4, decision 6a).
+ADMIN_RATER_ROLE = "public"
+
 # ---- Expert review (FR-REVIEW; apps/web/lib/mock/review.ts) ----
 
-REVIEW_SLA_HOURS: Final = 48
-# A case is "due soon" inside this many hours of its SLA deadline (review.ts's slaState()).
-REVIEW_DUE_SOON_HOURS: Final = 12
-# Pipeline verdicts below this confidence open a `low-confidence` review case
-# (review.ts REASON_META: "The AI was less than 60% confident").
-LOW_CONFIDENCE_THRESHOLD: Final = 60
-# A review decision needs a written justification of at least this length (FR-REVIEW-03;
-# openapi.yaml's decideCase body, minLength 10).
-REVIEW_JUSTIFICATION_MIN: Final = 10
-# User reports ("report an issue") on one verdict that open a `user-reports` case. ADR 0002.
-USER_REPORTS_CASE_THRESHOLD: Final = 5
+# A case is "due soon" within this many hours of its SLA deadline (review.ts's slaState()).
+REVIEW_DUE_SOON_HOURS = 12
+# Pipeline verdicts below this confidence open a `low-confidence` review case (review.ts
+# REASON_META: "The AI was less than 60% confident").
+LOW_CONFIDENCE_THRESHOLD = 60
+# A review decision needs a justification at least this long (FR-REVIEW-03; openapi.yaml's
+# decideCase body, minLength 10).
+REVIEW_JUSTIFICATION_MIN = 10
+# Open user reports on one verdict that open a `user-reports` case. ADR 0002.
+USER_REPORTS_CASE_THRESHOLD = 5
 
 # ---- Auth (FR-AUTH; apps/web/lib/auth.ts) ----
 
-PASSWORD_MIN_LENGTH: Final = 12  # FR-AUTH-04
-BCRYPT_ROUNDS: Final = 12  # ADR 0002
-TWO_FACTOR_ROLES: Final = frozenset({"expert", "admin"})  # FR-AUTH-05: always on for these
+BCRYPT_ROUNDS = 12  # ADR 0002
+TWO_FACTOR_ROLES = frozenset({"expert", "admin"})  # FR-AUTH-05: always on for these
 
-OTP_LENGTH: Final = 6  # openapi.yaml: codes match ^\d{6}$
-OTP_TTL_SECONDS: Final = 10 * 60  # ADR 0002
-OTP_MAX_ATTEMPTS: Final = 5  # ADR 0002
-OTP_RESEND_COOLDOWN_SECONDS: Final = 30  # openapi.yaml resendTwoFactor: "30 s cooldown"
+OTP_LENGTH = 6  # openapi.yaml: codes match ^\d{6}$
+OTP_TTL_SECONDS = 10 * 60  # ADR 0002
+OTP_MAX_ATTEMPTS = 5  # ADR 0002
+OTP_RESEND_COOLDOWN_SECONDS = 30  # openapi.yaml resendTwoFactor: "30 s cooldown"
 
-# Failed sign-ins per identifier (and per IP) before a 429 (ADR 0002, approved 23 Sep 2026).
-SIGN_IN_MAX_FAILURES: Final = 5
-SIGN_IN_LOCKOUT_WINDOW_SECONDS: Final = 15 * 60
+# Failed sign-ins per identifier (and per IP) before a 429 (ADR 0002, decision 2).
+SIGN_IN_MAX_FAILURES = 5
+SIGN_IN_LOCKOUT_WINDOW_SECONDS = 15 * 60
 
-SESSION_TTL_REMEMBER_SECONDS: Final = 30 * 24 * 3600  # ADR 0002
-SESSION_TTL_SECONDS: Final = 12 * 3600  # ADR 0002, `remember: false`
+SESSION_TTL_REMEMBER_SECONDS = 30 * 24 * 3600  # ADR 0002
+SESSION_TTL_SECONDS = 12 * 3600  # ADR 0002, `remember: false`
 
 # ---- Submissions (FR-SUBMIT; openapi.yaml SubmissionInput) ----
 
-MAX_MEDIA_BYTES: Final = 50 * 1024 * 1024  # "Up to 50 MB; image/audio/video."
-TEXT_MIN_CHARS: Final = 20
-TEXT_MAX_CHARS: Final = 5_000
-ARTICLE_MIN_CHARS: Final = 50
-ARTICLE_MAX_CHARS: Final = 20_000
-HEADLINE_MAX_CHARS: Final = 200
+TEXT_MIN_CHARS = 20
+TEXT_MAX_CHARS = 5_000
+ARTICLE_MIN_CHARS = 50
+ARTICLE_MAX_CHARS = 20_000
+HEADLINE_MAX_CHARS = 200
 
-# ---- Partner API (FR-API-01/02; /developers) ----
+# ---- Partner API (FR-API-02) ----
 
-PARTNER_RATE_LIMIT_PER_HOUR: Final = 100
-API_KEY_ROLES: Final = frozenset({"journalist", "admin"})  # FR-API-02
-
-# ---- AI retraining (FR-ADMIN-06; apps/web/lib/mock/admin.ts DEFAULT_SETTINGS) ----
-
-RETRAINING_CADENCE: Final = "weekly"
-RETRAINING_MIN_CCS: Final = 85
+API_KEY_ROLES = frozenset({"journalist", "admin"})

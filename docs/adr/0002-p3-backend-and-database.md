@@ -269,7 +269,7 @@ Answered by Noah on 23 Sep 2026:
 |---|---|---|
 | 1 | Sessions vs JWT | Opaque server-side sessions. `sessionAuth` description text updated. |
 | 2 | `429` on sign-in lockout | Yes. Added to `signIn`. |
-| 3 | `app/core/rules.py` | Created in PR 1 (it wasn't on any branch). |
+| 3 | `app/core/rules.py` | P2 Step 5's version (PR #4) landed on `main` while PR 1 was open. It is the base; P3's constants (OTP, lockout, sessions, review due-soon, low-confidence, …) are a marked section appended to it, using its names (`CCS_WEIGHTS`, `CCS_STATUS_THRESHOLDS`). |
 | 4 | Embedding dimension | Fixed in P4. P3 ships an untyped `vector` column with no index (§3). |
 | 5 | 2FA channel | SMS or email OTP only. No TOTP. |
 | 6a | Which role weights a vote | The role at vote time (`ratings.rater_role`), plus admin exclusion of a suspended or de-accredited user's past votes (§4). |

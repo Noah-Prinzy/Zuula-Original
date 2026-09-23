@@ -62,9 +62,9 @@ async def test_platform_settings_default_to_the_rules(db):
     from app.core import rules
 
     row = await db.get(m.PlatformSettings, 1)
-    assert row.settings["weights"] == rules.RATING_WEIGHTS
+    assert row.settings["weights"] == rules.CCS_WEIGHTS
     assert row.settings["slaHours"] == rules.REVIEW_SLA_HOURS
     assert (
         row.settings["thresholds"]["suspendedRatings"]
-        == (rules.CCS_THRESHOLDS["suspended"]["min_ratings"])
+        == (rules.CCS_STATUS_THRESHOLDS["suspended"]["min_ratings"])
     )

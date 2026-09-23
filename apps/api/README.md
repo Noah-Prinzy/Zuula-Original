@@ -106,8 +106,8 @@ app/
     errors.py          ApiError -> ErrorEnvelope exception handling (matches openapi.yaml's ErrorEnvelope)
     pagination.py       Shared {page, perPage, total} pagination helper
     router.py           APIRouter subclass defaulting response_model_exclude_none=True
-    rules.py            Business-rule constants with spec citations (P3)
     security.py         P2 stub auth (see the ADR) — X-Zuula-Role header (core), Bearer zl_live_* (partner)
+    rules.py             Business rules as documented constants (CCS weights/thresholds, review SLA, password/media limits, partner rate limit) — single source of truth for app/stubs/* and app/core/config.py; P3 adds its own section at the end
   db/                    P3 persistence: models/, async session (session.py), report ids, sample-data seed
   services/              Domain logic shared by routers, worker and seed (community.py: weighted CCS)
   schemas/               Pydantic v2 models mirroring openapi.yaml's schemas, camelCase on the wire
@@ -128,6 +128,7 @@ tests/
   contract/                 The openapi-core-backed contract test suite
   pipeline/                 Direct tests of the pipeline task, AnalysisProvider, and realtime pub/sub
   adapters/                 Direct tests of each app/adapters/ module
+  core/                     Direct tests of app/core/rules.py and its consumers
   db/                       Migrations, seed and database-enforced rules, against a real PostgreSQL
   conftest.py                Shared fake-Redis + eager-Celery fixture all suites use
 migrations/                  Alembic (async env); versions/0001 is the initial P3 schema
@@ -173,3 +174,8 @@ This is all documented more fully in the ADR, but briefly:
   sent back.
 - **Rate limiting** (partner API) is an in-memory per-process counter, not the real
   Redis-backed limiter.
+- **Business rules are centralized but only partly enforced** (`app/core/rules.py`): CCS
+  weights/thresholds and the review SLA are real (used by the stub data's computed scores);
+  the password minimum and media upload cap are documented (and declared in the contract)
+  but not checked anywhere yet — real enforcement needs real password storage and real file
+  uploads, both P3's job.

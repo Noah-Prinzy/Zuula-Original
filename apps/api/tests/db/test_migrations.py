@@ -11,7 +11,7 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.pool import NullPool
 
-from tests.db.conftest import TEST_DATABASE_URL, alembic_config, recreate_database
+from tests.dbutil import TEST_DATABASE_URL, alembic_config, recreate_database
 
 SCRATCH_URL = (
     make_url(TEST_DATABASE_URL)

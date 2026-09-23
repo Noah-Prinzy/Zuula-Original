@@ -104,14 +104,15 @@ class AuthChallenge(Base):
     __table_args__ = (
         CheckConstraint(in_check("purpose", CHALLENGE_PURPOSES), name="purpose"),
         CheckConstraint(in_check("channel", ("sms", "email")), name="channel"),
-        CheckConstraint("user_id IS NOT NULL OR pending_signup IS NOT NULL", name="has_subject"),
+        CheckConstraint("user_id IS NOT NULL OR payload IS NOT NULL", name="has_subject"),
     )
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)
     # NULL for a sign-up: the account doesn't exist until the code is confirmed, so the
-    # submitted name/identifier/password hash wait in pending_signup.
+    # submitted name/identifier/password hash wait in `payload`. For a two-factor sign-in,
+    # `payload` carries the `remember` choice through to the session it creates.
     user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), index=True)
-    pending_signup: Mapped[dict | None] = mapped_column(JSONB)
+    payload: Mapped[dict | None] = mapped_column(JSONB)
     purpose: Mapped[str] = mapped_column(Text)
     channel: Mapped[str] = mapped_column(Text)
     destination: Mapped[str] = mapped_column(Text)  # the email/phone the code went to
@@ -146,7 +147,11 @@ class AccreditationApplication(Base):
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
     status: Mapped[str] = mapped_column(Text, default="pending", server_default="pending")
     organisation: Mapped[str | None] = mapped_column(Text)
-    document_key: Mapped[str | None] = mapped_column(Text)  # S3 object key of the uploaded ID
+    press_card_number: Mapped[str | None] = mapped_column(Text)
+    # S3 object keys of the uploaded press card / ID documents (openapi.yaml `documents`).
+    document_keys: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), default=list, server_default=text("'{}'::text[]")
+    )
     submitted_at: Mapped[datetime] = created_at_column()
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     reviewer_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"))

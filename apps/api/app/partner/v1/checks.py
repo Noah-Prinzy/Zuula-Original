@@ -2,7 +2,7 @@ from fastapi import Body, Depends, Response
 
 from app.core.errors import ApiError
 from app.core.router import APIRouter
-from app.core.security import PartnerPrincipal, rate_limit_headers, require_partner_key
+from app.core.security import PartnerPrincipal, require_partner_key
 from app.schemas.partner import PartnerCheckStatus
 from app.schemas.submission import SubmissionAccepted
 from app.stubs.fact_checks import SAMPLE_REPORTS, get_report_by_tracking_id
@@ -17,7 +17,7 @@ def partner_submit_check(
     body: dict = Body(default={}),  # noqa: B008
     principal: PartnerPrincipal = Depends(require_partner_key),  # noqa: B008
 ):
-    response.headers.update(rate_limit_headers(principal.key))
+    response.headers.update(principal.rate_limit_headers)
     if not body.get("type"):
         raise ApiError("bad_request", "type is required.")
     sample = SAMPLE_REPORTS[0]
@@ -35,7 +35,7 @@ def partner_get_check_status(
     response: Response,
     principal: PartnerPrincipal = Depends(require_partner_key),  # noqa: B008
 ):
-    response.headers.update(rate_limit_headers(principal.key))
+    response.headers.update(principal.rate_limit_headers)
     report = get_report_by_tracking_id(tracking_id)
     if report is None:
         raise ApiError("not_found", f"No check with tracking id '{tracking_id}'.")

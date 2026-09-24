@@ -189,12 +189,14 @@ the stub's demo account, and an unconfigured WhatsApp/Telegram webhook refuses e
 
 **Languages (Sunbird AI).** `app/providers/language.py` detects which of the five languages a
 submission is in and translates between them and English with Sunbird AI's API
-(`/tasks/language_id`, `/tasks/nllb_translate`) whenever `SUNBIRD_API_KEY` is set, and with a
+(`/tasks/language_id`, `/tasks/translate`) whenever `SUNBIRD_API_KEY` is set, and with a
 stub that marks its "translations" `[stub-translation xx->yy]` otherwise. In the pipeline, the
 `language` step detects the language when the submitter chose `auto`; Luganda, Acholi,
 Runyankole and Ateso text is translated into English before `claims`; and the report's title,
 summary, what's false/true and claim reasons are translated back (FR-EXPLAIN-05). If Sunbird
-fails, the submission is still checked: untranslated, with an English explanation. See
+fails, the submission is still checked: untranslated, with an English explanation. That
+includes Sunbird's HTTP 429 (about 50 requests a minute, and a daily quota of roughly 450-500
+requests per key), which is logged as a rate-limit/quota failure. See
 [ADR 0003](../../docs/adr/0003-language-provider.md).
 
 The hosted AI provider (`ANALYSIS_PROVIDER`, `ANALYSIS_PROVIDER_REGION`) is P4's, and stays

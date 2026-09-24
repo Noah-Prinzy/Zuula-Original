@@ -3,7 +3,8 @@
 **Status:** Accepted. First added as scaffolding (#17). The Sunbird AI implementation and the
 pipeline wiring landed once Noah had an API key (24 Sep 2026); see "Sunbird implementation"
 and "Wired into the pipeline" below. The rest of this record is the original scaffolding
-decision.
+decision. **Amended the same day** by "Translation endpoint moved to `/tasks/translate`"
+below: `nllb_translate`, as described in "Sunbird implementation", no longer exists.
 
 ## Context
 
@@ -87,6 +88,35 @@ so this change adds files only while P3 PR 3 is changing files nearby. It should
   docs, so the request and response shapes come from Sunbird's published examples, not from
   a real call. The first deploy with the key should confirm them: submit a Luganda text with
   language `auto` and check the report comes back in Luganda.
+
+## Translation endpoint moved to `/tasks/translate` (24 Sep 2026)
+
+Checked live with the key, `POST /tasks/nllb_translate` now answers HTTP 405, so every
+translation through the provider failed (and the pipeline quietly fell back to untranslated
+text and English explanations). Sunbird's OpenAPI spec (`/openapi.json`) lists
+`POST /tasks/translate` in its place, backed by the sunflower-9b LLM instead of NLLB.
+`/tasks/language_id` is unchanged. The "Sunbird implementation" section above records what
+was built first and is left as it was; this is what changed:
+
+- **Request:** same body and bearer auth. Codes stay ISO 639-3 (`lug`); `source_language` is
+  optional there, but the provider always sends it.
+- **Response:** the translation is still `output.translated_text`, with `output.Error` on
+  failure. `output.text` echoes the *input*, although the schema calls it the translated
+  output, so reading it would silently return the original text. A missing or non-string
+  `translated_text` is treated as a failure.
+- **Chunking kept.** The spec still gives no maximum length, and documents 503 for an
+  inference timeout and 502 for empty model output. The 1,000-character whole-sentence chunks
+  stay, still as an assumption rather than a verified limit.
+- **LLM behaviour:** short inputs can gain a trailing period, and named `{placeholders}` can be
+  translated (`{name}` became `{erinnya}`); numeric `{0}` survived. Submissions and
+  explanations carry no placeholders, but templated text would need protecting.
+- **Limits:** about 50 requests a minute and a daily quota of roughly 450-500 requests per
+  key, both HTTP 429 (`RATE_LIMIT_ERROR`, with `details[].retry_after_seconds`).
+  `SunbirdError` now carries `status_code`, and a 429 says it's a rate limit or quota and
+  when to retry. The pipeline already treats any provider error as "don't translate", so a
+  spent quota degrades to English rather than failing submissions. One submission's
+  explanation is several requests (title, summary, each what's-false/true item, each claim
+  reason), so the daily quota caps real use at a few dozen translated submissions a day.
 
 ## Wired into the pipeline
 

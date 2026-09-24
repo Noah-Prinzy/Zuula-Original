@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Turns a stock clip into a small, seamless background loop for RouteBackdrop
-# (public/videos/): 720p, 24 fps, greyscale, no audio. Writes <output>.mp4 (H.264, faststart)
+# (public/videos/): 1080p, 24 fps, greyscale, no audio. Writes <output>.mp4 (H.264, faststart)
 # and <output>.webm (VP9) next to it; RouteBackdrop offers the WebM first, then the MP4.
 #
 # Seamless: it cuts LENGTH + FADE seconds starting at START, then crossfades the last FADE
@@ -13,10 +13,11 @@
 # Pick START where the motion is steady (no camera shake, no cut in the clip). Repetitive
 # motion (a press, pages turning) loops best; 5–8 s is plenty behind the auth card.
 # Aim for well under 1 MB each; if bigger, raise CRF (MP4) or WEBM_CRF (e.g. CRF=32 WEBM_CRF=44 …).
+# HEIGHT=720 for a source that isn't at least 1080p — upscaling adds no detail, only bytes.
 set -euo pipefail
 
 if [ $# -lt 2 ]; then
-  sed -n '2,15p' "$0"
+  sed -n '2,16p' "$0"
   exit 1
 fi
 
@@ -26,17 +27,19 @@ start=${3:-1}
 length=${4:-6}
 fade=${5:-1}
 crf=${CRF:-30}
+height=${HEIGHT:-1080}
 
 segment=$(awk "BEGIN { print $length + $fade }")
 offset=$(awk "BEGIN { print $length - $fade }")
 
 # The crossfade is fade (alpha) + overlay rather than xfade, so it runs on any ffmpeg build.
+# fps=24 after the overlay: some builds (e.g. 7.0) otherwise output 25 fps with duplicated frames.
 "${FFMPEG:-ffmpeg}" -hide_banner -y -ss "$start" -t "$segment" -i "$in" -an \
   -filter_complex "\
-[0:v]scale=-2:720:flags=lanczos,fps=24,hue=s=0,format=yuv420p,split[a][b];\
+[0:v]scale=-2:$height:flags=lanczos,fps=24,hue=s=0,format=yuv420p,split[a][b];\
 [a]trim=start=$fade,setpts=PTS-STARTPTS[body];\
 [b]trim=end=$fade,setpts=PTS-STARTPTS,format=yuva420p,fade=t=in:st=0:d=$fade:alpha=1,setpts=PTS+$offset/TB[head];\
-[body][head]overlay=eof_action=pass,format=yuv420p[v]" \
+[body][head]overlay=eof_action=pass,fps=24,format=yuv420p[v]" \
   -map "[v]" -c:v libx264 -preset slow -crf "$crf" -profile:v high -pix_fmt yuv420p \
   -movflags +faststart "$out"
 

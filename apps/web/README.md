@@ -50,6 +50,7 @@ Open questions for the supervisor:
 - Role checks in the UI run in the browser, from the real session's role. The API enforces roles on its own endpoints, but most screens don't call it yet.
 - CAPTCHA is off in development.
 - Python must be upgraded to 3.12 before P3.
+- `messages/{lg,ach,nyn,teo}.json` are partial, unreviewed machine drafts (Sunbird AI). Keys they don't have fall back to English. They need native-speaker review before they count as real translations.
 
 ## Development
 

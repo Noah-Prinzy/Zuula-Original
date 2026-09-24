@@ -164,7 +164,26 @@ def display_name(code: str) -> str:
 
 
 class SunbirdError(Exception):
-    pass
+    def __init__(self, message: str, *, status_code: int | None = None):
+        super().__init__(message)
+        # The HTTP status Sunbird answered with, when it answered with an error; 429 is the
+        # per-minute rate limit or the daily quota.
+        self.status_code = status_code
+
+
+def _retry_after(response: httpx.Response) -> str:
+    """The `, retry after Ns` suffix from a 429's `details[].retry_after_seconds`, or "" when
+    it isn't there. Only that number is read; the rest of the body stays out of the logs."""
+    try:
+        details = response.json().get("details") or []
+        seconds = next(
+            d["retry_after_seconds"]
+            for d in details
+            if isinstance(d, dict) and isinstance(d.get("retry_after_seconds"), int | float)
+        )
+    except (ValueError, AttributeError, StopIteration):
+        return ""
+    return f", retry after {int(seconds)}s"
 
 
 class SunbirdLanguageProvider:
@@ -173,11 +192,20 @@ class SunbirdLanguageProvider:
     - `detect()`: `POST /tasks/language_id` with `{"text"}`, answered with a language code.
       Sunbird reports no confidence and no code-switching, so `confidence` is None and
       `also_contains` is empty. A language outside the five (Lugbara, say) is OTHER.
-    - `translate()`: `POST /tasks/nllb_translate` with `{"source_language",
+    - `translate()`: `POST /tasks/translate` (the sunflower-9b LLM; it replaced
+      `/tasks/nllb_translate`, which now answers 405) with `{"source_language",
       "target_language", "text"}`, answered with `output.translated_text` (and
-      `output.Error` when it failed). Long text is sent in chunks of whole sentences
-      (_CHUNK_CHARS), because the underlying NLLB model translates short passages; the
-      public docs don't state the API's own length limit.
+      `output.Error` when it failed). Not `output.text`: despite the schema calling it the
+      translated output, it echoes the input back. Long text is sent in chunks of whole
+      sentences (_CHUNK_CHARS); see there for why.
+
+    Being an LLM, sunflower-9b can add a trailing period to a short input, and it can
+    translate named `{placeholders}` (`{name}` came back as `{erinnya}` in Luganda; numeric
+    `{0}` survived). Submissions and explanations carry no placeholders, but templated text
+    would need them protected before it's sent.
+
+    Limits seen on a real key (24 Sep 2026): about 50 requests a minute and a daily quota of
+    roughly 450-500 requests, both answered with HTTP 429; see _post().
 
     Sunbird's codes are three letters (`eng`, `lug`, …); Zuula's are the frontend's
     LocaleCodes (`en`, `lg`, …), mapped by _SUNBIRD_CODES."""
@@ -190,8 +218,17 @@ class SunbirdLanguageProvider:
     async def _post(self, client: httpx.AsyncClient, path: str, payload: dict) -> dict:
         response = await client.post(f"{self._url}{path}", json=payload, headers=self._headers)
         # Never include the response body: it could echo the submission back into logs.
+        if response.status_code == 429:
+            raise SunbirdError(
+                f"Sunbird {path} refused: rate limit or daily quota exceeded (HTTP 429"
+                f"{_retry_after(response)}).",
+                status_code=429,
+            )
         if response.status_code >= 400:
-            raise SunbirdError(f"Sunbird {path} failed with HTTP {response.status_code}.")
+            raise SunbirdError(
+                f"Sunbird {path} failed with HTTP {response.status_code}.",
+                status_code=response.status_code,
+            )
         try:
             return response.json()
         except ValueError as exc:
@@ -218,7 +255,7 @@ class SunbirdLanguageProvider:
             for chunk in _chunks(text):
                 body = await self._post(
                     client,
-                    "/tasks/nllb_translate",
+                    "/tasks/translate",
                     {
                         "source_language": _SUNBIRD_CODES[source],
                         "target_language": _SUNBIRD_CODES[target],
@@ -244,7 +281,11 @@ _SUNBIRD_CODES: dict[str, str] = {
 }
 _FROM_SUNBIRD: dict[str, str] = {v: k for k, v in _SUNBIRD_CODES.items()}
 
-# Longest piece of text sent to Sunbird in one request (an assumption; see the class docstring).
+# Longest piece of text sent to Sunbird in one request. Written for NLLB's short-passage
+# limit; kept for sunflower-9b because Sunbird's OpenAPI spec still states no maximum length
+# for /tasks/translate, while it does document 503 for an inference timeout and 502 for empty
+# model output, both likelier on one long generation. 1,000 is still an assumption, not a
+# verified limit.
 _CHUNK_CHARS = 1000
 _SENTENCE_END = re.compile(r"(?<=[.!?])\s+|\n+")
 

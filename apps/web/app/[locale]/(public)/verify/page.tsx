@@ -11,8 +11,11 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
 import { PageHero, PageSheet } from "@/components/decor/page-sheet"
+import { Leaderboard } from "@/components/home/leaderboard"
 import { SubmissionComposer } from "@/components/submission/submission-composer"
 import { TrackingLookup } from "@/components/submission/tracking-lookup"
+import { leaderboard } from "@/lib/library"
+import { SAMPLE_REPORTS } from "@/lib/mock/fact-checks"
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Verify")
@@ -98,6 +101,7 @@ export default async function VerifyPage() {
       </div>
     </div>
     </PageSheet>
+    <Leaderboard leaders={leaderboard(SAMPLE_REPORTS, 5)} />
     </>
   )
 }

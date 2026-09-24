@@ -4,7 +4,6 @@ import { RiFireLine, RiThumbUpLine, RiTrophyLine } from "@remixicon/react"
 
 import { PhotoHero } from "@/components/decor/photo-hero"
 import { PHOTOS } from "@/components/decor/photos"
-import { Leaderboard } from "@/components/home/leaderboard"
 import { RotatingCard } from "@/components/home/rotating-card"
 import { Emphasis } from "@/components/motion/text/emphasis"
 import { KineticText } from "@/components/motion/text/kinetic-text"
@@ -72,15 +71,10 @@ function ReportSlide({
   )
 }
 
-// FR-RATE-10: the leaderboard sits below the hero; its leaders also rotate through the
-// hero's Community card as a teaser. "Why Zuula" lives on /about.
+// The standalone FR-RATE-10 leaderboard section was removed at Noah's request (24 Sep 2026);
+// the hero's Community card still rotates the same leaders as a teaser. "Why Zuula" lives on /about.
 export default function HomePage() {
-  return (
-    <>
-      <HomeHero />
-      <Leaderboard leaders={leaderboard(SAMPLE_REPORTS, 5)} />
-    </>
-  )
+  return <HomeHero />
 }
 
 // The hero text and composer, with two short status cards right below whose slides rotate.

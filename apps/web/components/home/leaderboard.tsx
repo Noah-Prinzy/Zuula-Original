@@ -20,8 +20,9 @@ import { formatDate } from "@/lib/verdicts"
 
 type Leader = { report: FactCheckReport; score: CommunityScore }
 
-// FR-RATE-10: the homepage leaderboard of the most accurately rated stories, ranked by
-// leaderboard() in lib/library.ts. Rows are whole-row links (press-surface, globals.css).
+// FR-RATE-10: the leaderboard of the most accurately rated stories, ranked by leaderboard()
+// in lib/library.ts. Rendered on /verify (moved off the home page at Noah's request, 24 Sep
+// 2026). Rows are whole-row links (press-surface, globals.css).
 export function Leaderboard({
   leaders,
   minRatings = 25,

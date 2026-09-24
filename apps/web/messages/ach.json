@@ -1,1 +1,148 @@
-{}
+{
+  "Nav": {
+    "openMenu": "Yab menu",
+    "tabBar": "Links ma oyot",
+    "accountMenu": "Jami me menu me account",
+    "section": "{section} dul",
+    "groups": {
+      "review": "Ngiyo",
+      "admin": "Lador tic"
+    },
+    "items": {
+      "home": "Paco",
+      "saved": "Ki gwoko",
+      "verify": "Ngiyo",
+      "library": "Ot gwoko buk",
+      "about": "I kom",
+      "review": "Ngiyo",
+      "admin": "Lador tic",
+      "reviewOverview": "Neno weng",
+      "reviewQueue": "Lain",
+      "reviewHistory": "Tekwaro",
+      "reviewCases": "Pido",
+      "adminOverview": "Neno weng",
+      "adminUsers": "Jo matiyo kwede",
+      "adminModeration": "Bedo ki ngec",
+      "adminSources": "Kama oaa ki iye",
+      "adminBroadcasts": "Cwalo lok angeya",
+      "adminReports": "Ripot",
+      "adminAuditLog": "Log me Audit",
+      "adminSettings": "Yub me tic",
+      "profile": "Kit ma ngat moni tye kwede",
+      "activity": "Tic",
+      "notifications": "Ngec manyen",
+      "alerts": "Cik me ciko dano",
+      "accreditation": "Nongo twero",
+      "apiKeys": "API Lagony"
+    },
+    "back": "Dok cen",
+    "backTo": "Dwogo cen i {page}",
+    "accountSheet": "Account ki ter ki yub",
+    "guestTitle": "Wajoli i Zuula",
+    "guestBody": "Dony me lubu lok ma ki waco, rwate ki lok ma ki ngiyo ki nongo lok manyen i kom ngo ma tye ka nya.",
+    "workspaces": "Kabedo me tic",
+    "yourAccount": "Akaunt mamegi",
+    "viewProfile": "Nen kit ma ngat moni tye kwede",
+    "appearance": "Kit ma nen kwede"
+  },
+  "Footer": {
+    "verify": "Ngiyo",
+    "library": "Ot gwoko buk",
+    "about": "I kom"
+  },
+  "Notifications": {
+    "title": "Ngec manyen",
+    "label": "Ngec manyen"
+  },
+  "Library": {
+    "metaTitle": "Ot gwoko buk",
+    "title": "Ot gwoko buk"
+  },
+  "Report": {
+    "backToLibrary": "Ot gwoko buk",
+    "sources": "Kama oaa ki iye"
+  },
+  "Verify": {
+    "metaTitle": "Ngiyo",
+    "title": "Ngiyo"
+  },
+  "Review": {
+    "queue": {
+      "review": "Ngiyo"
+    }
+  },
+  "Pages": {
+    "activity": {
+      "title": "Tic"
+    },
+    "alerts": {
+      "title": "Cik me ciko dano"
+    },
+    "apiKeys": {
+      "title": "API Lagony"
+    },
+    "notifications": {
+      "title": "Ngec manyen"
+    },
+    "profile": {
+      "title": "Kit ma ngat moni tye kwede"
+    },
+    "accreditation": {
+      "title": "Nongo twero"
+    },
+    "auditLog": {
+      "title": "Log me Audit"
+    },
+    "broadcasts": {
+      "title": "Cwalo lok angeya"
+    },
+    "settings": {
+      "title": "Yub me tic"
+    },
+    "moderation": {
+      "title": "Bedo ki ngec"
+    },
+    "reports": {
+      "title": "Ripot"
+    },
+    "sources": {
+      "title": "Kama oaa ki iye"
+    },
+    "users": {
+      "title": "Jo matiyo kwede"
+    }
+  },
+  "Auth": {
+    "verify": {
+      "submit": "Ngiyo"
+    }
+  },
+  "Developers": {
+    "toc": {
+      "overview": "Neno weng"
+    },
+    "overview": {
+      "title": "Neno weng"
+    }
+  },
+  "Home": {
+    "feed": {
+      "link": "Ot gwoko buk"
+    }
+  },
+  "About": {
+    "metaTitle": "I kom",
+    "banner": {
+      "title": "I kom"
+    }
+  },
+  "Legal": {
+    "privacy": {
+      "sections": {
+        "overview": {
+          "title": "Neno weng"
+        }
+      }
+    }
+  }
+}

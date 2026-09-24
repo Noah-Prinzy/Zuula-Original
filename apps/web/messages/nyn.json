@@ -1,1 +1,156 @@
-{}
+{
+  "Nav": {
+    "main": "Omukuru",
+    "mobile": "Eby'empurizagana",
+    "openMenu": "Yigura menu",
+    "tabBar": "Enkorengana ez'ahonaaho",
+    "accountMenu": "Akawunti menu",
+    "section": "Ekicweka kya {section}",
+    "groups": {
+      "review": "Okugarukamu",
+      "account": "Akaunti"
+    },
+    "items": {
+      "home": "Eka",
+      "saved": "Kikabiikwa",
+      "verify": "Kikakasibwa",
+      "library": "Eibikiro ry'ebitabo",
+      "about": "Aha bikwatiraine",
+      "review": "Okugarukamu",
+      "reviewOverview": "Okureeba hamwe",
+      "reviewQueue": "Orunyiriri",
+      "reviewHistory": "Ebyafaayo",
+      "reviewCases": "Emishango",
+      "adminOverview": "Okureeba hamwe",
+      "adminUsers": "Abakozesa",
+      "adminModeration": "Okutwaza gye",
+      "adminSources": "Oburugo",
+      "adminBroadcasts": "Okujanjaaza",
+      "adminReports": "Ripoota",
+      "adminAuditLog": "Logu ya okubara",
+      "adminSettings": "Ebyokutebeekanisa",
+      "profile": "Ebirikukwataho",
+      "activity": "Omurimo",
+      "notifications": "Okurabura",
+      "alerts": "Okurabura",
+      "accreditation": "Okwikirizibwa",
+      "apiKeys": "API Ebishumuruzo"
+    },
+    "back": "Enyima",
+    "backTo": "Okugaruka ahari {page}",
+    "accountSheet": "Akawunti hamwe n'ebitebeekano",
+    "guestTitle": "Mwakiirwa omuri Zuula",
+    "guestBody": "Yambuka okukuratira okwetomboitwa, okushwijuma amazima n'okutunga okurabura aha birikujanjaara.",
+    "workspaces": "Emyanya y'okukoreramu",
+    "yourAccount": "Akaunti yaawe",
+    "viewProfile": "Reeba ebirikukwata aha muntu",
+    "appearance": "Okureebeka"
+  },
+  "Footer": {
+    "verify": "Kikakasibwa",
+    "library": "Eibikiro ry'ebitabo",
+    "about": "Aha bikwatiraine"
+  },
+  "Notifications": {
+    "title": "Okurabura",
+    "label": "Okurabura"
+  },
+  "Library": {
+    "metaTitle": "Eibikiro ry'ebitabo",
+    "title": "Eibikiro ry'ebitabo"
+  },
+  "Report": {
+    "backToLibrary": "Eibikiro ry'ebitabo",
+    "sources": "Oburugo"
+  },
+  "Verify": {
+    "metaTitle": "Kikakasibwa",
+    "title": "Kikakasibwa"
+  },
+  "Account": {
+    "notifications": {
+      "kinds": {
+        "accreditation": "Akaunti"
+      }
+    }
+  },
+  "Review": {
+    "queue": {
+      "review": "Okugarukamu"
+    }
+  },
+  "Pages": {
+    "activity": {
+      "title": "Omurimo"
+    },
+    "alerts": {
+      "title": "Okurabura"
+    },
+    "apiKeys": {
+      "title": "API Ebishumuruzo"
+    },
+    "notifications": {
+      "title": "Okurabura"
+    },
+    "profile": {
+      "title": "Ebirikukwataho"
+    },
+    "accreditation": {
+      "title": "Okwikirizibwa"
+    },
+    "auditLog": {
+      "title": "Logu ya okubara"
+    },
+    "broadcasts": {
+      "title": "Okujanjaaza"
+    },
+    "settings": {
+      "title": "Ebyokutebeekanisa"
+    },
+    "moderation": {
+      "title": "Okutwaza gye"
+    },
+    "reports": {
+      "title": "Ripoota"
+    },
+    "sources": {
+      "title": "Oburugo"
+    },
+    "users": {
+      "title": "Abakozesa"
+    }
+  },
+  "Auth": {
+    "verify": {
+      "submit": "Kikakasibwa"
+    }
+  },
+  "Developers": {
+    "toc": {
+      "overview": "Okureeba hamwe"
+    },
+    "overview": {
+      "title": "Okureeba hamwe"
+    }
+  },
+  "Home": {
+    "feed": {
+      "link": "Eibikiro ry'ebitabo"
+    }
+  },
+  "About": {
+    "metaTitle": "Aha bikwatiraine",
+    "banner": {
+      "title": "Aha bikwatiraine"
+    }
+  },
+  "Legal": {
+    "privacy": {
+      "sections": {
+        "overview": {
+          "title": "Okureeba hamwe"
+        }
+      }
+    }
+  }
+}

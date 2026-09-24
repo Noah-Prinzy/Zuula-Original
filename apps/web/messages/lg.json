@@ -1,1 +1,155 @@
-{}
+{
+  "Nav": {
+    "main": "Ekikulu.",
+    "openMenu": "Ggula menu.",
+    "tabBar": "Obulango obw'amangu",
+    "accountMenu": "Mmeenyu ya akawunta.",
+    "section": "Ekitundu {section}",
+    "groups": {
+      "review": "Okuddamu okwekenneenya.",
+      "account": "Akawunti"
+    },
+    "items": {
+      "home": "Eka",
+      "saved": "Kikuumiddwa.",
+      "verify": "Kakasa.",
+      "library": "Ettendekero ly'ebitabo.",
+      "about": "Ku bikwata ku",
+      "review": "Okuddamu okwekenneenya.",
+      "reviewOverview": "Okutunuulira mu bufunze.",
+      "reviewQueue": "Olunyiriri.",
+      "reviewHistory": "Ebyafaayo",
+      "reviewCases": "Emisango.",
+      "adminOverview": "Okutunuulira mu bufunze.",
+      "adminUsers": "Abakozesa.",
+      "adminModeration": "Okwewala okukola ekisukkiridde.",
+      "adminSources": "Ensibuko",
+      "adminBroadcasts": "Okuweereza ku mpewo.",
+      "adminReports": "Alipoota.",
+      "adminAuditLog": "Ekiwandiiko kya Audit",
+      "adminSettings": "Ebyokutegeka",
+      "profile": "Ebikwata ku muntu.",
+      "activity": "Ekikolwa",
+      "notifications": "Obubaka obulabula.",
+      "alerts": "Obulabula.",
+      "accreditation": "Okukakasa omutindo.",
+      "apiKeys": "API Ebisumuluzo"
+    },
+    "back": "Emabega",
+    "backTo": "Okudda ku {page}",
+    "accountSheet": "Akaawunti n'enteekateeka.",
+    "guestTitle": "Tukwanirizza ku Zuula",
+    "guestBody": "Yingira okugoberera ebyogerwa, okupima okukebera amazima n'okufuna okulabulwa ku ebyo ebyeyongera okusaasaana.",
+    "workspaces": "Ebifo by'okukoleramu.",
+    "yourAccount": "Akawunti yo",
+    "viewProfile": "Laba ebikwata ku muntu.",
+    "appearance": "Endabika"
+  },
+  "Footer": {
+    "verify": "Kakasa.",
+    "library": "Ettendekero ly'ebitabo.",
+    "about": "Ku bikwata ku"
+  },
+  "Notifications": {
+    "title": "Obubaka obulabula.",
+    "label": "Obubaka obulabula."
+  },
+  "Library": {
+    "metaTitle": "Ettendekero ly'ebitabo.",
+    "title": "Ettendekero ly'ebitabo."
+  },
+  "Report": {
+    "backToLibrary": "Ettendekero ly'ebitabo.",
+    "sources": "Ensibuko"
+  },
+  "Verify": {
+    "metaTitle": "Kakasa.",
+    "title": "Kakasa."
+  },
+  "Account": {
+    "notifications": {
+      "kinds": {
+        "accreditation": "Akawunti"
+      }
+    }
+  },
+  "Review": {
+    "queue": {
+      "review": "Okuddamu okwekenneenya."
+    }
+  },
+  "Pages": {
+    "activity": {
+      "title": "Ekikolwa"
+    },
+    "alerts": {
+      "title": "Obulabula."
+    },
+    "apiKeys": {
+      "title": "API Ebisumuluzo"
+    },
+    "notifications": {
+      "title": "Obubaka obulabula."
+    },
+    "profile": {
+      "title": "Ebikwata ku muntu."
+    },
+    "accreditation": {
+      "title": "Okukakasa omutindo."
+    },
+    "auditLog": {
+      "title": "Ekiwandiiko kya Audit"
+    },
+    "broadcasts": {
+      "title": "Okuweereza ku mpewo."
+    },
+    "settings": {
+      "title": "Ebyokutegeka"
+    },
+    "moderation": {
+      "title": "Okwewala okukola ekisukkiridde."
+    },
+    "reports": {
+      "title": "Alipoota."
+    },
+    "sources": {
+      "title": "Ensibuko"
+    },
+    "users": {
+      "title": "Abakozesa."
+    }
+  },
+  "Auth": {
+    "verify": {
+      "submit": "Kakasa."
+    }
+  },
+  "Developers": {
+    "toc": {
+      "overview": "Okutunuulira mu bufunze."
+    },
+    "overview": {
+      "title": "Okutunuulira mu bufunze."
+    }
+  },
+  "Home": {
+    "feed": {
+      "link": "Ettendekero ly'ebitabo."
+    }
+  },
+  "About": {
+    "metaTitle": "Ku bikwata ku",
+    "banner": {
+      "title": "Ku bikwata ku"
+    }
+  },
+  "Legal": {
+    "privacy": {
+      "sections": {
+        "overview": {
+          "title": "Okutunuulira mu bufunze."
+        }
+      }
+    }
+  }
+}

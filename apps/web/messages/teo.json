@@ -1,1 +1,153 @@
-{}
+{
+  "Nav": {
+    "mobile": "Etelebision lo itingitai.",
+    "openMenu": "Apukor emenu",
+    "tabBar": "Iboro luepedorete aingarakin atipet",
+    "accountMenu": "Eikopo loka akaunt",
+    "section": "Atutubet naka {section}",
+    "groups": {
+      "review": "Aingic bobo.",
+      "admin": "Eswaman lo eyait.",
+      "account": "Akaunt"
+    },
+    "items": {
+      "home": "Erai ore.",
+      "saved": "Ayuwara",
+      "verify": "Kitogogong",
+      "library": "Eibikiro loka itabon.",
+      "about": "Kanuikamunitos",
+      "review": "Aingic bobo.",
+      "admin": "Eswaman lo eyait.",
+      "reviewOverview": "Aiwanyanario",
+      "reviewQueue": "Erai aiboisit naejaasi itunga luipu.",
+      "reviewHistory": "Akiro nukolo",
+      "reviewCases": "Ipuakata",
+      "adminOverview": "Aiwanyanario",
+      "adminUsers": "Itunga lu itwasamaete",
+      "adminModeration": "Aitikitik.",
+      "adminSources": "Ipuak luka akiro.",
+      "adminBroadcasts": "Aitodianareta.",
+      "adminReports": "Aripootin",
+      "adminSettings": "Aitemonokineta",
+      "profile": "Akiro nuikamunitos itunganan.",
+      "activity": "Aswamisioit",
+      "notifications": "Akiro nu iwanyunitai",
+      "alerts": "Akiro nuikamunitos",
+      "accreditation": "Aitigogongio.",
+      "apiKeys": "API Ikeys"
+    },
+    "back": "Abongun",
+    "backTo": "Abongun toma {page}",
+    "accountSheet": "Akaunt keda aitemonokineta",
+    "guestTitle": "Isukunyunitai toma Zuula",
+    "guestBody": "Kobwo kanu atupakinit akiro, aipim aanyanario naka akiro ka adumun aicoreta nuikamunitos nu isisianakinete.",
+    "workspaces": "Aiboisio nu aswam.",
+    "yourAccount": "Ekaunta kon",
+    "viewProfile": "Kosesen epurofail.",
+    "appearance": "Esubit bala"
+  },
+  "Footer": {
+    "verify": "Kitogogong",
+    "library": "Eibikiro loka itabon.",
+    "about": "Kanuikamunitos"
+  },
+  "Notifications": {
+    "title": "Akiro nu iwanyunitai",
+    "label": "Akiro nu iwanyunitai"
+  },
+  "Library": {
+    "metaTitle": "Eibikiro loka itabon.",
+    "title": "Eibikiro loka itabon."
+  },
+  "Report": {
+    "backToLibrary": "Eibikiro loka itabon.",
+    "sources": "Ipuak luka akiro."
+  },
+  "Verify": {
+    "metaTitle": "Kitogogong",
+    "title": "Kitogogong"
+  },
+  "Account": {
+    "notifications": {
+      "kinds": {
+        "accreditation": "Akaunt"
+      }
+    }
+  },
+  "Review": {
+    "queue": {
+      "review": "Aingic bobo."
+    }
+  },
+  "Pages": {
+    "activity": {
+      "title": "Aswamisioit"
+    },
+    "alerts": {
+      "title": "Akiro nuikamunitos"
+    },
+    "apiKeys": {
+      "title": "API Ikeys"
+    },
+    "notifications": {
+      "title": "Akiro nu iwanyunitai"
+    },
+    "profile": {
+      "title": "Akiro nuikamunitos itunganan."
+    },
+    "accreditation": {
+      "title": "Aitigogongio."
+    },
+    "broadcasts": {
+      "title": "Aitodianareta."
+    },
+    "settings": {
+      "title": "Aitemonokineta"
+    },
+    "moderation": {
+      "title": "Aitikitik."
+    },
+    "reports": {
+      "title": "Aripootin"
+    },
+    "sources": {
+      "title": "Ipuak luka akiro."
+    },
+    "users": {
+      "title": "Itunga lu itwasamaete"
+    }
+  },
+  "Auth": {
+    "verify": {
+      "submit": "Kitogogong"
+    }
+  },
+  "Developers": {
+    "toc": {
+      "overview": "Aiwanyanario"
+    },
+    "overview": {
+      "title": "Aiwanyanario"
+    }
+  },
+  "Home": {
+    "feed": {
+      "link": "Eibikiro loka itabon."
+    }
+  },
+  "About": {
+    "metaTitle": "Kanuikamunitos",
+    "banner": {
+      "title": "Kanuikamunitos"
+    }
+  },
+  "Legal": {
+    "privacy": {
+      "sections": {
+        "overview": {
+          "title": "Aiwanyanario"
+        }
+      }
+    }
+  }
+}

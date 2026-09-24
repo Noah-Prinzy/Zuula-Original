@@ -2,12 +2,13 @@
 
 import "./globals.css"
 
-import en from "@/messages/en.json"
+import { GLOBAL_ERROR_TEXT } from "@/lib/global-error-text"
 
 // Replaces the root layout when it fails, so no providers (i18n, theme) are available.
-// Text comes straight from the English messages; styles are inlined as a fallback in case
-// the stylesheet is what failed.
-const t = en.Errors
+// Styles are inlined as a fallback in case the stylesheet is what failed.
+//
+// Text: lib/global-error-text.ts, a copy of the English strings (not the whole catalogue).
+const t = GLOBAL_ERROR_TEXT
 
 export default function GlobalError({
   error,

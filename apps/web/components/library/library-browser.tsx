@@ -51,19 +51,33 @@ import { useContentLabels } from "@/hooks/use-content-labels"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useFormat } from "@/lib/format"
 
+type LibraryBrowserProps = {
+  reports: FactCheckReport[]
+  categories: string[]
+  languages: string[]
+}
+
+// Reads the filters from the URL. useSearchParams opts out of static rendering up to the
+// nearest Suspense boundary, so the page wraps this in Suspense with the plain
+// <LibraryBrowser> (no filters) as the fallback: the unfiltered list is in the static HTML,
+// and filtered URLs switch to their results once hydrated.
+export function LibraryBrowserFromUrl(props: LibraryBrowserProps) {
+  const params = useSearchParams()
+  return <LibraryBrowser {...props} search={params.toString()} />
+}
+
 export function LibraryBrowser({
   reports,
   categories,
   languages,
-}: {
-  reports: FactCheckReport[]
-  categories: string[]
-  languages: string[]
+  search = "",
+}: LibraryBrowserProps & {
+  /** The URL's query string; "" renders the unfiltered first page. */
+  search?: string
 }) {
   const router = useRouter()
   const pathname = usePathname()
-  const params = useSearchParams()
-  const query = React.useMemo(() => parseQuery(new URLSearchParams(params.toString())), [params])
+  const query = React.useMemo(() => parseQuery(new URLSearchParams(search)), [search])
   const [text, setText] = React.useState(query.q)
   const isMobile = useIsMobile()
 

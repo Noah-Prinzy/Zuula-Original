@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { RiMenuLine } from "@remixicon/react"
 import { useTranslations } from "next-intl"
 
@@ -24,9 +23,10 @@ import {
 import { isInSection, PUBLIC_NAV } from "@/lib/navigation"
 import { hasAnyRole } from "@/lib/roles"
 import { cn } from "@/lib/utils"
+import { usePagePath } from "@/hooks/use-page-path"
 
 export function SiteHeader() {
-  const pathname = usePathname()
+  const pathname = usePagePath()
   const { user, role } = useSession()
   const t = useTranslations("Nav")
 

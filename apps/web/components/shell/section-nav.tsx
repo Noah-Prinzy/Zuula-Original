@@ -2,7 +2,6 @@
 
 import { Fragment, useEffect, useRef } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 
 import { useSession } from "@/components/providers/session-provider"
@@ -17,6 +16,7 @@ import {
 import { APP_NAV, isActivePath, isInSection, NON_PAGE_ROUTES, ROUTE_KEYS, type NavGroup } from "@/lib/navigation"
 import { hasAnyRole } from "@/lib/roles"
 import { cn } from "@/lib/utils"
+import { usePagePath } from "@/hooks/use-page-path"
 
 // Breadcrumb label: a translated nav label where one exists, else the raw segment (e.g. a case ID).
 function useTitleFor() {
@@ -31,7 +31,7 @@ function useTitleFor() {
 
 // The current section's nav group, filtered for the signed-in role.
 function useSection(): NavGroup | null {
-  const pathname = usePathname()
+  const pathname = usePagePath()
   const { role, ready } = useSession()
   if (!ready || !role) return null
 
@@ -150,7 +150,7 @@ function SectionBreadcrumbs({ pathname }: { pathname: string }) {
 // Page frame for the Review, Admin and Account areas: section nav beside
 // (desktop) or above (mobile) the content, under the global site header.
 export function SectionLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname()
+  const pathname = usePagePath()
   const section = useSection()
 
   return (

@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import {
   RiChat3Line,
   RiThumbDownFill,
@@ -31,6 +30,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { applyVote, communityScore, RATING_WEIGHTS, raterRole } from "@/lib/community"
 import type { CommunityRating } from "@/lib/types/fact-check"
 import { cn } from "@/lib/utils"
+import { usePagePath } from "@/hooks/use-page-path"
 
 type Vote = "accurate" | "inaccurate"
 
@@ -46,7 +46,7 @@ export function RatingPanel({
   className?: string
 }) {
   const { user, role } = useSession()
-  const pathname = usePathname()
+  const pathname = usePagePath()
   const t = useTranslations("Community.panel")
   const tc = useTranslations("Common")
   const tr = useTranslations("Roles")

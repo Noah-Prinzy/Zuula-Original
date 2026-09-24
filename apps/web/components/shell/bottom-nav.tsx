@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import {
   RiBookmarkFill,
   RiBookmarkLine,
@@ -22,11 +21,8 @@ import { useTranslations } from "next-intl"
 import { useSession } from "@/components/providers/session-provider"
 import { useOnline } from "@/components/pwa/use-online"
 import { isInSection } from "@/lib/navigation"
-import { LOCALES } from "@/lib/locales"
 import { cn } from "@/lib/utils"
-
-// proxy.ts rewrites "/" to "/<locale>" internally, so either form can reach us.
-const HOME_PATHS = new Set(["/", ...LOCALES.map((l) => `/${l.code}`)])
+import { usePagePath } from "@/hooks/use-page-path"
 
 type Tab = {
   href: string
@@ -45,7 +41,7 @@ type Tab = {
 // that is always mounted (and not limited to phones) announces going offline and back online;
 // screen readers often skip live regions that appear already filled.
 export function BottomNav() {
-  const pathname = usePathname()
+  const pathname = usePagePath()
   const { user } = useSession()
   const t = useTranslations("Nav")
   const tc = useTranslations("Common")
@@ -57,7 +53,7 @@ export function BottomNav() {
 
   const account = user ? "/account" : "/sign-in"
   const tabs: Tab[] = [
-    { href: "/", label: t("items.home"), icon: RiHome5Line, activeIcon: RiHome5Fill, active: HOME_PATHS.has(pathname) },
+    { href: "/", label: t("items.home"), icon: RiHome5Line, activeIcon: RiHome5Fill, active: pathname === "/" },
     {
       href: "/verify",
       label: t("items.verify"),

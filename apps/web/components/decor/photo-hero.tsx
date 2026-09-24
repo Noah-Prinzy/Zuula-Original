@@ -4,8 +4,9 @@ import { cn } from "@/lib/utils"
 
 import type { Photo } from "./photos"
 
-// Quality 90 is allow-listed in next.config.ts (images.qualities).
-export const PHOTO_QUALITY = 90
+// Every photo sits under a 55–60% black scrim, where AVIF/WebP at 75 is indistinguishable
+// from 90 and about a third smaller. Allow-listed in next.config.ts (images.qualities).
+export const PHOTO_QUALITY = 75
 
 export function PhotoCredit({
   photo,

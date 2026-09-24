@@ -1,10 +1,13 @@
-import { LOCALES } from "@/lib/locales"
+import { stripLocale } from "@/lib/locales"
 
 import { PHOTOS, type Photo } from "./photos"
 
 export type RoutePhoto = {
   photo: Photo
   position?: string
+  /** The page draws this photo itself in a PhotoHero that covers the backdrop, so
+   *  RouteBackdrop skips it (it would only download the same photo a second time). */
+  ownHero?: boolean
   /** A muted loop played over the photo where conditions allow (RouteBackdrop). The photo
    *  stays as the poster and the fallback. */
   video?: RouteVideo
@@ -68,9 +71,7 @@ const NO_PHOTO_PATHS = [
 
 const FALLBACK: RoutePhoto = { photo: PHOTOS.kampalaSkyline }
 
-// Home: "/" in the address bar, or "/<locale>" after proxy.ts rewrites it on the server.
-const HOME: RoutePhoto = { photo: PHOTOS.newspaperWall, position: "center 60%" }
-const HOME_PATHS = new Set(["/", ...LOCALES.map((l) => `/${l.code}`)])
+const HOME: RoutePhoto = { photo: PHOTOS.newspaperWall, position: "center 60%", ownHero: true }
 
 function matches(pathname: string, prefix: string) {
   return (
@@ -80,7 +81,9 @@ function matches(pathname: string, prefix: string) {
 }
 
 export function photoForPath(pathname: string): RoutePhoto | null {
-  if (HOME_PATHS.has(pathname)) return HOME
+  // Callers may pass the server's "/<locale>/..." path; match on the visitor's path.
+  pathname = stripLocale(pathname)
+  if (pathname === "/") return HOME
   if (NO_PHOTO_PATHS.some((prefix) => matches(pathname, prefix))) return null
   for (const [prefix, entry] of ROUTES) {
     if (matches(pathname, prefix)) return entry

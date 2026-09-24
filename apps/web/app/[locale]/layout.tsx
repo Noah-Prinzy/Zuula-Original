@@ -18,25 +18,31 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { isLocale, LOCALES } from "@/i18n/config"
 import { cn } from "@/lib/utils"
 
-// latin-ext is required for ŋ (Luganda, Acholi).
+// Only the latin subset is preloaded; the latin-ext faces (needed for ŋ in Luganda and
+// Acholi) are still declared, with their unicode-range, so the browser fetches them the moment
+// such a character is on the page. Body (Lora) and heading (Raleway) fonts are preloaded;
+// Geist and Geist Mono appear in small UI details only, so they load on first use instead of
+// competing with the page's main content for bandwidth.
 const ralewayHeading = Raleway({
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin"],
   variable: "--font-heading",
 })
 
 const lora = Lora({
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin"],
   variable: "--font-serif",
 })
 
 const fontSans = Geist({
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin"],
   variable: "--font-sans",
+  preload: false,
 })
 
 const fontMono = Geist_Mono({
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin"],
   variable: "--font-mono",
+  preload: false,
 })
 
 export async function generateMetadata(): Promise<Metadata> {

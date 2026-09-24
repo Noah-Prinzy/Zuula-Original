@@ -2,22 +2,23 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react"
 import Image from "next/image"
-import { usePathname } from "next/navigation"
 
 import { cn } from "@/lib/utils"
 
 import { PHOTO_QUALITY } from "./photo-hero"
 import { photoForPath, ROUTE_VIDEOS } from "./route-photos"
+import { usePagePath } from "@/hooks/use-page-path"
 
 // The page's single background photo, pinned behind everything. A 60% black scrim keeps
 // white text on it at WCAG AA for every photo in the set (checked over 99% of each image),
 // in both themes; body copy sits on a solid PageSheet instead.
-// `sizes` covers a 3:2 photo stretched to fill a portrait viewport, so phones aren't served
-// an image narrower than they display (no upscaling blur).
+// `sizes` covers a 3:2 photo stretched to fill a portrait viewport. On phones it asks for
+// ~60% of that: behind the scrim, on 2–3x screens, that is still 1.2+ device pixels per CSS
+// pixel, at well under half the bytes on mobile data.
 export function RouteBackdrop() {
-  const pathname = usePathname()
+  const pathname = usePagePath()
   const entry = photoForPath(pathname)
-  if (!entry) return null
+  if (!entry || entry.ownHero) return null
 
   return (
     <div
@@ -31,7 +32,7 @@ export function RouteBackdrop() {
         fill
         preload
         quality={PHOTO_QUALITY}
-        sizes="max(100vw, 150vh)"
+        sizes="(max-width: 767px) max(60vw, 90vh), max(100vw, 150vh)"
         className="object-cover"
         style={{ objectPosition: entry.position ?? "center" }}
       />
@@ -42,7 +43,7 @@ export function RouteBackdrop() {
 }
 
 export function useRoutePhoto() {
-  return photoForPath(usePathname())
+  return photoForPath(usePagePath())
 }
 
 // Only play background video where it costs the viewer nothing they'd mind: not under

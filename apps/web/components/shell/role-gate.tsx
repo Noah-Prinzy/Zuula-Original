@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { RiLockLine } from "@remixicon/react"
 import { useTranslations } from "next-intl"
 
@@ -17,6 +16,7 @@ import {
 } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
 import { hasAnyRole, type Role } from "@/lib/roles"
+import { usePagePath } from "@/hooks/use-page-path"
 
 // Client-side gate for UX only. Real enforcement happens in the API (Phase 2/3).
 export function RoleGate({
@@ -27,7 +27,7 @@ export function RoleGate({
   children: React.ReactNode
 }) {
   const { role, ready } = useSession()
-  const pathname = usePathname()
+  const pathname = usePagePath()
   const t = useTranslations("RoleGate")
   const tc = useTranslations("Common")
   const tr = useTranslations("Roles")

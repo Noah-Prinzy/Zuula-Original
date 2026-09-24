@@ -1,0 +1,5 @@
+fake-cache.jsonl
+fake-out/
+fake-report.json
+report.json
+*.log

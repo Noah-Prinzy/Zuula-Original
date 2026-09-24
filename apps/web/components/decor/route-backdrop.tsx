@@ -15,7 +15,15 @@ import { usePagePath } from "@/hooks/use-page-path"
 // `sizes` covers a 3:2 photo stretched to fill a portrait viewport. On phones it asks for
 // ~60% of that: behind the scrim, on 2–3x screens, that is still 1.2+ device pixels per CSS
 // pixel, at well under half the bytes on mobile data.
-export function RouteBackdrop() {
+// `className` re-positions it (e.g. inside the auth layout's media panel instead of the whole
+// viewport); `scrimClassName` swaps the scrim where no text sits on the photo.
+export function RouteBackdrop({
+  className,
+  scrimClassName = "bg-black/60",
+}: {
+  className?: string
+  scrimClassName?: string
+}) {
   const pathname = usePagePath()
   const entry = photoForPath(pathname)
   const allowed = useBackdropVideoAllowed()
@@ -43,7 +51,10 @@ export function RouteBackdrop() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 -z-10 bg-foreground dark:bg-card"
+      className={cn(
+        "pointer-events-none fixed inset-0 -z-10 bg-foreground dark:bg-card",
+        className
+      )}
     >
       <Image
         key={entry.photo.src.src}
@@ -67,7 +78,7 @@ export function RouteBackdrop() {
         )}
       />
       <BackdropVideos src={video} onStall={setStalled} />
-      <div className="absolute inset-0 bg-black/60" />
+      <div className={cn("absolute inset-0", scrimClassName)} />
     </div>
   )
 }

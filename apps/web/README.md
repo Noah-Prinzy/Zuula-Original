@@ -13,7 +13,7 @@ Deadline **30 Nov 2026**, one developer.
 |---|---|---|---|
 | P1 Frontend | 21 Sep – 9 Oct | Next.js 16 + shadcn/ui, every page on mock data | In progress — core pages done; auth layout, home hero and mobile UI passes landed ahead of schedule |
 | P2 API design | 12 – 20 Oct | FastAPI core REST API; separate partner API (API keys, 100 requests/hour); SSE/WebSockets; WhatsApp and Telegram webhooks; AI job queue (Celery + Redis); OAuth, Africa's Talking SMS, Turnstile, ClamAV, S3 | Done — Steps 1–6 merged |
-| P3 Backend + database | 21 Oct – 6 Nov | PostgreSQL + pgvector, Redis, auth (bcrypt, 2FA), weighted CCS and escalation, audit log | In progress — PR 1 (DB foundation) and PR 2 (real auth/roles) merged; PRs 3–6 (content, admin, real adapters, docs) remaining ([ADR 0002](../../docs/adr/0002-p3-backend-and-database.md)) |
+| P3 Backend + database | 21 Oct – 6 Nov | PostgreSQL + pgvector, Redis, auth (bcrypt, 2FA), weighted CCS and escalation, audit log | Done — PRs 1–6 merged (DB foundation, auth/roles, content, admin, real adapters, docs); [ADR 0002](../../docs/adr/0002-p3-backend-and-database.md) accepted |
 | P4 AI engine | 9 – 24 Nov | Hosted LLM (Claude) with evidence retrieval; Sunbird AI for Ugandan languages; Whisper; RoBERTa AI-text detector and a deepfake API; evaluation on about 500 labelled items | Not started |
 | Hardening + launch | 25 – 30 Nov | Security, performance, deployment | Not started |
 

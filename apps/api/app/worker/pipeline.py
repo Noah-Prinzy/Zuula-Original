@@ -7,11 +7,15 @@ over Redis for the SSE endpoint), and on success writes the `fact_check_reports`
 low-confidence review case if needed, and tells the submitter. The Celery task
 `run_submission_pipeline` is a thin wrapper running it on the worker's own connection.
 
-A media upload is read back from object storage and scanned by ClamAV in the "scan" step;
-transcription and the AI step go through app.providers.analysis.AnalysisProvider (P4).
+A media upload is read back from object storage and scanned by ClamAV in the "scan" step.
+The `language` step resolves the submission's language (app.providers.language, Sunbird AI),
+text in a Ugandan language is translated into English before `claims`, and the finished
+explanation is translated back (FR-EXPLAIN-05). Transcription and the verdict itself go
+through app.providers.analysis.AnalysisProvider (P4).
 """
 
 import asyncio
+import dataclasses
 import logging
 import time
 from datetime import UTC, datetime
@@ -27,7 +31,16 @@ from app.core import rules
 from app.core.config import get_analysis_settings, get_database_settings
 from app.db.ids import next_report_id
 from app.db.models import FactCheckReport, Submission
-from app.providers.analysis import get_analysis_provider
+from app.providers.analysis import AnalysisResult, get_analysis_provider
+from app.providers.language import (
+    OTHER,
+    PIVOT_LANGUAGE,
+    SUPPORTED_LANGUAGES,
+    LanguageProvider,
+    display_name,
+    get_language_provider,
+    resolve_submission_language,
+)
 from app.realtime import redis_client
 from app.realtime.submissions import publish_done, publish_failed, publish_step
 from app.services import escalation, notifications
@@ -74,10 +87,23 @@ async def run_pipeline(db: AsyncSession, tracking_id: str) -> None:
     # can't be fetched. Real fetch failures replace this in P3 PR 5.
     fail_at = "fetch" if s.type == "url" and "fail" in (s.url or "").lower() else None
 
+    languages = get_language_provider()
+    text = _analysis_text(s)
+    # The submission's language code: the submitter's choice, or detected in the `language`
+    # step. Media has no `language` step (transcription is P4), so it keeps the choice or OTHER.
+    lang = s.language if s.language in SUPPORTED_LANGUAGES else OTHER
+    # What the claims/sources/ai steps read: the text, in English.
+    pivot_text = text
+
     for step in PIPELINES[s.type]:
         seconds = STEP_SECONDS[step]
         publish_step(r, tracking_id, {"step": step, "status": "active", "seconds": seconds})
         await asyncio.sleep(seconds * scale)
+
+        if step == "language":
+            lang = await _resolve_language(s, text, languages)
+        elif step == "claims":
+            pivot_text = await _to_pivot(s, text, lang, languages)
 
         failure = None
         if step == "scan" and s.media_object_key:
@@ -102,17 +128,18 @@ async def run_pipeline(db: AsyncSession, tracking_id: str) -> None:
         publish_step(r, tracking_id, {"step": step, "status": "done", "seconds": seconds})
 
     report_content_type = _report_content_type(s)
-    text = _analysis_text(s)
     analysis = get_analysis_provider().analyze(
-        content_type=report_content_type, text=text, language=s.language
+        content_type=report_content_type, text=pivot_text, language=PIVOT_LANGUAGE
     )
+    # FR-EXPLAIN-05: the explanation comes back in the submission's own language.
+    analysis = await _explain_in(analysis, lang, languages, tracking_id)
     now = datetime.now(UTC)
     report = FactCheckReport(
         id=await next_report_id(db, now=now),
         tracking_id=tracking_id,
         title=analysis.title,
         content_type=report_content_type,
-        language=s.language,
+        language=display_name(lang),
         submitted_text=text,
         source_url=s.url or s.article_url,
         verdict=analysis.verdict,
@@ -157,6 +184,67 @@ async def run_pipeline(db: AsyncSession, tracking_id: str) -> None:
         s,
         f"Zuula verdict: {notifications.VERDICT_LABELS[report.verdict]}. {report.summary} "
         f"Full report: https://zuula.ug/fact-checks/{report.id}",
+    )
+
+
+async def _resolve_language(s: Submission, text: str, languages: LanguageProvider) -> str:
+    """The `language` step. A URL's own text isn't fetched yet (P4), so only an explicit
+    choice can say what language it's in. A detection failure isn't fatal: the submission is
+    analysed as it is, and the report says "Other"."""
+    if s.type == "url":
+        return s.language if s.language in SUPPORTED_LANGUAGES else OTHER
+    try:
+        return await resolve_submission_language(s.language, text, languages)
+    except Exception:  # noqa: BLE001 — the provider is down or refused: analyse untranslated
+        logger.warning("Language detection failed for %s", s.tracking_id, exc_info=True)
+        return OTHER
+
+
+async def _to_pivot(s: Submission, text: str, lang: str, languages: LanguageProvider) -> str:
+    """Before `claims`: Luganda, Acholi, Runyankole or Ateso text into English, which the
+    claims/sources/ai steps work in. English and OTHER pass through; so does a URL, whose
+    content isn't fetched yet. If translation fails, the original text is analysed."""
+    if s.type not in ("text", "article") or lang in (PIVOT_LANGUAGE, OTHER) or not text:
+        return text
+    try:
+        result = await languages.translate(text=text, source=lang, target=PIVOT_LANGUAGE)
+    except Exception:  # noqa: BLE001
+        logger.warning("Translating %s into English failed", s.tracking_id, exc_info=True)
+        return text
+    return result.text
+
+
+async def _explain_in(
+    analysis: AnalysisResult, lang: str, languages: LanguageProvider, tracking_id: str
+) -> AnalysisResult:
+    """FR-EXPLAIN-05: the report's own words (title, summary, what's false/true, each claim's
+    reason) translated from English into the submission's language. Citation titles stay
+    as their sources wrote them. On failure the English explanation is kept."""
+    if lang in (PIVOT_LANGUAGE, OTHER):
+        return analysis
+
+    async def tr(value: str) -> str:
+        if not value:
+            return value
+        result = await languages.translate(text=value, source=PIVOT_LANGUAGE, target=lang)
+        return result.text
+
+    try:
+        title = await tr(analysis.title)
+        summary = await tr(analysis.summary)
+        what_is_false = [await tr(v) for v in analysis.what_is_false]
+        what_is_true = [await tr(v) for v in analysis.what_is_true]
+        claims = [c.model_copy(update={"reason": await tr(c.reason)}) for c in analysis.claims]
+    except Exception:  # noqa: BLE001
+        logger.warning("Translating %s's explanation failed", tracking_id, exc_info=True)
+        return analysis
+    return dataclasses.replace(
+        analysis,
+        title=title,
+        summary=summary,
+        what_is_false=what_is_false,
+        what_is_true=what_is_true,
+        claims=claims,
     )
 
 

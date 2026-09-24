@@ -15,6 +15,7 @@
 """
 
 import asyncio
+import os
 import weakref
 
 import fakeredis
@@ -25,12 +26,30 @@ from sqlalchemy.pool import NullPool
 
 from app.adapters import email, sms
 from app.adapters.storage import StubObjectStorage
-from app.core.config import get_adapters_settings, get_analysis_settings, get_settings
+from app.core.config import (
+    get_adapters_settings,
+    get_analysis_settings,
+    get_language_settings,
+    get_settings,
+)
 from app.realtime import redis_client
 from app.worker import celery_app
 from tests.dbutil import TEST_DATABASE_URL, alembic_config, recreate_database, seed_database
 
 _fake_server = fakeredis.FakeServer()
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _no_real_language_provider():
+    """This environment may carry a real SUNBIRD_API_KEY, which would switch the pipeline to
+    Sunbird's live API. The suite never calls a real service: drop it for the whole run
+    (tests that exercise Sunbird mock HTTP with respx and configure their own key)."""
+    saved = os.environ.pop("SUNBIRD_API_KEY", None)
+    get_language_settings.cache_clear()
+    yield
+    if saved is not None:
+        os.environ["SUNBIRD_API_KEY"] = saved
+    get_language_settings.cache_clear()
 
 
 @pytest.fixture(autouse=True, scope="session")

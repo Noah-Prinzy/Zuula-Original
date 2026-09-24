@@ -1,8 +1,9 @@
-# ADR 0003: LanguageProvider (P3 scaffolding, Sunbird deferred to P4)
+# ADR 0003: LanguageProvider (Sunbird AI)
 
-**Status:** Scaffolding only. The interface and a stub exist; the real Sunbird AI
-integration is P4 (the AI engine), same as the real `AnalysisProvider`. Nothing in the
-running app calls this yet. See "Not wired in yet" below.
+**Status:** Accepted. First added as scaffolding (#17). The Sunbird AI implementation and the
+pipeline wiring landed once Noah had an API key (24 Sep 2026); see "Sunbird implementation"
+and "Wired into the pipeline" below. The rest of this record is the original scaffolding
+decision.
 
 ## Context
 
@@ -50,7 +51,66 @@ Sunbird. For now the class lives in `app/providers/language.py`, not `app/core/c
 so this change adds files only while P3 PR 3 is changing files nearby. It should move next to
 `AnalysisSettings` (and gain `.env.example` entries) once that PR lands.
 
-## Not wired in yet
+## Sunbird implementation (24 Sep 2026)
+
+`SunbirdLanguageProvider` calls Sunbird AI's hosted API (`SUNBIRD_API_URL`, default
+`https://api.sunbird.ai`) with `Authorization: Bearer SUNBIRD_API_KEY`:
+
+- **`detect()`**: `POST /tasks/language_id` with `{"text"}`. The answer carries a language
+  code (`{"language": "lug"}`; also accepted nested under `output`).
+- **`translate()`**: `POST /tasks/nllb_translate` with `{"source_language", "target_language",
+  "text"}`. The answer is `output.translated_text`, with `output.Error` set on failure.
+- **Codes:** Sunbird uses `eng`, `lug`, `ach`, `nyn`, `teo`; Zuula uses the frontend's `en`,
+  `lg`, `ach`, `nyn`, `teo`. The provider maps between them. Sunbird also knows languages
+  Zuula doesn't support (Lugbara, `lgg`); those are `other`.
+- **Choosing it:** `LANGUAGE_PROVIDER` empty (the default) means Sunbird when
+  `SUNBIRD_API_KEY` is set and the stub otherwise, the same real-when-configured rule as
+  `app/adapters/`. `stub` or `sunbird` forces one; `sunbird` without a key is an error.
+  `LanguageSettings` moved to `app/core/config.py` as planned.
+- **Async:** the interface became async (`detect`, `translate`,
+  `resolve_submission_language`), like the adapters in ADR 0002, since the pipeline is async
+  and the real calls are network I/O.
+- **Tests** mock Sunbird with `respx`; nothing calls the real API. The test session removes
+  any `SUNBIRD_API_KEY` from its environment so the pipeline tests use the stub.
+
+**Where Sunbird can't do what the stub assumed (flagged):**
+
+- **No confidence.** `language_id` returns a language only, so `DetectionResult.confidence`
+  became optional and is `None` from Sunbird.
+- **No code-switching.** `language_id` names one language, so `also_contains` is always
+  empty from Sunbird, and mixed Luganda-English text is translated as a whole.
+- **Length.** The public docs don't state a text limit for `nllb_translate`, and the NLLB
+  model behind it translates short passages. Text is sent in whole-sentence chunks of at most
+  1,000 characters (an assumption). A 20,000-character article is about 20 requests, against
+  a documented rate limit of 50 requests a minute on a standard account.
+- **Not verified live.** This build environment can't reach `api.sunbird.ai` or Sunbird's
+  docs, so the request and response shapes come from Sunbird's published examples, not from
+  a real call. The first deploy with the key should confirm them: submit a Luganda text with
+  language `auto` and check the report comes back in Luganda.
+
+## Wired into the pipeline
+
+As planned below, in `app/worker/pipeline.py`:
+
+1. **`language` step:** `resolve_submission_language(...)`. An explicit choice is trusted; `auto`
+   is detected. The report stores the display name (`Luganda`), where before it stored the
+   raw request value (often `auto`). A URL's content isn't fetched yet (P4), so `auto` on a
+   URL is `Other`; media keeps an explicit choice or is `Other` until transcription (P4).
+2. **Before `claims`:** text and article submissions in Luganda, Acholi, Runyankole or Ateso are
+   translated into English, and the analysis provider is given that English text.
+   `submitted_text` keeps what the person wrote.
+3. **After analysis:** the title, summary, what's false, what's true and each claim's reason are
+   translated into the submission's language (FR-EXPLAIN-05). Citation titles stay as their
+   sources wrote them. Only the translated version is stored; there's no English copy.
+4. **Failures don't fail the submission.** If detection fails the language is `Other`; if
+   translation fails the original text is analysed, or the explanation stays in English. Each
+   is logged.
+
+**Left for P4:** claim `start`/`end` offsets index the text the analysis read. Once that is
+the English translation, they no longer point into the original `submitted_text`, so P4's
+analysis has to map them back (or highlight claims another way).
+
+## Originally: not wired in yet
 
 Connecting this is P3 PR 3's territory (`app/worker/pipeline.py`), so it's left for that
 work. The expected shape:
@@ -67,17 +127,20 @@ work. The expected shape:
 `media` submissions have no `language` step. Their language would come from transcription,
 which is also P4 (Whisper).
 
-## Open questions (flagged, not decided)
+## Open questions
 
-- **Sunbird access.** Whether Zuula has Sunbird API access, and on what terms, is a question
-  for Noah. The settings are placeholders until that's known.
-- **Which report fields get translated back.** Probably `summary`, `whatIsFalse`,
-  `whatIsTrue` and the claim text. Maybe not citation titles, which are the sources' own
-  words. There's also whether the original-language and English versions are both stored.
-  That touches the `fact_check_reports` schema (ADR 0002), so it isn't decided here.
-- **What happens with `other`.** Reject the submission, analyse it untranslated, or send it
-  to human review? The spec doesn't say.
-- **Code-switching.** `also_contains` reports it. Whether a Luganda-English message is
-  translated as a whole or segment by segment depends on what Sunbird supports.
-- **Data protection.** Sunbird is a Ugandan organisation, which may make §10.1 easier than
-  it is for a hosted LLM. That still needs confirming, like `ANALYSIS_PROVIDER_REGION`.
+Where each stands after the Sunbird work:
+
+- **Sunbird access.** *Answered:* Noah has a key (24 Sep 2026).
+- **Which report fields get translated back.** *Built as:* title, summary, what's false,
+  what's true and claim reasons; citation titles stay as written; only the translated
+  version is stored. Keeping an English copy too would need a `fact_check_reports` schema
+  change (ADR 0002). Still Noah's call whether that's wanted.
+- **What happens with `other`.** *Built as:* analysed untranslated, explanation in English.
+  Rejecting it or sending it to human review instead is still open; the spec doesn't say.
+- **Code-switching.** *Answered by Sunbird's API:* it names one language, so mixed text is
+  translated as a whole.
+- **Data protection.** Still open. Sunbird is a Ugandan organisation, which may make §10.1
+  easier than it is for a hosted LLM, but that needs confirming, like
+  `ANALYSIS_PROVIDER_REGION`. Submissions in a Ugandan language, and every explanation
+  going back to one, are now sent to Sunbird whenever the key is set.

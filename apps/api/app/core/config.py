@@ -77,6 +77,20 @@ class AnalysisSettings(BaseSettings):
     pipeline_step_scale: float = 1.0
 
 
+class LanguageSettings(BaseSettings):
+    """Language detection and translation (app/providers/language.py, ADR 0003). Same
+    no-prefix convention as AnalysisSettings. LANGUAGE_PROVIDER picks the implementation:
+    `sunbird`, `stub`, or empty (the default) for Sunbird when SUNBIRD_API_KEY is set and the
+    stub otherwise. Sunbird is a Ugandan organisation; whether that settles §10.1 data
+    protection for sending submissions to it is still to be confirmed (ADR 0003)."""
+
+    model_config = SettingsConfigDict(extra="ignore")
+
+    language_provider: str = ""
+    sunbird_api_url: str = "https://api.sunbird.ai"
+    sunbird_api_key: str = ""
+
+
 class AdaptersSettings(BaseSettings):
     """Config for every integration adapter (app/adapters/**). Each adapter uses its real
     implementation when its credentials are set and the logging stub otherwise; in
@@ -143,6 +157,11 @@ def get_celery_settings() -> CelerySettings:
 @lru_cache
 def get_analysis_settings() -> AnalysisSettings:
     return AnalysisSettings()
+
+
+@lru_cache
+def get_language_settings() -> LanguageSettings:
+    return LanguageSettings()
 
 
 @lru_cache

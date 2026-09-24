@@ -17,7 +17,7 @@ Deadline **30 Nov 2026**, one developer.
 | P4 AI engine | 9 – 24 Nov | Hosted LLM (Claude) with evidence retrieval; Sunbird AI for Ugandan languages; Whisper; RoBERTa AI-text detector and a deepfake API; evaluation on about 500 labelled items | Not started |
 | Hardening + launch | 25 – 30 Nov | Security, performance, deployment | Not started |
 
-All three phases above are running well ahead of their scheduled windows — P2's window hasn't opened yet and it's already done; P3's PRs 1–2 landed three weeks before P3's window starts.
+All three phases above are running well ahead of their scheduled windows — P2 and P3 are both done before either window has opened (P3 finished on 23 Sep, four weeks before its 21 Oct start).
 
 Repo layout: `apps/web` (this app), `apps/api` (P2–P3), `services/ai` (P4), `packages/shared`. `apps/api` now has substantial code (see its own README); `services/ai` is still empty, pending P4.
 

@@ -63,7 +63,17 @@
       "alerts": "Alerts",
       "accreditation": "Accreditation",
       "apiKeys": "API Keys"
-    }
+    },
+    "back": "Back",
+    "backTo": "Back to {page}",
+    "accountSheet": "Account and settings",
+    "guestTitle": "Welcome to Zuula",
+    "guestBody": "Sign in to follow claims, rate fact-checks and get alerts about what’s spreading.",
+    "workspaces": "Workspaces",
+    "yourAccount": "Your account",
+    "app": "App",
+    "viewProfile": "View profile",
+    "appearance": "Appearance"
   },
   "Footer": {
     "blurb": "AI-powered misinformation detection for Uganda. Developed by the Centre for Intelligent Technologies, Victoria University Kampala.",
@@ -301,7 +311,12 @@
     "expertNotes": "Expert notes",
     "rating": "Community rating",
     "sources": "Sources",
-    "sourcesHint": "{count, plural, one {# source cross-referenced} other {# sources cross-referenced}}"
+    "sourcesHint": "{count, plural, one {# source cross-referenced} other {# sources cross-referenced}}",
+    "actions": "Report actions",
+    "rate": "Rate",
+    "share": "Share",
+    "linkCopied": "Link copied",
+    "shareFailed": "Couldn't share. Copy the address from your browser instead."
   },
   "Status": {
     "metaTitle": "Status {id}",
@@ -1412,7 +1427,8 @@
     "social": {
       "divider": "or continue with",
       "notConnected": "{provider} sign-in isn't connected yet",
-      "notConnectedBody": "It will work once the authentication API is live."
+      "notConnectedBody": "It will work once the authentication API is live.",
+      "dividerEmail": "or use your email or phone"
     },
     "resend": {
       "prompt": "Didn't get it?",

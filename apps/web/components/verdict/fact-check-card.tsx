@@ -28,11 +28,14 @@ const TYPE_ICON: Record<ContentType, typeof RiFileTextLine> = {
 }
 
 // A fact-check in a list (Home feed, Library results). The whole card is one link.
+// `feed`: below md it drops the box and becomes an edge-to-edge row in a divided list.
 export function FactCheckCard({
   report,
+  feed = false,
   className,
 }: {
   report: FactCheckReport
+  feed?: boolean
   className?: string
 }) {
   const score = communityScore(report.community)
@@ -45,6 +48,8 @@ export function FactCheckCard({
     <article
       className={cn(
         "group press-surface relative flex h-full flex-col gap-3 border bg-card p-4 transition-colors focus-within:ring-2 focus-within:ring-ring hover:border-foreground/30",
+        feed &&
+          "max-md:gap-2 max-md:border-x-0 max-md:border-t-0 max-md:bg-background max-md:py-3.5 max-md:pr-[clamp(1rem,3vw,3rem)] max-md:pl-[calc(clamp(1rem,3vw,3rem)+0.25rem)] max-md:focus-within:ring-inset max-md:hover:border-border",
         className
       )}
     >
@@ -59,7 +64,7 @@ export function FactCheckCard({
           verdict={report.verdict}
           size="sm"
           showLabel={false}
-          className="-mt-1 -mr-1"
+          className={cn("-mt-1 -mr-1", feed && "max-md:-my-1.5 max-md:scale-90")}
         />
       </div>
 

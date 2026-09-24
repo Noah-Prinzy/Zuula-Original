@@ -76,7 +76,7 @@ export function SignInForm({ next }: { next?: string }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <AuthHeading title={t("signIn.title")} description={t("signIn.description")} />
+      <AuthHeading title={t("signIn.title")} description={t("signIn.description")} className="max-md:-order-2" />
 
       <DemoHint kind="roles" />
       <FormError message={error} />
@@ -93,9 +93,10 @@ export function SignInForm({ next }: { next?: string }) {
                 id="signin-identifier"
                 autoComplete="username"
                 inputMode="email"
+                enterKeyHint="next"
                 aria-invalid={fieldState.invalid}
                 placeholder={t("fields.identifierPlaceholder")}
-                className="h-10"
+                className="h-10 max-md:h-12"
               />
               <FieldError>{v(fieldState.error?.message)}</FieldError>
             </Field>
@@ -108,7 +109,10 @@ export function SignInForm({ next }: { next?: string }) {
             <Field data-invalid={fieldState.invalid}>
               <div className="flex items-center justify-between">
                 <FieldLabel htmlFor="signin-password">{t("fields.password")}</FieldLabel>
-                <Link href="/forgot-password" className="text-xs text-primary underline-offset-4 hover:underline">
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-primary underline-offset-4 hover:underline max-md:-my-3 max-md:inline-flex max-md:min-h-11 max-md:items-center max-md:text-sm"
+                >
                   {t("signIn.forgot")}
                 </Link>
               </div>
@@ -116,8 +120,9 @@ export function SignInForm({ next }: { next?: string }) {
                 {...field}
                 id="signin-password"
                 autoComplete="current-password"
+                enterKeyHint="go"
                 aria-invalid={fieldState.invalid}
-                className="h-10"
+                className="h-10 max-md:h-12"
               />
               <FieldError>{v(fieldState.error?.message)}</FieldError>
             </Field>
@@ -127,7 +132,7 @@ export function SignInForm({ next }: { next?: string }) {
           control={control}
           name="remember"
           render={({ field }) => (
-            <Field orientation="horizontal">
+            <Field orientation="horizontal" className="max-md:min-h-11 max-md:items-center">
               <Checkbox
                 id="signin-remember"
                 checked={field.value}
@@ -139,19 +144,19 @@ export function SignInForm({ next }: { next?: string }) {
             </Field>
           )}
         />
-        <Button type="submit" size="lg" className="h-10" disabled={formState.isSubmitting}>
+        <Button type="submit" size="lg" className="h-10 max-md:h-12" disabled={formState.isSubmitting}>
           {formState.isSubmitting && <Spinner />}
           {formState.isSubmitting ? t("signIn.submitting") : t("signIn.submit")}
         </Button>
       </form>
 
-      <SocialButtons disabled={formState.isSubmitting} />
+      <SocialButtons disabled={formState.isSubmitting} className="max-md:-order-1" />
 
       <p className="text-center text-sm text-muted-foreground">
         {t("signIn.newHere")}{" "}
         <Link
           href={next ? `/sign-up?next=${encodeURIComponent(next)}` : "/sign-up"}
-          className="font-medium text-primary underline underline-offset-4"
+          className="font-medium text-primary underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center"
         >
           {t("signIn.createAccount")}
         </Link>

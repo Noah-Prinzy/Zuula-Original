@@ -124,7 +124,7 @@ async function HomeHero() {
         {/* Phones: a "cover" block that pins the headline low, so the top of the screen is the
             photo itself rather than wall-to-wall text and cards. From sm up it dissolves
             (`contents`) into the centred stack. */}
-        <div className="flex min-h-[calc(72svh-var(--header-h))] w-full flex-col items-center justify-end gap-3 sm:contents">
+        <div className="flex min-h-[calc(50svh-var(--header-h))] w-full flex-col items-center justify-end gap-3 sm:contents">
           <Badge
             variant="outline"
             className="enter hidden border-white/40 bg-black/20 text-white backdrop-blur-sm sm:inline-flex"

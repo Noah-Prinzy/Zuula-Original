@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { Spinner } from "@/components/ui/spinner"
 import { useApiErrorMessage } from "@/hooks/use-api-error-message"
 import { useValidationMessage } from "@/hooks/use-validation-message"
@@ -38,6 +39,12 @@ export function SignUpForm({ next }: { next?: string }) {
   })
   const { control, handleSubmit, formState, setError: setFieldError } = form
   const password = useWatch({ control, name: "password" })
+  // Phones skip "Confirm password": retyping it on a phone keyboard is where sign-ups are
+  // abandoned, and the show-password toggle lets people check what they typed instead.
+  const isMobile = useIsMobile()
+  React.useEffect(() => {
+    if (isMobile) form.setValue("confirm", password)
+  }, [isMobile, password, form])
 
   async function onSubmit(values: Values) {
     setError(null)
@@ -69,7 +76,7 @@ export function SignUpForm({ next }: { next?: string }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <AuthHeading title={t("signUp.title")} description={t("signUp.description")} />
+      <AuthHeading title={t("signUp.title")} description={t("signUp.description")} className="max-md:-order-2" />
 
       <FormError message={error} />
 
@@ -80,7 +87,15 @@ export function SignUpForm({ next }: { next?: string }) {
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor="signup-name">{t("fields.fullName")}</FieldLabel>
-              <Input {...field} id="signup-name" autoComplete="name" aria-invalid={fieldState.invalid} className="h-10" />
+              <Input
+                {...field}
+                id="signup-name"
+                autoComplete="name"
+                autoCapitalize="words"
+                enterKeyHint="next"
+                aria-invalid={fieldState.invalid}
+                className="h-10 max-md:h-12"
+              />
               <FieldError>{v(fieldState.error?.message)}</FieldError>
             </Field>
           )}
@@ -95,9 +110,11 @@ export function SignUpForm({ next }: { next?: string }) {
                 {...field}
                 id="signup-identifier"
                 autoComplete="username"
+                inputMode="email"
+                enterKeyHint="next"
                 aria-invalid={fieldState.invalid}
                 placeholder={t("fields.identifierPlaceholder")}
-                className="h-10"
+                className="h-10 max-md:h-12"
               />
               <FieldDescription>{t("signUp.identifierHint")}</FieldDescription>
               <FieldError>{v(fieldState.error?.message)}</FieldError>
@@ -114,9 +131,10 @@ export function SignUpForm({ next }: { next?: string }) {
                 {...field}
                 id="signup-password"
                 autoComplete="new-password"
+                enterKeyHint={isMobile ? "done" : "next"}
                 aria-invalid={fieldState.invalid}
                 aria-describedby={password ? "signup-password-strength" : undefined}
-                className="h-10"
+                className="h-10 max-md:h-12"
               />
               {/* The meter and checklist appear once typing starts, not as four ✕ rows up front. */}
               {password && <PasswordStrength id="signup-password-strength" password={password} />}
@@ -124,7 +142,7 @@ export function SignUpForm({ next }: { next?: string }) {
             </Field>
           )}
         />
-        <Controller
+        {!isMobile && <Controller
           control={control}
           name="confirm"
           render={({ field, fieldState }) => (
@@ -135,18 +153,18 @@ export function SignUpForm({ next }: { next?: string }) {
                 id="signup-confirm"
                 autoComplete="new-password"
                 aria-invalid={fieldState.invalid}
-                className="h-10"
+                className="h-10 max-md:h-12"
               />
               <FieldError>{v(fieldState.error?.message)}</FieldError>
             </Field>
           )}
-        />
+        />}
         <Controller
           control={control}
           name="consent"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <div className="flex items-start gap-2">
+              <div className="flex items-start gap-2 max-md:min-h-11 max-md:py-1">
                 <Checkbox
                   id="signup-consent"
                   checked={field.value}
@@ -173,19 +191,19 @@ export function SignUpForm({ next }: { next?: string }) {
             </Field>
           )}
         />
-        <Button type="submit" size="lg" className="h-10" disabled={formState.isSubmitting}>
+        <Button type="submit" size="lg" className="h-10 max-md:h-12" disabled={formState.isSubmitting}>
           {formState.isSubmitting && <Spinner />}
           {formState.isSubmitting ? t("signUp.submitting") : t("signUp.submit")}
         </Button>
       </form>
 
-      <SocialButtons disabled={formState.isSubmitting} />
+      <SocialButtons disabled={formState.isSubmitting} className="max-md:-order-1" />
 
       <p className="text-center text-sm text-muted-foreground">
         {t("signUp.haveAccount")}{" "}
         <Link
           href={next ? `/sign-in?next=${encodeURIComponent(next)}` : "/sign-in"}
-          className="font-medium text-primary underline underline-offset-4"
+          className="font-medium text-primary underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center"
         >
           {t("signUp.signIn")}
         </Link>

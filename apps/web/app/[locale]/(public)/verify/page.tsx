@@ -35,7 +35,7 @@ export default async function VerifyPage() {
     <>
     <PageHero title={t("title")} description={t("description")} />
     <PageSheet>
-    <div className="page-container flex flex-col gap-8 py-10">
+    <div className="page-container flex flex-col gap-8 py-10 max-md:pt-0">
 
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_26rem]">
         <SubmissionComposer className="enter [--d:2]" />

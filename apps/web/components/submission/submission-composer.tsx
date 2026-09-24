@@ -14,6 +14,7 @@ import { Controller } from "react-hook-form"
 
 import { CaptchaField } from "@/components/submission/captcha-field"
 import { MediaDropzone } from "@/components/submission/media-dropzone"
+import { MobileComposer } from "@/components/submission/mobile-composer"
 import { QuickComposer } from "@/components/submission/quick-composer"
 import { useSubmissionForm } from "@/components/submission/use-submission-form"
 import { Button } from "@/components/ui/button"
@@ -57,7 +58,14 @@ export function SubmissionComposer({
   variant?: "full" | "compact"
   className?: string
 }) {
-  return variant === "compact" ? <QuickComposer className={className} /> : <FullComposer className={className} />
+  return variant === "compact" ? (
+    <>
+      <MobileComposer className={cn(className, "md:hidden")} />
+      <QuickComposer className={cn(className, "max-md:hidden")} />
+    </>
+  ) : (
+    <FullComposer className={className} />
+  )
 }
 
 // Every input type in tabs, with language and article fields (/verify).
@@ -71,7 +79,9 @@ function FullComposer({ className }: { className?: string }) {
       onSubmit={submit}
       onKeyDown={onKeyDown}
       aria-label="Submit content to verify"
-      className={cn("flex flex-col border bg-card text-left", className)}
+      // Phones: edge to edge, with the type as a four-way segmented control and the language
+      // and Verify row pinned above the tab bar while the form scrolls.
+      className={cn("flex flex-col border bg-card text-left max-md:bleed max-md:border-x-0", className)}
     >
       <Controller
         control={control}
@@ -85,10 +95,15 @@ function FullComposer({ className }: { className?: string }) {
             }}
             className="gap-0"
           >
-            <div className={cn("border-b px-3 sm:px-4", "pt-3")}>
-              <TabsList variant="line" className="w-full justify-start">
+            <div className="border-b px-3 pt-3 max-md:px-0 max-md:pt-0 sm:px-4">
+              <TabsList variant="line" className="w-full justify-start max-md:grid max-md:h-auto max-md:grid-cols-4 max-md:gap-0 max-md:p-0">
                 {TABS.map((t) => (
-                  <TabsTrigger key={t.value} value={t.value} disabled={submitting} className="flex-none">
+                  <TabsTrigger
+                    key={t.value}
+                    value={t.value}
+                    disabled={submitting}
+                    className="flex-none max-md:h-14 max-md:flex-col max-md:gap-1 max-md:text-xs max-md:[&_svg:not([class*='size-'])]:size-5"
+                  >
                     <t.icon aria-hidden />
                     {t.label}
                   </TabsTrigger>
@@ -243,7 +258,7 @@ function FullComposer({ className }: { className?: string }) {
         )}
       />
 
-      <div className="flex items-center gap-3 border-t bg-muted/30 p-3 sm:p-4">
+      <div className="flex items-center gap-3 border-t bg-muted/30 p-3 max-md:sticky max-md:bottom-(--bottom-nav-h) max-md:z-20 max-md:bg-background max-md:shadow-[0_-8px_16px_-12px_rgba(0,0,0,0.3)] sm:p-4">
         <Controller
           control={control}
           name="language"
@@ -254,7 +269,7 @@ function FullComposer({ className }: { className?: string }) {
                 Language
               </FieldLabel>
               <Select value={field.value} onValueChange={field.onChange} disabled={submitting}>
-                <SelectTrigger id="submit-language" size="sm" className="w-full min-w-0 sm:w-48">
+                <SelectTrigger id="submit-language" size="sm" className="w-full min-w-0 max-md:h-11 sm:w-48">
                   <RiTranslate2 className="text-muted-foreground sm:hidden" aria-hidden />
                   <SelectValue />
                 </SelectTrigger>
@@ -275,7 +290,7 @@ function FullComposer({ className }: { className?: string }) {
             <span className="hidden text-xs text-muted-foreground lg:inline">
               <Kbd>Ctrl</Kbd> + <Kbd>Enter</Kbd>
             </span>
-            <Button type="submit" size="lg" disabled={submitting} className="px-5">
+            <Button type="submit" size="lg" disabled={submitting} className="px-5 max-md:h-11 max-md:px-6">
               {submitting ? <Spinner /> : <RiSearchEyeLine aria-hidden />}
               {submitting ? (type === "media" ? "Uploading…" : "Submitting…") : "Verify"}
             </Button>

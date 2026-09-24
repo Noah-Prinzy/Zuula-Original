@@ -16,16 +16,16 @@ export function PasswordInput({ className, ...props }: Omit<React.ComponentProps
       <Input
         {...props}
         type={visible ? "text" : "password"}
-        className={cn("pr-10", className)}
+        className={cn("pr-10 max-md:pr-12", className)}
       />
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
         aria-label={visible ? t("hide") : t("show")}
         aria-pressed={visible}
-        className="press absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground [--press-scale:0.85] [--press-tint:transparent] hover:text-foreground focus-visible:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:ring-inset"
+        className="press absolute inset-y-0 right-0 flex w-10 max-md:w-12 items-center justify-center text-muted-foreground [--press-scale:0.85] [--press-tint:transparent] hover:text-foreground focus-visible:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:ring-inset"
       >
-        {visible ? <RiEyeOffLine className="size-4" aria-hidden /> : <RiEyeLine className="size-4" aria-hidden />}
+        {visible ? <RiEyeOffLine className="size-4 max-md:size-5" aria-hidden /> : <RiEyeLine className="size-4 max-md:size-5" aria-hidden />}
       </button>
     </div>
   )

@@ -155,6 +155,21 @@
   padding-inline: clamp(1rem, 3vw, 3rem);
 }
 
+/* Phones: 16px text in fields, below which iOS zooms the page in on focus (the preset's
+   inputs are 12px). Unlayered, so it outranks the text-size utilities. */
+@media (width < 48rem) {
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]),
+  textarea,
+  select {
+    font-size: 1rem;
+  }
+}
+
+/* Cancels page-container's padding, for full-bleed phone lists and sticky toolbars. */
+@utility bleed {
+  margin-inline: calc(-1 * clamp(1rem, 3vw, 3rem));
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

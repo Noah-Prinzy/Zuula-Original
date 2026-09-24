@@ -1,5 +1,7 @@
 import type { components, operations } from "@zuula/shared"
 
+import { demoAuthApi } from "@/lib/demo-auth"
+
 // Thin client for apps/api (the core /api/v1 surface), typed from packages/shared's generated
 // openapi.ts. Only the identity/session calls live here for now: content (fact-checks,
 // ratings, review, admin) still comes from lib/mock until the backend's content layer lands.
@@ -34,6 +36,18 @@ export function apiBaseUrl(): string | null {
   const configured = process.env.NEXT_PUBLIC_API_URL?.trim()
   if (configured) return configured.replace(/\/+$/, "")
   return process.env.NODE_ENV === "production" ? null : "http://localhost:8000"
+}
+
+// "api": real sign-in against apps/api. "demo": the browser-only demo sign-in in
+// lib/demo-auth.ts (any password, role from the address). NEXT_PUBLIC_AUTH_MODE forces either;
+// unset, a build with an API address uses it and a build without one (the deployed site until
+// the API is hosted) falls back to the demo instead of refusing to sign anyone in.
+export type AuthMode = "api" | "demo"
+
+export function authMode(): AuthMode {
+  const forced = process.env.NEXT_PUBLIC_AUTH_MODE?.trim()
+  if (forced === "api" || forced === "demo") return forced
+  return apiBaseUrl() === null ? "demo" : "api"
 }
 
 export class ApiError extends Error {
@@ -95,7 +109,7 @@ export function isTwoFactorChallenge(r: ApiSession | TwoFactorChallenge): r is T
   return "challengeId" in r
 }
 
-export const authApi = {
+const realAuthApi = {
   signUp: (body: JsonBody<"signUp">) =>
     request<SignUpAccepted>("/api/v1/auth/sign-up", { method: "POST", body }),
 
@@ -130,3 +144,8 @@ export const authApi = {
     }
   },
 }
+
+// What the app calls. Resolved per call, so tests (and nothing else) can switch modes.
+export const authApi: typeof realAuthApi = new Proxy(realAuthApi, {
+  get: (real, key: keyof typeof realAuthApi) => (authMode() === "demo" ? demoAuthApi : real)[key],
+})

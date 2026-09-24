@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { ApiError, apiBaseUrl, authApi, isTwoFactorChallenge } from "@/lib/api"
+import { ApiError, apiBaseUrl, authApi, authMode, isTwoFactorChallenge } from "@/lib/api"
 
 // Shapes below are copied from real apps/api responses (see the PR for the live run).
 const PROFILE = {
@@ -52,12 +52,25 @@ describe("apiBaseUrl", () => {
     expect(apiBaseUrl()).toBe("http://localhost:8000")
   })
 
-  it("has no fallback in production, and then sends nothing", async () => {
+  it("has no API fallback in production, so auth falls back to the demo", () => {
     vi.stubEnv("NEXT_PUBLIC_API_URL", "")
     vi.stubEnv("NODE_ENV", "production")
     expect(apiBaseUrl()).toBeNull()
+    expect(authMode()).toBe("demo")
+  })
+
+  it("sends nothing when the API is forced on but has no address", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "")
+    vi.stubEnv("NODE_ENV", "production")
+    vi.stubEnv("NEXT_PUBLIC_AUTH_MODE", "api")
     await expect(authApi.me()).rejects.toMatchObject({ code: "unconfigured" })
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("lets NEXT_PUBLIC_AUTH_MODE force the demo even with an API address", () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "https://api.zuula.ug")
+    vi.stubEnv("NEXT_PUBLIC_AUTH_MODE", "demo")
+    expect(authMode()).toBe("demo")
   })
 })
 

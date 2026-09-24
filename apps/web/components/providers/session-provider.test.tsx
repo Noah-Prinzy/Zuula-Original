@@ -7,7 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { renderWithIntl } from "@/test/render"
 
 const api = vi.hoisted(() => ({ me: vi.fn(), signOut: vi.fn() }))
-vi.mock("@/lib/api", () => ({ authApi: api }))
+const mode = vi.hoisted(() => ({ value: "api" as "api" | "demo" }))
+vi.mock("@/lib/api", () => ({ authApi: api, authMode: () => mode.value }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
 vi.mock("@/i18n/actions", () => ({ setLocaleCookie: vi.fn() }))
 
@@ -47,6 +48,7 @@ beforeEach(() => {
   resetPreviewForTests()
   api.me.mockReset()
   api.signOut.mockReset()
+  mode.value = "api"
 })
 
 beforeEach(() => vi.stubEnv("NEXT_PUBLIC_ROLE_SWITCHER", "true"))
@@ -130,5 +132,23 @@ describe("SessionProvider", () => {
     await waitFor(() => expect(who()).toBe("account:admin"))
     await act(() => expect(session.signOut()).rejects.toThrow())
     expect(who()).toBe("account:admin")
+  })
+
+  it("in demo mode, shows the Demo bar even when signed in, and switching roles signs in", async () => {
+    mode.value = "demo"
+    vi.stubEnv("NEXT_PUBLIC_ROLE_SWITCHER", "")
+    api.me.mockResolvedValue(null)
+    api.signOut.mockResolvedValue(undefined)
+    renderSession()
+    await waitFor(() => expect(who()).toBe("none:-"))
+
+    await userEvent.selectOptions(screen.getByLabelText(/demo: view as/i), "expert")
+    expect(who()).toBe("account:expert")
+    expect(session.user?.name).toBe("David Okello")
+    expect(screen.getByLabelText(/demo: view as/i)).toBeInTheDocument()
+
+    await userEvent.selectOptions(screen.getByLabelText(/demo: view as/i), "signed-out")
+    await waitFor(() => expect(who()).toBe("none:-"))
+    expect(api.signOut).toHaveBeenCalled()
   })
 })

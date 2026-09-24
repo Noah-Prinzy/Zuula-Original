@@ -2,7 +2,14 @@
 
 import { useEffect, useRef } from "react"
 import Link from "next/link"
-import { RiArrowLeftLine, RiArrowRightLine, RiImageAddLine, RiLink, RiSearchEyeLine } from "@remixicon/react"
+import {
+  RiArrowLeftLine,
+  RiArrowRightLine,
+  RiClipboardLine,
+  RiImageAddLine,
+  RiLink,
+  RiSearchEyeLine,
+} from "@remixicon/react"
 import { Controller } from "react-hook-form"
 
 import { CaptchaField } from "@/components/submission/captcha-field"
@@ -24,14 +31,45 @@ import { cn } from "@/lib/utils"
 // Home's composer: a single box, like a search or chat field. Paste a message or a link (a
 // lone link is detected and checked as one), or switch the box to a photo, video or voice
 // note. Language is detected automatically; the language picker and the long-article form
-// live on /verify, one tap away under "More options". Same layout at every width.
-export function QuickComposer({ className }: { className?: string }) {
+// live on /verify, one tap away under "More options".
+// On phones it opens in a full-height sheet instead (`sheet`, see mobile-composer.tsx): a
+// taller box that takes focus, a Paste button (pasting on a phone is a long-press away
+// otherwise), and Verify as a full-width button pinned to the bottom, where the thumb is.
+export function QuickComposer({
+  className,
+  sheet = false,
+  initialText,
+}: {
+  className?: string
+  sheet?: boolean
+  /** Sheet only: text to start with (the clipboard, when opened from its Paste button). */
+  initialText?: string
+}) {
   const { form, control, type, text, submitting, uploadProgress, signedIn, onToken, submit, onKeyDown } =
     useSubmissionForm({ detectLinks: true })
   const { setValue, clearErrors, formState } = form
   const media = type === "media"
   const link = !media && isLink(text)
   const length = text.trim().length
+  const id = sheet ? "sheet" : "quick"
+  const canPaste = sheet && typeof navigator !== "undefined" && !!navigator.clipboard?.readText
+
+  async function pasteClipboard() {
+    try {
+      const clip = (await navigator.clipboard.readText()).trim()
+      if (!clip) return
+      if (media) setValue("type", "text")
+      setValue("text", clip, { shouldDirty: true })
+      clearErrors()
+      form.setFocus("text")
+    } catch {
+      // Permission refused: the box keeps focus, so the system paste menu is still a tap away.
+      form.setFocus("text")
+    }
+  }
+  useEffect(() => {
+    if (initialText) setValue("text", initialText, { shouldDirty: true })
+  }, [initialText, setValue])
 
   // Switching modes unmounts the button that was pressed, so move focus to the new field
   // rather than letting it fall back to the page (WCAG 2.4.3).
@@ -44,12 +82,17 @@ export function QuickComposer({ className }: { className?: string }) {
   useEffect(() => {
     if (!focusAfterSwitch.current) return
     focusAfterSwitch.current = false
-    if (media) document.getElementById("quick-file")?.focus()
+    if (media) document.getElementById(`${id}-file`)?.focus()
     else form.setFocus("text")
-  }, [media, form])
+  }, [media, form, id])
 
   const verify = (
-    <Button type="submit" size="sm" disabled={submitting} className="ml-auto px-4">
+    <Button
+      type="submit"
+      size={sheet ? "lg" : "sm"}
+      disabled={submitting}
+      className={cn(sheet ? "h-12 w-full text-sm" : "ml-auto px-4")}
+    >
       {submitting ? <Spinner /> : <RiSearchEyeLine aria-hidden />}
       {submitting ? (media ? "Uploading…" : "Submitting…") : "Verify"}
     </Button>
@@ -61,37 +104,44 @@ export function QuickComposer({ className }: { className?: string }) {
       onSubmit={submit}
       onKeyDown={onKeyDown}
       aria-label="Submit content to verify"
-      className={cn("flex flex-col border bg-card text-left", className)}
+      className={cn("flex flex-col text-left", sheet ? "min-h-0 flex-1" : "border bg-card", className)}
     >
-      <div className="p-3 sm:p-4">
+      <div className={cn("p-3 sm:p-4", sheet && "min-h-0 flex-1 overflow-y-auto")}>
         {media ? (
           <Controller
             control={control}
             name="file"
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="quick-file" className="sr-only">
+                <FieldLabel htmlFor={`${id}-file`} className="sr-only">
                   Photo, video or voice note
                 </FieldLabel>
                 <MediaDropzone
-                  id="quick-file"
+                  id={`${id}-file`}
                   value={field.value}
                   onChange={(f) => {
                     field.onChange(f)
                     if (f) void form.trigger("file")
                   }}
                   invalid={fieldState.invalid}
-                  describedBy="quick-file-error"
+                  describedBy={`${id}-file-error`}
                   progress={uploadProgress}
                   disabled={submitting}
                 />
-                <FieldError id="quick-file-error" errors={[fieldState.error]} />
+                <FieldError id={`${id}-file-error`} errors={[fieldState.error]} />
                 <div className="flex items-center gap-2">
-                  <Button type="button" variant="ghost" size="sm" disabled={submitting} onClick={() => switchTo("text")}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={submitting}
+                    onClick={() => switchTo("text")}
+                    className={cn(sheet && "h-11")}
+                  >
                     <RiArrowLeftLine aria-hidden />
                     Paste text or a link instead
                   </Button>
-                  {verify}
+                  {!sheet && verify}
                 </div>
               </Field>
             )}
@@ -105,19 +155,20 @@ export function QuickComposer({ className }: { className?: string }) {
               const error = fieldState.error ?? formState.errors.url
               return (
                 <Field data-invalid={!!error}>
-                  <FieldLabel htmlFor="quick-text" className="sr-only">
+                  <FieldLabel htmlFor={`${id}-text`} className="sr-only">
                     Message, claim or link to check
                   </FieldLabel>
                   <InputGroup>
                     <InputGroupTextarea
                       {...field}
-                      id="quick-text"
-                      rows={3}
+                      id={`${id}-text`}
+                      rows={sheet ? 7 : 3}
+                      autoFocus={sheet}
                       disabled={submitting}
                       aria-invalid={!!error}
-                      aria-describedby="quick-text-error"
+                      aria-describedby={`${id}-text-error`}
                       placeholder="Paste a message, claim or link to check…"
-                      className="min-h-20 text-base"
+                      className={cn("min-h-20 text-base", sheet && "min-h-40")}
                       onChange={(e) => {
                         field.onChange(e)
                         // Editing after a link was detected on submit goes back to plain text.
@@ -125,7 +176,18 @@ export function QuickComposer({ className }: { className?: string }) {
                       }}
                     />
                     <InputGroupAddon align="block-end" className="gap-1 border-t pt-2">
-                      <InputGroupButton size="sm" disabled={submitting} onClick={() => switchTo("media")}>
+                      {canPaste && (
+                        <InputGroupButton size="sm" disabled={submitting} onClick={() => void pasteClipboard()} className="h-11">
+                          <RiClipboardLine aria-hidden />
+                          Paste
+                        </InputGroupButton>
+                      )}
+                      <InputGroupButton
+                        size="sm"
+                        disabled={submitting}
+                        onClick={() => switchTo("media")}
+                        className={cn(sheet && "h-11")}
+                      >
                         <RiImageAddLine aria-hidden />
                         <span className="sm:hidden">Media</span>
                         <span className="max-sm:hidden">Photo, video or voice note</span>
@@ -142,10 +204,10 @@ export function QuickComposer({ className }: { className?: string }) {
                           </InputGroupText>
                         )
                       )}
-                      {verify}
+                      {!sheet && verify}
                     </InputGroupAddon>
                   </InputGroup>
-                  <FieldError id="quick-text-error" errors={[error]} />
+                  <FieldError id={`${id}-text-error`} errors={[error]} />
                 </Field>
               )
             }}
@@ -173,6 +235,9 @@ export function QuickComposer({ className }: { className?: string }) {
           </Link>
         </div>
       </div>
+      {sheet && (
+        <div className="border-t bg-background px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">{verify}</div>
+      )}
     </form>
   )
 }

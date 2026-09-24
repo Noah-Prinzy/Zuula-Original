@@ -50,6 +50,8 @@ import { VERDICTS, type FactCheckReport, type Verdict } from "@/lib/types/fact-c
 import { useContentLabels } from "@/hooks/use-content-labels"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useFormat } from "@/lib/format"
+import { cn } from "@/lib/utils"
+import { VERDICT_META } from "@/lib/verdicts"
 
 type LibraryBrowserProps = {
   reports: FactCheckReport[]
@@ -185,7 +187,9 @@ export function LibraryBrowser({
       </aside>
 
       <div className="flex min-w-0 flex-col gap-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        {/* Phones: the search box and filter button stay pinned under the app bar while the
+            results scroll, with one-tap verdict chips below them. */}
+        <div className="flex flex-col gap-3 max-md:sticky max-md:top-14 max-md:z-30 max-md:bleed max-md:-mt-6 max-md:grid max-md:grid-cols-[minmax(0,1fr)_auto] max-md:gap-2 max-md:border-b max-md:bg-background/95 max-md:py-2 max-md:px-[clamp(1rem,3vw,3rem)] max-md:backdrop-blur sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <RiSearchLine
               className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
@@ -197,14 +201,15 @@ export function LibraryBrowser({
               onChange={(e) => setText(e.target.value)}
               placeholder={t("searchPlaceholder")}
               aria-label={t("searchLabel")}
-              className="h-10 pl-9 text-base"
+              enterKeyHint="search"
+              className="h-10 pl-9 text-base max-md:h-11"
             />
           </div>
 
           <div className="flex items-center gap-2">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" className="h-10 lg:hidden">
+                <Button variant="outline" className="h-10 lg:hidden max-md:h-11">
                   <RiEqualizerLine aria-hidden />
                   {filterCount > 0 ? t("filtersCount", { count: filterCount }) : t("filters")}
                 </Button>
@@ -218,34 +223,69 @@ export function LibraryBrowser({
                   <SheetTitle>{t("filters")}</SheetTitle>
                   <SheetDescription>{t("results", { count: result.total })}</SheetDescription>
                 </SheetHeader>
-                <div className="px-4">{filters}</div>
-                <SheetFooter className="grid grid-cols-2">
-                  <Button variant="outline" onClick={clearAll} disabled={filterCount === 0}>
+                <div className="flex flex-col gap-4 px-4">
+                  {/* The sort menu moves in here on phones, leaving the pinned bar to search. */}
+                  {isMobile && (
+                    <div className="flex flex-col gap-2">
+                      <label htmlFor="library-sort-sheet" className="text-sm font-medium">
+                        {t("sortBy")}
+                      </label>
+                      <NativeSelect
+                        id="library-sort-sheet"
+                        value={query.sort}
+                        onChange={(e) => update({ sort: e.target.value as SortValue })}
+                        className="w-full [&_select]:h-11"
+                      >
+                        {SORTS.map((s) => (
+                          <NativeSelectOption key={s.value} value={s.value}>
+                            {t(`sorts.${s.value}`)}
+                          </NativeSelectOption>
+                        ))}
+                      </NativeSelect>
+                    </div>
+                  )}
+                  {filters}
+                </div>
+                <SheetFooter className="sticky bottom-0 grid grid-cols-2 border-t bg-background">
+                  <Button variant="outline" onClick={clearAll} disabled={filterCount === 0} className="max-md:h-11">
                     {t("clearAll")}
                   </Button>
                   <SheetClose asChild>
-                    <Button>{t("showResults", { count: result.total })}</Button>
+                    <Button className="max-md:h-11">{t("showResults", { count: result.total })}</Button>
                   </SheetClose>
                 </SheetFooter>
               </SheetContent>
             </Sheet>
 
-            <label htmlFor="library-sort" className="sr-only">
-              {t("sortBy")}
-            </label>
-            <NativeSelect
-              id="library-sort"
-              value={query.sort}
-              onChange={(e) => update({ sort: e.target.value as SortValue })}
-              className="[&_select]:h-10"
-            >
-              {SORTS.map((s) => (
-                <NativeSelectOption key={s.value} value={s.value}>
-                  {t(`sorts.${s.value}`)}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+            {!isMobile && (
+              <>
+                <label htmlFor="library-sort" className="sr-only">
+                  {t("sortBy")}
+                </label>
+                <NativeSelect
+                  id="library-sort"
+                  value={query.sort}
+                  onChange={(e) => update({ sort: e.target.value as SortValue })}
+                  className="[&_select]:h-10"
+                >
+                  {SORTS.map((s) => (
+                    <NativeSelectOption key={s.value} value={s.value}>
+                      {t(`sorts.${s.value}`)}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+              </>
+            )}
           </div>
+
+          <VerdictChips
+            selected={query.verdicts}
+            counts={verdictCounts}
+            label={t("filter.verdict")}
+            onToggle={(v) =>
+              update({ verdicts: query.verdicts.includes(v) ? query.verdicts.filter((x) => x !== v) : [...query.verdicts, v] })
+            }
+          />
         </div>
 
         <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -296,10 +336,11 @@ export function LibraryBrowser({
             <h2 id="library-results-title" className="sr-only">
               {t("results", { count: result.total })}
             </h2>
-            <ul className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
+            {/* Phones: an edge-to-edge feed of rows rather than a stack of boxed cards. */}
+            <ul className="grid gap-3 max-md:bleed max-md:gap-0 max-md:border-t md:grid-cols-2 2xl:grid-cols-3">
               {result.items.map((r) => (
                 <li key={r.id}>
-                  <FactCheckCard report={r} />
+                  <FactCheckCard report={r} feed />
                 </li>
               ))}
             </ul>
@@ -336,6 +377,50 @@ export function LibraryBrowser({
           </Pagination>
         )}
       </div>
+    </div>
+  )
+}
+
+// Phones: the verdict filter as a row of one-tap chips that scrolls sideways, so the most used
+// filter needs no trip into the sheet. Verdicts nobody has hit in this search are left out.
+function VerdictChips({
+  selected,
+  counts,
+  label,
+  onToggle,
+}: {
+  selected: Verdict[]
+  counts: Record<Verdict, number>
+  label: string
+  onToggle: (v: Verdict) => void
+}) {
+  const tv = useTranslations("Verdicts.labels")
+  const shown = VERDICTS.filter((v) => counts[v] > 0 || selected.includes(v))
+  return (
+    <div
+      role="group"
+      aria-label={label}
+      className="-mx-4 flex gap-2 overflow-x-auto px-4 max-md:col-span-2 [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden"
+    >
+      {shown.map((v) => {
+        const on = selected.includes(v)
+        return (
+          <button
+            key={v}
+            type="button"
+            aria-pressed={on}
+            onClick={() => onToggle(v)}
+            className={cn(
+              "press inline-flex h-9 shrink-0 items-center gap-1.5 border px-3 text-sm whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              on ? "border-primary bg-primary text-primary-foreground" : "bg-background text-foreground"
+            )}
+          >
+            <span aria-hidden className={cn("size-2", VERDICT_META[v].solid, on && "ring-1 ring-primary-foreground")} />
+            {tv(v)}
+            <span className={cn("tabular-nums", on ? "text-primary-foreground/80" : "text-muted-foreground")}>{counts[v]}</span>
+          </button>
+        )
+      })}
     </div>
   )
 }

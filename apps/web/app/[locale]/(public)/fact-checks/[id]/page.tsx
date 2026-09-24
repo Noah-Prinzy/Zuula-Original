@@ -15,6 +15,7 @@ import { CitationCard } from "@/components/verdict/citation-card"
 import { ClaimHighlighter } from "@/components/verdict/claim-highlighter"
 import { ExpertAnnotation } from "@/components/verdict/expert-annotation"
 import { FactCheckCard } from "@/components/verdict/fact-check-card"
+import { ReportActionBar } from "@/components/verdict/report-action-bar"
 import { VerdictSummary } from "@/components/verdict/verdict-summary"
 import { WhatIsTrueCard } from "@/components/verdict/what-is-true-card"
 import { communityScore } from "@/lib/community"
@@ -72,9 +73,10 @@ export default async function ReportPage({ params }: Props) {
   const tc = await getTranslations("Common")
 
   return (
-    <PageSheet className="mt-6 md:mt-10">
+    <PageSheet className="md:mt-10">
     <div className="page-container flex flex-col gap-6 py-8">
-      <div className="flex items-center justify-between gap-4">
+      {/* Phones use the app bar's back button instead. */}
+      <div className="flex items-center justify-between gap-4 max-md:hidden">
         <Button variant="ghost" size="sm" asChild className="-ml-2">
           <Link href="/fact-checks">
             <RiArrowLeftLine aria-hidden /> {tr("backToLibrary")}
@@ -169,16 +171,17 @@ export default async function ReportPage({ params }: Props) {
       {/* FR-SEARCH-03: related fact-checks. */}
       {related.length > 0 && (
         <Section id="related" title={t("title")} description={t("description")}>
-          <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <ul className="grid gap-4 max-md:bleed max-md:gap-0 max-md:border-t md:grid-cols-2 xl:grid-cols-3">
             {related.map((r) => (
               <li key={r.id} className="hover-lift">
-                <FactCheckCard report={r} />
+                <FactCheckCard report={r} feed />
               </li>
             ))}
           </ul>
         </Section>
       )}
     </div>
+    <ReportActionBar title={report.title} sources={report.citations.length} />
     </PageSheet>
   )
 }

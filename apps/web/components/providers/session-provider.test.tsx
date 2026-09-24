@@ -16,11 +16,13 @@ import { RoleSwitcher } from "@/components/shell/role-switcher"
 
 const MARY = { id: "u1", name: "Mary Akello", email: "mary@example.com", role: "admin" } as const
 
-// The latest context value, for calling its actions from tests.
+// The latest context value, for calling its actions from tests. Updated in a layout effect, in
+// the same commit as the DOM: with useEffect, waitFor could see the new DOM while probe still
+// held the previous render's actions (e.g. a signOut from before sign-in).
 const probe = {} as { session: ReturnType<typeof useSession> }
 function Probe() {
   const s = useSession()
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     probe.session = s
   })
   return <p data-testid="who">{s.ready ? `${s.source ?? "none"}:${s.role ?? "-"}` : "checking"}</p>

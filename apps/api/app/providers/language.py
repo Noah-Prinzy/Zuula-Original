@@ -1,8 +1,7 @@
 """LanguageProvider: the interface between the submission pipeline and whatever identifies
 and translates the five languages Zuula supports (FR-SUBMIT-03: English, Luganda, Acholi,
-Runyankole, Ateso). P2/P3 ship only a stub; the real implementation is Sunbird AI, which is
-P4 (the AI engine), same as AnalysisProvider's real implementation. See
-docs/adr/0003-language-provider.md.
+Runyankole, Ateso). The real implementation is Sunbird AI (`SunbirdLanguageProvider`); the
+stub stays for local dev and the tests. See docs/adr/0003-language-provider.md.
 
 Two jobs, matching the pipeline's `language` step (app/worker/pipeline.py's PIPELINES,
 transcribed from apps/web/lib/analysis.ts: "Identifying the language and any
@@ -15,16 +14,20 @@ code-switching") and FR-EXPLAIN-05 (explanations in the submitted content's lang
   claims/sources/ai steps, since trusted sources and the verdict engine work in English.
   Outbound, the finished explanation from PIVOT_LANGUAGE back into the submission's language.
 
-Not wired into the pipeline yet: P3 PR 3 is rewriting app/worker/pipeline.py, so the
-connection point is left for that work. Nothing in the running app calls this module today.
+The pipeline calls both (app/worker/pipeline.py's `_resolve_language()`, `_to_pivot()` and
+`_explain_in()`).
 """
 
+import logging
 import re
 from dataclasses import dataclass, field
-from functools import lru_cache
 from typing import Protocol
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+import httpx
+
+from app.core.config import get_language_settings
+
+logger = logging.getLogger("zuula.providers.language")
 
 # LocaleCode -> display name. Mirrors apps/web/lib/locales.ts's LOCALES exactly. The API
 # takes codes on the way in (SubmissionInput.language) and stores display names on
@@ -48,31 +51,13 @@ AUTO = "auto"
 PIVOT_LANGUAGE = "en"
 
 
-class LanguageSettings(BaseSettings):
-    """Belongs in app/core/config.py next to AnalysisSettings, and should move there once P3
-    PR 3 (which is changing files around the pipeline) has landed. It lives here for now so
-    this change adds files only. Same no-prefix convention as AnalysisSettings: field names
-    are the env var names. P2/P3 ship only `stub`; nothing reads the Sunbird fields yet.
-    Whether Zuula has Sunbird API access at all is still an open question."""
-
-    model_config = SettingsConfigDict(extra="ignore")
-
-    language_provider: str = "stub"
-    sunbird_api_url: str = ""
-    sunbird_api_key: str = ""
-
-
-@lru_cache
-def get_language_settings() -> LanguageSettings:
-    return LanguageSettings()
-
-
 @dataclass
 class DetectionResult:
     # A SUPPORTED_LANGUAGES code, or OTHER.
     language: str
-    # 0.0-1.0. How sure the provider is about `language`.
-    confidence: float
+    # 0.0-1.0: how sure the provider is about `language`. None when the provider doesn't say
+    # (Sunbird's language_id returns a language only).
+    confidence: float | None
     # Other supported languages the text also uses (code-switching), most-used first.
     # Never includes `language`.
     also_contains: list[str] = field(default_factory=list)
@@ -89,11 +74,11 @@ class TranslationResult:
 
 
 class LanguageProvider(Protocol):
-    def detect(self, *, text: str) -> DetectionResult:
+    async def detect(self, *, text: str) -> DetectionResult:
         """Identify which supported language `text` is in (or OTHER)."""
         ...
 
-    def translate(self, *, text: str, source: str, target: str) -> TranslationResult:
+    async def translate(self, *, text: str, source: str, target: str) -> TranslationResult:
         """Translate `text` between two SUPPORTED_LANGUAGES codes. Raises ValueError for any
         other code, OTHER included."""
         ...
@@ -131,7 +116,7 @@ class StubLanguageProvider:
     xx->yy]` prefix so a stub translation can't be mistaken for a real one in a demo or in a
     stored report. Same source and target returns the text unchanged."""
 
-    def detect(self, *, text: str) -> DetectionResult:
+    async def detect(self, *, text: str) -> DetectionResult:
         words = [w.lower() for w in _WORD.findall(text)]
         hits = {code: sum(w in markers for w in words) for code, markers in _MARKERS.items()}
         total = sum(hits.values())
@@ -150,7 +135,7 @@ class StubLanguageProvider:
             also_contains=ranked[1:],
         )
 
-    def translate(self, *, text: str, source: str, target: str) -> TranslationResult:
+    async def translate(self, *, text: str, source: str, target: str) -> TranslationResult:
         _check_supported(source)
         _check_supported(target)
         if source == target:
@@ -163,14 +148,14 @@ class StubLanguageProvider:
         )
 
 
-def resolve_submission_language(requested: str, text: str, provider: LanguageProvider) -> str:
+async def resolve_submission_language(requested: str, text: str, provider: LanguageProvider) -> str:
     """What the pipeline's `language` step needs to decide: the submission's language code.
 
     A language the submitter picked explicitly is trusted as-is (no detection call). `auto`,
     or anything that isn't a supported code, goes to detection, which may return OTHER."""
     if requested in SUPPORTED_LANGUAGES:
         return requested
-    return provider.detect(text=text).language
+    return (await provider.detect(text=text)).language
 
 
 def display_name(code: str) -> str:
@@ -178,15 +163,129 @@ def display_name(code: str) -> str:
     return SUPPORTED_LANGUAGES.get(code, "Other")
 
 
-_PROVIDERS: dict[str, type[LanguageProvider]] = {"stub": StubLanguageProvider}
+class SunbirdError(Exception):
+    pass
+
+
+class SunbirdLanguageProvider:
+    """Sunbird AI's hosted API (https://api.sunbird.ai), bearer-token auth.
+
+    - `detect()`: `POST /tasks/language_id` with `{"text"}`, answered with a language code.
+      Sunbird reports no confidence and no code-switching, so `confidence` is None and
+      `also_contains` is empty. A language outside the five (Lugbara, say) is OTHER.
+    - `translate()`: `POST /tasks/nllb_translate` with `{"source_language",
+      "target_language", "text"}`, answered with `output.translated_text` (and
+      `output.Error` when it failed). Long text is sent in chunks of whole sentences
+      (_CHUNK_CHARS), because the underlying NLLB model translates short passages; the
+      public docs don't state the API's own length limit.
+
+    Sunbird's codes are three letters (`eng`, `lug`, …); Zuula's are the frontend's
+    LocaleCodes (`en`, `lg`, …), mapped by _SUNBIRD_CODES."""
+
+    def __init__(self, *, api_url: str, api_key: str, timeout: float = 30.0):
+        self._url = api_url.rstrip("/")
+        self._headers = {"Authorization": f"Bearer {api_key}", "Accept": "application/json"}
+        self._timeout = timeout
+
+    async def _post(self, client: httpx.AsyncClient, path: str, payload: dict) -> dict:
+        response = await client.post(f"{self._url}{path}", json=payload, headers=self._headers)
+        # Never include the response body: it could echo the submission back into logs.
+        if response.status_code >= 400:
+            raise SunbirdError(f"Sunbird {path} failed with HTTP {response.status_code}.")
+        try:
+            return response.json()
+        except ValueError as exc:
+            raise SunbirdError(f"Sunbird {path} returned something other than JSON.") from exc
+
+    async def detect(self, *, text: str) -> DetectionResult:
+        if not text.strip():
+            return DetectionResult(language=OTHER, confidence=None)
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            body = await self._post(client, "/tasks/language_id", {"text": text[:_CHUNK_CHARS]})
+        # The documented answer is {"language": "lug"}; accept it nested under "output" too.
+        found = body.get("language") or (body.get("output") or {}).get("language") or ""
+        return DetectionResult(
+            language=_FROM_SUNBIRD.get(str(found).lower(), OTHER), confidence=None
+        )
+
+    async def translate(self, *, text: str, source: str, target: str) -> TranslationResult:
+        _check_supported(source)
+        _check_supported(target)
+        if source == target or not text.strip():
+            return TranslationResult(text=text, source=source, target=target, translated=False)
+        parts = []
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            for chunk in _chunks(text):
+                body = await self._post(
+                    client,
+                    "/tasks/nllb_translate",
+                    {
+                        "source_language": _SUNBIRD_CODES[source],
+                        "target_language": _SUNBIRD_CODES[target],
+                        "text": chunk,
+                    },
+                )
+                output = body.get("output") or {}
+                if output.get("Error") or not isinstance(output.get("translated_text"), str):
+                    raise SunbirdError("Sunbird couldn't translate the text.")
+                parts.append(output["translated_text"].strip())
+        return TranslationResult(
+            text=" ".join(parts), source=source, target=target, translated=True
+        )
+
+
+# Zuula LocaleCode -> Sunbird's language code, and back.
+_SUNBIRD_CODES: dict[str, str] = {
+    "en": "eng",
+    "lg": "lug",
+    "ach": "ach",
+    "nyn": "nyn",
+    "teo": "teo",
+}
+_FROM_SUNBIRD: dict[str, str] = {v: k for k, v in _SUNBIRD_CODES.items()}
+
+# Longest piece of text sent to Sunbird in one request (an assumption; see the class docstring).
+_CHUNK_CHARS = 1000
+_SENTENCE_END = re.compile(r"(?<=[.!?])\s+|\n+")
+
+
+def _chunks(text: str) -> list[str]:
+    """Whole sentences packed into pieces of at most _CHUNK_CHARS; a single longer sentence
+    is cut at the limit."""
+    chunks: list[str] = []
+    current = ""
+    for sentence in (p.strip() for p in _SENTENCE_END.split(text)):
+        if not sentence:
+            continue
+        while len(sentence) > _CHUNK_CHARS:
+            if current:
+                chunks.append(current)
+                current = ""
+            chunks.append(sentence[:_CHUNK_CHARS])
+            sentence = sentence[_CHUNK_CHARS:]
+        if current and len(current) + 1 + len(sentence) > _CHUNK_CHARS:
+            chunks.append(current)
+            current = sentence
+        else:
+            current = f"{current} {sentence}".strip()
+    if current:
+        chunks.append(current)
+    return chunks
 
 
 def get_language_provider() -> LanguageProvider:
+    """LANGUAGE_PROVIDER: `sunbird`, `stub`, or empty for Sunbird when SUNBIRD_API_KEY is set
+    and the stub otherwise (the same real-when-configured rule as app/adapters/)."""
     settings = get_language_settings()
-    provider_cls = _PROVIDERS.get(settings.language_provider)
-    if provider_cls is None:
+    choice = settings.language_provider.strip().lower()
+    if choice not in ("", "stub", "sunbird"):
         raise NotImplementedError(
-            f"Unknown LANGUAGE_PROVIDER '{settings.language_provider}'. Only 'stub' exists "
-            "so far; P4 adds Sunbird AI behind this same interface."
+            f"Unknown LANGUAGE_PROVIDER '{settings.language_provider}': use 'sunbird' or 'stub'."
         )
-    return provider_cls()
+    if choice == "stub" or (choice == "" and not settings.sunbird_api_key):
+        return StubLanguageProvider()
+    if not settings.sunbird_api_key:
+        raise NotImplementedError("LANGUAGE_PROVIDER=sunbird needs SUNBIRD_API_KEY.")
+    return SunbirdLanguageProvider(
+        api_url=settings.sunbird_api_url, api_key=settings.sunbird_api_key
+    )

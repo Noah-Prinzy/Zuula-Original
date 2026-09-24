@@ -1,4 +1,29 @@
 {
+  "LanguageSwitcher": {
+    "label": "Orurimi"
+  },
+  "Common": {
+    "tagline": "Ekitongore ekirikurinda amazima omu Uganda",
+    "signIn": "Yingira",
+    "signUp": "Handiika",
+    "signOut": "Rugaho",
+    "backToHome": "Okugaruka omuka",
+    "cancel": "Kushazamu",
+    "save": "Kabiika",
+    "saveChanges": "Kubiika empindahinduka",
+    "confirm": "Kakasa",
+    "remove": "Yihamu",
+    "goBack": "Garuka enyima",
+    "sampleReportTitle": "Ripoota y'eky'okureeberaho",
+    "sampleReportBody": "Eripoota egi neekoresa ebihandiiko by'ebiteekateeko kureebera omu nkora. Eripoota ezihikire nizaija n'ingini ya AI.",
+    "screenInProgress": "Ekirahuri kiriyo nikigyenda omu maisho",
+    "screenInProgressBody": "Ekirahuri eki n'ekicweka ky'okwombeka omu kicweka kya 1.",
+    "screenInProgressSpec": "Ekirahuri eki n'ekicweka ky'omutendera 1 gw'okwombeka ({spec}).",
+    "skipToContent": "Ruga omu by'okurya",
+    "loading": "Okutwara",
+    "justNow": "obwahati bwonka",
+    "ago": "{unit, select, minute {{count} edakiika ehweireho} hour {{count} enyima} other {{count, plural, =1 {nyomwebazyo} other {Ebiro # enyima}}}}"
+  },
   "Nav": {
     "main": "Omukuru",
     "mobile": "Eby'empurizagana",
@@ -47,17 +72,82 @@
     "appearance": "Okureebeka"
   },
   "Footer": {
+    "blurb": "Okucondooza okurikukoresa amaani ga AI okuronda amakuru agatahikire omu Uganda. Kukatandikwaho ekitongore kya Centre for Intelligent Technologies, Victoria University Kampala.",
+    "product": "Ekintu",
+    "organisation": "Ekitongore",
+    "legal": "Eby'ebiragiro",
     "verify": "Kikakasibwa",
     "library": "Eibikiro ry'ebitabo",
-    "about": "Aha bikwatiraine"
+    "about": "Aha bikwatiraine",
+    "methodology": "Omuringo gw'okukora",
+    "independence": "Okwetegyeka omu by'amahurire",
+    "contact": "Okuhikaana",
+    "privacy": "Obutamanya ebirikukukwataho",
+    "terms": "Ebigambo",
+    "dataProtection": "Okurinda ebihandiiko (DPPA 2019)"
+  },
+  "Roles": {
+    "public": "Omukozesa wa gavumenti",
+    "journalist": "Omwandiki w'amahurire ohakakisiibwe",
+    "expert": "Omushwijumi w'obukugu",
+    "admin": "Omwebembezi"
+  },
+  "Theme": {
+    "change": "Hindura omutwe",
+    "light": "Omushana",
+    "dark": "Ekirikwiragura",
+    "system": "Enkora"
+  },
+  "Search": {
+    "button": "Shuuruura okukyebera amazima…",
+    "label": "Ronda ebirikukyebera amazima",
+    "dialogTitle": "Ronda ebirikukyebera amazima",
+    "dialogDescription": "Okuronda ebi abantu baahamizeho hamwe n'ebihandiiko",
+    "placeholder": "Okuronda ebiragiro, omutwe, oburugo…",
+    "empty": "Tihariho ebirikuhikaana. Nyiga Enter okuronda okushwijuma ebihikire.",
+    "trending": "Amakuru agatahikire agarikujanjaara",
+    "byCategory": "Ronda kurugirira aha kicweka",
+    "topics": {
+      "ebola": "Okuragurira Ebola nikugambwa",
+      "elections": "Ebirugire omu karuuru 2026",
+      "fuel": "Okweyongyera kw'emihendo y'amajuta",
+      "school": "Okuhindura kalenda y'eishomero",
+      "mobileMoney": "Omushoro gwa mobayiro mane"
+    }
+  },
+  "Categories": {
+    "Health": "Amagara",
+    "Politics": "Eby'obutegyeki",
+    "Elections": "Oburuuru",
+    "Economy": "Ebyentatsya",
+    "Education": "Obwegyese",
+    "Technology": "Tekinorogye",
+    "Weather": "Embeera y'obwire",
+    "Security": "Eby'okwerinda"
   },
   "Notifications": {
     "title": "Okurabura",
-    "label": "Okurabura"
+    "label": "Okurabura",
+    "labelUnread": "Okurabura, {count} kutashomirwe",
+    "markAllRead": "Marka byona ebishomirwe",
+    "unread": "Ekitakashomiibwe",
+    "viewAll": "Reeba okurabura kwona"
+  },
+  "RoleGate": {
+    "title": "Okuhikwaho kuzibirwe"
+  },
+  "Verdicts": {
+    "summary": {
+      "language": "Orurimi"
+    }
   },
   "Library": {
     "metaTitle": "Eibikiro ry'ebitabo",
-    "title": "Eibikiro ry'ebitabo"
+    "title": "Eibikiro ry'ebitabo",
+    "searchLabel": "Ronda ebirikukyebera amazima",
+    "filter": {
+      "language": "Orurimi"
+    }
   },
   "Report": {
     "backToLibrary": "Eibikiro ry'ebitabo",
@@ -71,12 +161,21 @@
     "notifications": {
       "kinds": {
         "accreditation": "Akaunti"
-      }
+      },
+      "unreadDot": "Ekitakashomiibwe"
+    },
+    "profile": {
+      "securityTitle": "Eby'okwerinda"
     }
   },
   "Review": {
     "queue": {
       "review": "Okugarukamu"
+    }
+  },
+  "Admin": {
+    "broadcasts": {
+      "administrator": "Omwebembezi"
     }
   },
   "Pages": {
@@ -121,16 +220,25 @@
     }
   },
   "Auth": {
+    "meta": {
+      "signIn": "Yingira",
+      "signUp": "Handiika"
+    },
     "verify": {
-      "submit": "Kikakasibwa"
+      "submit": "Kikakasibwa",
+      "goBack": "Garuka enyima"
     }
   },
   "Developers": {
     "toc": {
-      "overview": "Okureeba hamwe"
+      "overview": "Okureeba hamwe",
+      "search": "Ronda ebirikukyebera amazima"
     },
     "overview": {
       "title": "Okureeba hamwe"
+    },
+    "search": {
+      "title": "Ronda ebirikukyebera amazima"
     }
   },
   "Home": {
@@ -142,13 +250,33 @@
     "metaTitle": "Aha bikwatiraine",
     "banner": {
       "title": "Aha bikwatiraine"
+    },
+    "methodology": {
+      "eyebrow": "Omuringo gw'okukora"
+    },
+    "independence": {
+      "eyebrow": "Okwetegyeka omu by'amahurire"
+    },
+    "contact": {
+      "eyebrow": "Okuhikaana"
     }
   },
   "Legal": {
     "privacy": {
+      "metaTitle": "Obutamanya ebirikukukwataho",
+      "title": "Obutamanya ebirikukukwataho",
       "sections": {
         "overview": {
           "title": "Okureeba hamwe"
+        }
+      }
+    },
+    "terms": {
+      "metaTitle": "Ebigambo",
+      "title": "Ebigambo",
+      "sections": {
+        "contact": {
+          "title": "Okuhikaana"
         }
       }
     }

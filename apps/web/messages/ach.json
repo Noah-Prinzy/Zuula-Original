@@ -1,4 +1,29 @@
 {
+  "LanguageSwitcher": {
+    "label": "Leb"
+  },
+  "Common": {
+    "tagline": "Lok ada pa Uganda",
+    "signIn": "Dony Iye",
+    "signUp": "Coone Iye",
+    "signOut": "Kwany woko",
+    "backToHome": "Dwogo gang",
+    "cancel": "Juku woko",
+    "save": "Gwoko",
+    "saveChanges": "Gwok aloka-loka",
+    "confirm": "Moko",
+    "remove": "Kwany woko",
+    "goBack": "Dok cen",
+    "sampleReportTitle": "Adwogi tic me lapor",
+    "sampleReportBody": "Lok ma mako lok man tiyo ki ngec ma kiyubo me nyutu kit ma kiyubu kwede. Lok ada oo ki AI engine.",
+    "screenInProgress": "Kwang me neno tye kawot anyim",
+    "screenInProgressBody": "Kwang man obedo but yub me gedo me Phase 1.",
+    "screenInProgressSpec": "Kwang me kompiuta man obedo but yub me Phase 1 build ({spec}).",
+    "skipToContent": "Wek i cit i gin ma tye iye",
+    "loading": "Tye ka piko",
+    "justNow": "kombedi kany",
+    "ago": "{unit, select, minute {{count} dakika ma okato angec} hour {{count} h ma okato angec} other {{count, plural, =1 {laworo} other {# nino ma okato angec}}}}"
+  },
   "Nav": {
     "openMenu": "Yab menu",
     "tabBar": "Links ma oyot",
@@ -46,17 +71,81 @@
     "appearance": "Kit ma nen kwede"
   },
   "Footer": {
+    "blurb": "AI-ma neno lok goba ma ki keto i Uganda. Centre for Intelligent Technologies, Victoria University Kampala aye oyubu.",
+    "product": "Jami ma kiyubu",
+    "organisation": "Dul moni",
+    "legal": "Cik",
     "verify": "Ngiyo",
     "library": "Ot gwoko buk",
-    "about": "I kom"
+    "about": "I kom",
+    "methodology": "Kit me tic",
+    "independence": "Bedo agonya me editorial",
+    "contact": "Kube",
+    "privacy": "Mung",
+    "terms": "Lok ma mako",
+    "dataProtection": "Gwoko ngec (DPPA 2019)"
+  },
+  "Roles": {
+    "public": "Latic pa lwak",
+    "journalist": "Lacoo lok angea ma ki moko",
+    "expert": "Lakwed ma ladiro",
+    "admin": "Lador tic"
+  },
+  "Theme": {
+    "change": "Lok kit ma nen kwede",
+    "light": "Lero",
+    "dark": "Col piny"
+  },
+  "Search": {
+    "button": "Yen lok me moko ada…",
+    "label": "Yeny lok ada me moko",
+    "dialogTitle": "Yeny lok ada me moko",
+    "dialogDescription": "Yeny lok ma kiyee con ki coc ma ki lwongo ni article",
+    "placeholder": "Yeny lok ma ki waco, wi lok, kama aa ki iye…",
+    "empty": "Pe tye gin mo ma rwate. Di Enter me yenyo fact-checks weng.",
+    "trending": "Lok ma pe atir ma oywek",
+    "byCategory": "Yeny i dul mapat-pat",
+    "topics": {
+      "ebola": "Lok me cango two ebola",
+      "elections": "Adwoki me yer 2026",
+      "fuel": "Wel moo me wot omede",
+      "school": "Lokke pa kalenda me cukul",
+      "mobileMoney": "Mucoro iwi mobile money"
+    }
+  },
+  "Categories": {
+    "Health": "Yot kom",
+    "Politics": "Cungu iwi bye",
+    "Elections": "Yer",
+    "Economy": "Lok kom lim",
+    "Education": "Kwan",
+    "Technology": "Tekinoloji",
+    "Weather": "Piny ma tye ka cwee",
+    "Security": "Gwoko kuc"
   },
   "Notifications": {
     "title": "Ngec manyen",
-    "label": "Ngec manyen"
+    "label": "Ngec manyen",
+    "labelUnread": "Ngec manyen, {count} pe ki kwano",
+    "markAllRead": "Mark gin weng ma ki kwano",
+    "unread": "Pe kikwano",
+    "viewAll": "Nen lok ducu ma ki cwalo"
+  },
+  "RoleGate": {
+    "title": "Kiketo kigeng i kom yoo me donyo"
+  },
+  "Verdicts": {
+    "summary": {
+      "language": "Leb"
+    }
   },
   "Library": {
     "metaTitle": "Ot gwoko buk",
-    "title": "Ot gwoko buk"
+    "title": "Ot gwoko buk",
+    "searchLabel": "Yeny lok ada me moko",
+    "filter": {
+      "language": "Leb"
+    }
   },
   "Report": {
     "backToLibrary": "Ot gwoko buk",
@@ -66,9 +155,22 @@
     "metaTitle": "Ngiyo",
     "title": "Ngiyo"
   },
+  "Account": {
+    "notifications": {
+      "unreadDot": "Pe kikwano"
+    },
+    "profile": {
+      "securityTitle": "Gwoko kuc"
+    }
+  },
   "Review": {
     "queue": {
       "review": "Ngiyo"
+    }
+  },
+  "Admin": {
+    "broadcasts": {
+      "administrator": "Lador tic"
     }
   },
   "Pages": {
@@ -113,16 +215,25 @@
     }
   },
   "Auth": {
+    "meta": {
+      "signIn": "Dony Iye",
+      "signUp": "Coone Iye"
+    },
     "verify": {
-      "submit": "Ngiyo"
+      "submit": "Ngiyo",
+      "goBack": "Dok cen"
     }
   },
   "Developers": {
     "toc": {
-      "overview": "Neno weng"
+      "overview": "Neno weng",
+      "search": "Yeny lok ada me moko"
     },
     "overview": {
       "title": "Neno weng"
+    },
+    "search": {
+      "title": "Yeny lok ada me moko"
     }
   },
   "Home": {
@@ -134,13 +245,33 @@
     "metaTitle": "I kom",
     "banner": {
       "title": "I kom"
+    },
+    "methodology": {
+      "eyebrow": "Kit me tic"
+    },
+    "independence": {
+      "eyebrow": "Bedo agonya me editorial"
+    },
+    "contact": {
+      "eyebrow": "Kube"
     }
   },
   "Legal": {
     "privacy": {
+      "metaTitle": "Mung",
+      "title": "Mung",
       "sections": {
         "overview": {
           "title": "Neno weng"
+        }
+      }
+    },
+    "terms": {
+      "metaTitle": "Lok ma mako",
+      "title": "Lok ma mako",
+      "sections": {
+        "contact": {
+          "title": "Kube"
         }
       }
     }

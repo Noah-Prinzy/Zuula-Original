@@ -1,39 +1,63 @@
 {
+  "LanguageSwitcher": {
+    "label": "Angajep"
+  },
+  "Common": {
+    "tagline": "Abeit naka Uganda",
+    "signIn": "Alomar",
+    "signUp": "Kowadikaun",
+    "signOut": "Alomar kinga",
+    "backToHome": "Abongun ore",
+    "cancel": "Kogolok",
+    "save": "Ayuarite",
+    "saveChanges": "Kiswama aijulanakineta",
+    "confirm": "Itigogong",
+    "remove": "Kolema",
+    "goBack": "Abongun bobo",
+    "sampleReportTitle": "Aripoota naka aanyunet",
+    "sampleReportBody": "Itosomai eripoota lo akiro nuka aomisio kanu aitodun epone loka aitemonokin. Eripootan luka abeit edolonokinete keda AI engine.",
+    "screenInProgress": "Ejai esirin aitolot",
+    "screenInProgressBody": "Erai esirin lo ediope kotoma adukio naka Atutubet 1.",
+    "screenInProgressSpec": "Erai esirin lo ediope kotoma adukio naka Atutubet 1 ({spec}).",
+    "skipToContent": "Kobwot toma akiro",
+    "loading": "Aitodolikin",
+    "ago": "{unit, select, minute {{count} mam ber sek} hour {{count} sek sek} other {{count, plural, =1 {Abu bian kojaikin} other {# apaarasia kau}}}}"
+  },
   "Nav": {
-    "mobile": "Etelebision lo itingitai.",
+    "mobile": "Etelebision lo itingitai",
     "openMenu": "Apukor emenu",
     "tabBar": "Iboro luepedorete aingarakin atipet",
     "accountMenu": "Eikopo loka akaunt",
     "section": "Atutubet naka {section}",
     "groups": {
-      "review": "Aingic bobo.",
-      "admin": "Eswaman lo eyait.",
+      "review": "Aingic bobo",
+      "admin": "Eswaman lo eyait",
       "account": "Akaunt"
     },
     "items": {
-      "home": "Erai ore.",
+      "home": "Erai ore",
       "saved": "Ayuwara",
       "verify": "Kitogogong",
-      "library": "Eibikiro loka itabon.",
+      "library": "Eibikiro loka itabon",
       "about": "Kanuikamunitos",
-      "review": "Aingic bobo.",
-      "admin": "Eswaman lo eyait.",
+      "review": "Aingic bobo",
+      "admin": "Eswaman lo eyait",
       "reviewOverview": "Aiwanyanario",
-      "reviewQueue": "Erai aiboisit naejaasi itunga luipu.",
+      "reviewQueue": "Erai aiboisit naejaasi itunga luipu",
       "reviewHistory": "Akiro nukolo",
       "reviewCases": "Ipuakata",
       "adminOverview": "Aiwanyanario",
       "adminUsers": "Itunga lu itwasamaete",
-      "adminModeration": "Aitikitik.",
-      "adminSources": "Ipuak luka akiro.",
-      "adminBroadcasts": "Aitodianareta.",
+      "adminModeration": "Aitikitik",
+      "adminSources": "Ipuak luka akiro",
+      "adminBroadcasts": "Aitodianareta",
       "adminReports": "Aripootin",
       "adminSettings": "Aitemonokineta",
-      "profile": "Akiro nuikamunitos itunganan.",
+      "profile": "Akiro nuikamunitos itunganan",
       "activity": "Aswamisioit",
       "notifications": "Akiro nu iwanyunitai",
       "alerts": "Akiro nuikamunitos",
-      "accreditation": "Aitigogongio.",
+      "accreditation": "Aitigogongio",
       "apiKeys": "API Ikeys"
     },
     "back": "Abongun",
@@ -41,27 +65,91 @@
     "accountSheet": "Akaunt keda aitemonokineta",
     "guestTitle": "Isukunyunitai toma Zuula",
     "guestBody": "Kobwo kanu atupakinit akiro, aipim aanyanario naka akiro ka adumun aicoreta nuikamunitos nu isisianakinete.",
-    "workspaces": "Aiboisio nu aswam.",
+    "workspaces": "Aiboisio nu aswam",
     "yourAccount": "Ekaunta kon",
-    "viewProfile": "Kosesen epurofail.",
+    "viewProfile": "Kosesen epurofail",
     "appearance": "Esubit bala"
   },
   "Footer": {
+    "blurb": "AI-naepedori ajenun akiro numam eraasi nuka abeit koUganda. Etolomunitai ko Centre for Intelligent Technologies, Victoria University Kampala.",
+    "product": "Ejautene",
+    "organisation": "Atukot na eyait",
+    "legal": "Eswamae loka ikisila",
     "verify": "Kitogogong",
-    "library": "Eibikiro loka itabon.",
-    "about": "Kanuikamunitos"
+    "library": "Eibikiro loka itabon",
+    "about": "Kanuikamunitos",
+    "methodology": "Eipone lo itwasamatere",
+    "independence": "Aipugaikin bon naka ewadikan",
+    "contact": "Kontak",
+    "privacy": "Aiyeyea",
+    "terms": "Atutubena",
+    "dataProtection": "Ayuarite akiro (DPPA 2019)"
+  },
+  "Roles": {
+    "public": "Itunganan yen itosomai",
+    "journalist": "Erai ngesi arotan iyemuto lo itigogongoritai",
+    "expert": "Ecoran loepirioit",
+    "admin": "Eyaiton"
+  },
+  "Theme": {
+    "change": "Ijulakinete akirot",
+    "light": "Aica",
+    "dark": "Loirionon",
+    "system": "Erai System ibore yen itwasamao"
+  },
+  "Search": {
+    "button": "Aingic akiro nuka aanyanario...",
+    "label": "Aingic akiro nu aanyanario",
+    "dialogTitle": "Aingic akiro nu aanyanario",
+    "dialogDescription": "Aingic akiro nu itigogongoritai sek keda akiro",
+    "placeholder": "Aingic akiro, akiro, aiboisio…",
+    "empty": "Emamei acamanara. Piresi Enter kanu aimo akiro kere nuka aanyanario.",
+    "trending": "Akiro numam eraasi nuka abeit",
+    "byCategory": "Aingic kotupitete atutubet",
+    "topics": {
+      "ebola": "Amukian naka ekorona loka Ebola",
+      "elections": "2026 akiro nuelomunitos kotoma aseo",
+      "fuel": "Aiyatakin etiai loka akinyet",
+      "school": "Aijulakinio naka ekalenda loka esomero",
+      "mobileMoney": "Ebei loka isolosinei luka mobile money"
+    }
+  },
+  "Categories": {
+    "Health": "Angaleu",
+    "Politics": "Epolitikis",
+    "Elections": "Aseo",
+    "Education": "Aswam naka asioman",
+    "Technology": "Etatai loakwana",
+    "Weather": "Ekuse ka etepe",
+    "Security": "Ayuarite"
   },
   "Notifications": {
     "title": "Akiro nu iwanyunitai",
-    "label": "Akiro nu iwanyunitai"
+    "label": "Akiro nu iwanyunitai",
+    "labelUnread": "Akiro nu iwanyunitai, {count} mam esiomitai",
+    "markAllRead": "Koomakisi akiro kere nu esiomitai",
+    "unread": "Mam esiomitai",
+    "viewAll": "Asesen akiro kere nuikamunitos"
+  },
+  "RoleGate": {
+    "title": "Ejaasi aitikitik na alomar"
+  },
+  "Verdicts": {
+    "summary": {
+      "language": "Angajep"
+    }
   },
   "Library": {
-    "metaTitle": "Eibikiro loka itabon.",
-    "title": "Eibikiro loka itabon."
+    "metaTitle": "Eibikiro loka itabon",
+    "title": "Eibikiro loka itabon",
+    "searchLabel": "Aingic akiro nu aanyanario",
+    "filter": {
+      "language": "Angajep"
+    }
   },
   "Report": {
-    "backToLibrary": "Eibikiro loka itabon.",
-    "sources": "Ipuak luka akiro."
+    "backToLibrary": "Eibikiro loka itabon",
+    "sources": "Ipuak luka akiro"
   },
   "Verify": {
     "metaTitle": "Kitogogong",
@@ -71,12 +159,21 @@
     "notifications": {
       "kinds": {
         "accreditation": "Akaunt"
-      }
+      },
+      "unreadDot": "Mam esiomitai"
+    },
+    "profile": {
+      "securityTitle": "Ayuarite"
     }
   },
   "Review": {
     "queue": {
-      "review": "Aingic bobo."
+      "review": "Aingic bobo"
+    }
+  },
+  "Admin": {
+    "broadcasts": {
+      "administrator": "Eyaiton"
     }
   },
   "Pages": {
@@ -93,59 +190,88 @@
       "title": "Akiro nu iwanyunitai"
     },
     "profile": {
-      "title": "Akiro nuikamunitos itunganan."
+      "title": "Akiro nuikamunitos itunganan"
     },
     "accreditation": {
-      "title": "Aitigogongio."
+      "title": "Aitigogongio"
     },
     "broadcasts": {
-      "title": "Aitodianareta."
+      "title": "Aitodianareta"
     },
     "settings": {
       "title": "Aitemonokineta"
     },
     "moderation": {
-      "title": "Aitikitik."
+      "title": "Aitikitik"
     },
     "reports": {
       "title": "Aripootin"
     },
     "sources": {
-      "title": "Ipuak luka akiro."
+      "title": "Ipuak luka akiro"
     },
     "users": {
       "title": "Itunga lu itwasamaete"
     }
   },
   "Auth": {
+    "meta": {
+      "signIn": "Alomar",
+      "signUp": "Kowadikaun"
+    },
     "verify": {
-      "submit": "Kitogogong"
+      "submit": "Kitogogong",
+      "goBack": "Abongun bobo"
     }
   },
   "Developers": {
     "toc": {
-      "overview": "Aiwanyanario"
+      "overview": "Aiwanyanario",
+      "search": "Aingic akiro nu aanyanario"
     },
     "overview": {
       "title": "Aiwanyanario"
+    },
+    "search": {
+      "title": "Aingic akiro nu aanyanario"
     }
   },
   "Home": {
     "feed": {
-      "link": "Eibikiro loka itabon."
+      "link": "Eibikiro loka itabon"
     }
   },
   "About": {
     "metaTitle": "Kanuikamunitos",
     "banner": {
       "title": "Kanuikamunitos"
+    },
+    "methodology": {
+      "eyebrow": "Eipone lo itwasamatere"
+    },
+    "independence": {
+      "eyebrow": "Aipugaikin bon naka ewadikan"
+    },
+    "contact": {
+      "eyebrow": "Kontak"
     }
   },
   "Legal": {
     "privacy": {
+      "metaTitle": "Aiyeyea",
+      "title": "Aiyeyea",
       "sections": {
         "overview": {
           "title": "Aiwanyanario"
+        }
+      }
+    },
+    "terms": {
+      "metaTitle": "Atutubena",
+      "title": "Atutubena",
+      "sections": {
+        "contact": {
+          "title": "Kontak"
         }
       }
     }

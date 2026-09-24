@@ -1,81 +1,181 @@
 {
+  "LanguageSwitcher": {
+    "label": "Olulimi"
+  },
+  "Common": {
+    "tagline": "Uganda Fact-Guard yeeyongera okukuuma amazima",
+    "signIn": "Yingira mu akawunti",
+    "signUp": "Weerandiisa",
+    "signOut": "Okufuluma",
+    "backToHome": "Okudda ewaka",
+    "cancel": "Kikomya",
+    "save": "Tereka",
+    "saveChanges": "Tereka enkyukakyuka",
+    "confirm": "Kakasa",
+    "remove": "Ggyako",
+    "goBack": "Ddayo emabega",
+    "sampleReportTitle": "Alipoota ya sampolo",
+    "sampleReportBody": "Alipoota eno ekozesa obubaka obutali bwa ddala okulaga engeri gye kinaakolebwamu. Alipoota entuufu zijja ne yingini ya AI.",
+    "screenInProgress": "Ekirawuli kiri mu kukolebwa",
+    "screenInProgressBody": "Ekifaananyi kino kitundu ku kuzimba kwa Phase 1.",
+    "screenInProgressSpec": "Ekirawuli kino kitundu ku kuzimba kwa Phase 1 ({spec}).",
+    "skipToContent": "Skip ku by'okulaba",
+    "loading": "Okutikka",
+    "justNow": "kati kennyini",
+    "ago": "{unit, select, minute {{count} edakiika eziyise} hour {{count} emabega} other {{count, plural, =1 {eggulo} other {# ennaku eziyise}}}}"
+  },
   "Nav": {
-    "main": "Ekikulu.",
-    "openMenu": "Ggula menu.",
+    "main": "Ekikulu",
+    "openMenu": "Ggula menu",
     "tabBar": "Obulango obw'amangu",
-    "accountMenu": "Mmeenyu ya akawunta.",
+    "accountMenu": "Mmeenyu ya akawunta",
     "section": "Ekitundu {section}",
     "groups": {
-      "review": "Okuddamu okwekenneenya.",
+      "review": "Okuddamu okwekenneenya",
       "account": "Akawunti"
     },
     "items": {
       "home": "Eka",
-      "saved": "Kikuumiddwa.",
-      "verify": "Kakasa.",
-      "library": "Ettendekero ly'ebitabo.",
+      "saved": "Kikuumiddwa",
+      "verify": "Kakasa",
+      "library": "Ettendekero ly'ebitabo",
       "about": "Ku bikwata ku",
-      "review": "Okuddamu okwekenneenya.",
-      "reviewOverview": "Okutunuulira mu bufunze.",
-      "reviewQueue": "Olunyiriri.",
+      "review": "Okuddamu okwekenneenya",
+      "reviewOverview": "Okutunuulira mu bufunze",
+      "reviewQueue": "Olunyiriri",
       "reviewHistory": "Ebyafaayo",
-      "reviewCases": "Emisango.",
-      "adminOverview": "Okutunuulira mu bufunze.",
-      "adminUsers": "Abakozesa.",
-      "adminModeration": "Okwewala okukola ekisukkiridde.",
+      "reviewCases": "Emisango",
+      "adminOverview": "Okutunuulira mu bufunze",
+      "adminUsers": "Abakozesa",
+      "adminModeration": "Okwewala okukola ekisukkiridde",
       "adminSources": "Ensibuko",
-      "adminBroadcasts": "Okuweereza ku mpewo.",
-      "adminReports": "Alipoota.",
+      "adminBroadcasts": "Okuweereza ku mpewo",
+      "adminReports": "Alipoota",
       "adminAuditLog": "Ekiwandiiko kya Audit",
       "adminSettings": "Ebyokutegeka",
-      "profile": "Ebikwata ku muntu.",
+      "profile": "Ebikwata ku muntu",
       "activity": "Ekikolwa",
-      "notifications": "Obubaka obulabula.",
-      "alerts": "Obulabula.",
-      "accreditation": "Okukakasa omutindo.",
+      "notifications": "Obubaka obulabula",
+      "alerts": "Obulabula",
+      "accreditation": "Okukakasa omutindo",
       "apiKeys": "API Ebisumuluzo"
     },
     "back": "Emabega",
     "backTo": "Okudda ku {page}",
-    "accountSheet": "Akaawunti n'enteekateeka.",
+    "accountSheet": "Akaawunti n'enteekateeka",
     "guestTitle": "Tukwanirizza ku Zuula",
     "guestBody": "Yingira okugoberera ebyogerwa, okupima okukebera amazima n'okufuna okulabulwa ku ebyo ebyeyongera okusaasaana.",
-    "workspaces": "Ebifo by'okukoleramu.",
+    "workspaces": "Ebifo by'okukoleramu",
     "yourAccount": "Akawunti yo",
-    "viewProfile": "Laba ebikwata ku muntu.",
+    "viewProfile": "Laba ebikwata ku muntu",
     "appearance": "Endabika"
   },
   "Footer": {
-    "verify": "Kakasa.",
-    "library": "Ettendekero ly'ebitabo.",
-    "about": "Ku bikwata ku"
+    "blurb": "Okuzuula amawulire ag'obulimba agataliiko maanyi ga AI mu Uganda. Kwatondebwa Centre for Intelligent Technologies, Victoria University Kampala.",
+    "product": "Ekintu ekikolebwa",
+    "organisation": "Ekitongole",
+    "legal": "Eby'amateeka",
+    "verify": "Kakasa",
+    "library": "Ettendekero ly'ebitabo",
+    "about": "Ku bikwata ku",
+    "methodology": "Enkola y'okunoonyereza",
+    "independence": "Obwetwaze mu by'amawulire",
+    "contact": "Okutuukirira",
+    "privacy": "Ebyama",
+    "terms": "Emigambo",
+    "dataProtection": "Okukuuma obubaka (DPPA 2019)"
+  },
+  "Roles": {
+    "public": "Omukozesa wa lujjudde",
+    "journalist": "Munnamawulire akakasiddwa",
+    "expert": "Omwekenneenya Omukugu",
+    "admin": "Omukulembeze"
+  },
+  "Theme": {
+    "change": "Kyusa theme",
+    "light": "Ekitangaala",
+    "dark": "Ekizikiza",
+    "system": "Enkola"
+  },
+  "Search": {
+    "button": "Noonya okukebera amazima…",
+    "label": "Noonya okukebera amazima",
+    "dialogTitle": "Noonya okukebera amazima",
+    "dialogDescription": "Noonya ebyo ebyakakasibwa edda n'ebitundu",
+    "placeholder": "Noonya ebiwandiiko, emitwe, ensibuko…",
+    "empty": "Tewali bigya. Ponda Enter okunoonya fact-checks zonna.",
+    "trending": "Obubaka obukyamu obutambula ennyo",
+    "byCategory": "Noonya mu kiti",
+    "shortcut": "Ctrl K kitegeeza ki?",
+    "topics": {
+      "ebola": "Okujjanjaba Ebola kwe kwogerebwako",
+      "elections": "2026 ebivudde mu kulonda",
+      "fuel": "Okulinnya kw'ebbeeyi ya amafuta",
+      "school": "Enkyukakyuka mu kalenda y'essomero",
+      "mobileMoney": "Omusolo ku ssente ezitambuzibwa ku ssimu"
+    }
+  },
+  "Categories": {
+    "Health": "Obulamu",
+    "Politics": "Ebyobufuzi",
+    "Elections": "Okulonda",
+    "Economy": "Ebyenfuna",
+    "Education": "Eby'enjigiriza",
+    "Technology": "Tekinologiya",
+    "Weather": "Embeera y'obudde",
+    "Security": "Ebyokwerinda"
   },
   "Notifications": {
-    "title": "Obubaka obulabula.",
-    "label": "Obubaka obulabula."
+    "title": "Obubaka obulabula",
+    "label": "Obubaka obulabula",
+    "labelUnread": "Obubaka, {count} tebusomeddwa",
+    "markAllRead": "Marka byonna ebisomeddwa",
+    "unread": "Etasomeddwa",
+    "viewAll": "Laba obubaka bwonna obulabula"
+  },
+  "RoleGate": {
+    "title": "Okutuuka kukugiriddwa"
+  },
+  "Verdicts": {
+    "summary": {
+      "language": "Olulimi"
+    }
   },
   "Library": {
-    "metaTitle": "Ettendekero ly'ebitabo.",
-    "title": "Ettendekero ly'ebitabo."
+    "metaTitle": "Ettendekero ly'ebitabo",
+    "title": "Ettendekero ly'ebitabo",
+    "searchLabel": "Noonya okukebera amazima",
+    "filter": {
+      "language": "Olulimi"
+    }
   },
   "Report": {
-    "backToLibrary": "Ettendekero ly'ebitabo.",
+    "backToLibrary": "Ettendekero ly'ebitabo",
     "sources": "Ensibuko"
   },
   "Verify": {
-    "metaTitle": "Kakasa.",
-    "title": "Kakasa."
+    "metaTitle": "Kakasa",
+    "title": "Kakasa"
   },
   "Account": {
     "notifications": {
       "kinds": {
         "accreditation": "Akawunti"
-      }
+      },
+      "unreadDot": "Etasomeddwa"
+    },
+    "profile": {
+      "securityTitle": "Ebyokwerinda"
     }
   },
   "Review": {
     "queue": {
-      "review": "Okuddamu okwekenneenya."
+      "review": "Okuddamu okwekenneenya"
+    }
+  },
+  "Admin": {
+    "broadcasts": {
+      "administrator": "Omukulembeze"
     }
   },
   "Pages": {
@@ -83,71 +183,100 @@
       "title": "Ekikolwa"
     },
     "alerts": {
-      "title": "Obulabula."
+      "title": "Obulabula"
     },
     "apiKeys": {
       "title": "API Ebisumuluzo"
     },
     "notifications": {
-      "title": "Obubaka obulabula."
+      "title": "Obubaka obulabula"
     },
     "profile": {
-      "title": "Ebikwata ku muntu."
+      "title": "Ebikwata ku muntu"
     },
     "accreditation": {
-      "title": "Okukakasa omutindo."
+      "title": "Okukakasa omutindo"
     },
     "auditLog": {
       "title": "Ekiwandiiko kya Audit"
     },
     "broadcasts": {
-      "title": "Okuweereza ku mpewo."
+      "title": "Okuweereza ku mpewo"
     },
     "settings": {
       "title": "Ebyokutegeka"
     },
     "moderation": {
-      "title": "Okwewala okukola ekisukkiridde."
+      "title": "Okwewala okukola ekisukkiridde"
     },
     "reports": {
-      "title": "Alipoota."
+      "title": "Alipoota"
     },
     "sources": {
       "title": "Ensibuko"
     },
     "users": {
-      "title": "Abakozesa."
+      "title": "Abakozesa"
     }
   },
   "Auth": {
+    "meta": {
+      "signIn": "Yingira mu akawunti",
+      "signUp": "Weerandiisa"
+    },
     "verify": {
-      "submit": "Kakasa."
+      "submit": "Kakasa",
+      "goBack": "Ddayo emabega"
     }
   },
   "Developers": {
     "toc": {
-      "overview": "Okutunuulira mu bufunze."
+      "overview": "Okutunuulira mu bufunze",
+      "search": "Noonya okukebera amazima"
     },
     "overview": {
-      "title": "Okutunuulira mu bufunze."
+      "title": "Okutunuulira mu bufunze"
+    },
+    "search": {
+      "title": "Noonya okukebera amazima"
     }
   },
   "Home": {
     "feed": {
-      "link": "Ettendekero ly'ebitabo."
+      "link": "Ettendekero ly'ebitabo"
     }
   },
   "About": {
     "metaTitle": "Ku bikwata ku",
     "banner": {
       "title": "Ku bikwata ku"
+    },
+    "methodology": {
+      "eyebrow": "Enkola y'okunoonyereza"
+    },
+    "independence": {
+      "eyebrow": "Obwetwaze mu by'amawulire"
+    },
+    "contact": {
+      "eyebrow": "Okutuukirira"
     }
   },
   "Legal": {
     "privacy": {
+      "metaTitle": "Ebyama",
+      "title": "Ebyama",
       "sections": {
         "overview": {
-          "title": "Okutunuulira mu bufunze."
+          "title": "Okutunuulira mu bufunze"
+        }
+      }
+    },
+    "terms": {
+      "metaTitle": "Emigambo",
+      "title": "Emigambo",
+      "sections": {
+        "contact": {
+          "title": "Okutuukirira"
         }
       }
     }

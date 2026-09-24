@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation"
 import { useLocale } from "next-intl"
 
 import { setLocaleCookie } from "@/i18n/actions"
-import { authApi, type UserProfile } from "@/lib/api"
+import { authApi, authMode, type UserProfile } from "@/lib/api"
+import { demoAuthApi } from "@/lib/demo-auth"
 import type { LocaleCode } from "@/lib/locales"
 import { ROLE_LABELS, type Role } from "@/lib/roles"
 
@@ -19,6 +20,11 @@ import { ROLE_LABELS, type Role } from "@/lib/roles"
 //    authentication: the API never sees it and grants nothing for it. Off unless the build sets
 //    NEXT_PUBLIC_ROLE_SWITCHER="true" (local dev, demo deploys); without it every gate in the
 //    app (RoleGate, the rating panel, …) depends on the real session alone.
+//
+// Demo mode (authMode() "demo": no API configured) is the exception: there is no real session
+// to protect, "account" comes from lib/demo-auth.ts's browser-only sign-in, and the bar is the
+// old "Demo: view as" switcher that signs straight in as the chosen role (on unless
+// NEXT_PUBLIC_ROLE_SWITCHER="false").
 
 export type SessionUser = {
   name: string
@@ -33,8 +39,10 @@ type SessionContextValue = {
   role: Role | null
   /** Where `user` came from, or null when signed out and not previewing. */
   source: SessionSource | null
-  /** Whether role previews are allowed at all (NEXT_PUBLIC_ROLE_SWITCHER="true"). */
+  /** Whether the role bar is shown at all (NEXT_PUBLIC_ROLE_SWITCHER, and demo mode). */
   previewEnabled: boolean
+  /** Demo sign-in (no API configured): sign-in accepts anything and grants nothing. */
+  demo: boolean
   /** The UI language (NEXT_LOCALE cookie, via next-intl). */
   locale: LocaleCode
   /** True while a language switch is re-rendering the page. */
@@ -45,7 +53,8 @@ type SessionContextValue = {
   setAccount: (user: UserProfile) => void
   /** Re-read the session from the API (e.g. after a password reset revoked it). */
   refresh: () => Promise<void>
-  /** Preview the UI as a sample user of `role` (null: stop previewing). Ignored when signed in. */
+  /** Preview the UI as a sample user of `role` (null: stop previewing). Ignored when signed in.
+   * In demo mode it signs in as that sample user instead (null: sign out). */
   previewAs: (role: Role | null) => void
   /** Ends the real session with the API, or stops previewing. Rejects if the API call fails. */
   signOut: () => Promise<void>
@@ -61,7 +70,8 @@ export const PREVIEW_USERS: Record<Role, SessionUser> = {
 }
 
 export function previewEnabled() {
-  return process.env.NEXT_PUBLIC_ROLE_SWITCHER === "true"
+  const flag = process.env.NEXT_PUBLIC_ROLE_SWITCHER
+  return flag === "true" || (flag !== "false" && authMode() === "demo")
 }
 
 // ---- Preview role: per browser (localStorage), so it survives navigation and reloads ----
@@ -171,6 +181,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, [signedIn])
 
   const allowPreview = previewEnabled()
+  const demo = authMode() === "demo"
   const value = React.useMemo<SessionContextValue>(() => {
     let user: SessionUser | null = null
     let source: SessionSource | null = null
@@ -186,18 +197,22 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       role: user?.role ?? null,
       source,
       previewEnabled: allowPreview,
+      demo,
       locale,
       switchingLocale,
       ready: account.status !== "checking",
       setAccount,
       refresh,
       previewAs: (r) => {
-        if (account.status !== "signed-in") setPreviewRole(r)
+        if (demo) {
+          if (r) setAccount(demoAuthApi.signInAs(r))
+          else void signOut()
+        } else if (account.status !== "signed-in") setPreviewRole(r)
       },
       signOut,
       setLocale,
     }
-  }, [account, allowPreview, preview.role, locale, switchingLocale, setAccount, refresh, signOut, setLocale])
+  }, [account, allowPreview, demo, preview.role, locale, switchingLocale, setAccount, refresh, signOut, setLocale])
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
 }

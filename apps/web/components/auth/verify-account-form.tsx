@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { AuthHeading } from "@/components/auth/auth-heading"
+import { DemoHint } from "@/components/auth/demo-hint"
 import { CodeInput } from "@/components/auth/code-input"
 import { usePendingAuth } from "@/components/auth/use-pending-auth"
 import { useSession } from "@/components/providers/session-provider"
@@ -87,6 +88,7 @@ export function VerifyAccountForm() {
           strong: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
         })}
       />
+      <DemoHint kind="code" />
       <form
         noValidate
         onSubmit={(e) => {

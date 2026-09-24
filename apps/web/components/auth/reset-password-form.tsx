@@ -11,6 +11,7 @@ import { toast } from "sonner"
 import type { z } from "zod"
 
 import { AuthHeading } from "@/components/auth/auth-heading"
+import { DemoHint } from "@/components/auth/demo-hint"
 import { CodeInput } from "@/components/auth/code-input"
 import { FormError } from "@/components/auth/form-error"
 import { PasswordInput } from "@/components/auth/password-input"
@@ -86,6 +87,7 @@ export function ResetPasswordForm() {
           strong: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
         })}
       />
+      <DemoHint kind="code" />
       <FormError message={error} />
 
       <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">

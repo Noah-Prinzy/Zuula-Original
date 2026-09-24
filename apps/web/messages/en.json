@@ -94,7 +94,8 @@
     "viewAs": "Demo: view as",
     "signedOut": "Signed out",
     "previewAs": "Preview as",
-    "previewNote": "Not signed in. Previews use sample data and grant no access."
+    "previewNote": "Not signed in. Previews use sample data and grant no access.",
+    "demoNote": "Demo sign-in: sample data, nothing is sent to a server."
   },
   "Theme": {
     "change": "Change theme",
@@ -1403,6 +1404,10 @@
         "3": "Good",
         "4": "Strong"
       }
+    },
+    "demo": {
+      "roles": "Demo: any password works. Start the address with <code>journalist@</code>, <code>expert@</code> or <code>admin@</code> to try other roles.",
+      "code": "Demo: any 6 digits work, except 000000."
     },
     "social": {
       "divider": "or continue with",

@@ -10,12 +10,14 @@ import { ROLES, type Role } from "@/lib/roles"
 // Role preview, not sign-in: while nobody is signed in, look at the role-gated screens (still
 // on mock content) as a sample user. It never reaches the API. Hidden once someone really
 // signs in (their own role applies everywhere), and unless NEXT_PUBLIC_ROLE_SWITCHER is "true".
+// In demo mode (no API configured) it's the "Demo: view as" bar again: picking a role signs in
+// as that sample user, and it stays visible while signed in.
 export function RoleSwitcher() {
-  const { role, ready, source, previewEnabled, previewAs } = useSession()
+  const { role, ready, source, previewEnabled, demo, previewAs } = useSession()
   const t = useTranslations("Demo")
   const tr = useTranslations("Roles")
 
-  if (!previewEnabled || !ready || source === "account") return null
+  if (!previewEnabled || !ready || (source === "account" && !demo)) return null
 
   return (
     // A labelled landmark, so screen-reader users can find (or skip) the demo controls.
@@ -24,7 +26,7 @@ export function RoleSwitcher() {
       className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 border-b bg-muted px-4 py-1 text-xs text-muted-foreground"
     >
       <RiFlaskLine className="size-3.5" aria-hidden />
-      <label htmlFor="role-switcher">{t("previewAs")}</label>
+      <label htmlFor="role-switcher">{demo ? t("viewAs") : t("previewAs")}</label>
       <NativeSelect
         id="role-switcher"
         size="sm"
@@ -42,7 +44,7 @@ export function RoleSwitcher() {
           </NativeSelectOption>
         ))}
       </NativeSelect>
-      <span id="role-switcher-note">{t("previewNote")}</span>
+      <span id="role-switcher-note">{demo ? t("demoNote") : t("previewNote")}</span>
     </aside>
   )
 }

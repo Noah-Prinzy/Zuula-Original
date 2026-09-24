@@ -60,6 +60,10 @@ npm run dev
 
 Checks: `npm run lint`, `npm run typecheck`, `npm test`.
 
+### Demo sign-in (until the API is hosted)
+
+A production build with no `NEXT_PUBLIC_API_URL` (the deployed site today) uses a browser-only demo sign-in instead of the API (`lib/demo-auth.ts`): any password works, the part of the address before `@` picks the role (`admin@`, `expert@`, `journalist@`, anything else is a Public User), codes are any 6 digits except `000000`, and the "Demo: view as" bar switches roles directly. Nothing is sent anywhere and nothing is protected. Setting `NEXT_PUBLIC_API_URL` switches to real sign-in; `NEXT_PUBLIC_AUTH_MODE=api|demo` forces either.
+
 ### Signing in locally
 
 Sign-in needs `apps/api` running with its database (see [its README](../api/README.md)). Then:

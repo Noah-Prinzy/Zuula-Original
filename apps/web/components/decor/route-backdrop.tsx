@@ -18,7 +18,27 @@ import { usePagePath } from "@/hooks/use-page-path"
 export function RouteBackdrop() {
   const pathname = usePagePath()
   const entry = photoForPath(pathname)
+  const allowed = useBackdropVideoAllowed()
+  const hydrated = useSyncExternalStore(
+    noSubscribe,
+    () => true,
+    () => false
+  )
+  // Hydrating this late, the CSS fallback below has already faded the photo in: keep it.
+  const [stalled, setStalled] = useState<string | undefined>(() =>
+    typeof window !== "undefined" && performance.now() > STALL_MS
+      ? entry?.video?.src
+      : undefined
+  )
   if (!entry || entry.ownHero) return null
+
+  // Where a clip plays, the photo stays hidden: showing it first, then fading an unrelated
+  // clip in over it, reads as a flash. It's still the fallback: shown for reduced motion
+  // (in CSS), once we know the clip won't play here (Data Saver, slow connection), and if
+  // the clip fails to start. Until hydration decides, a CSS animation shows it after
+  // STALL_MS anyway, so a slow-loading page never sits on a bare background.
+  const video = entry.video?.src
+  const showPhoto = !video || (hydrated && (!allowed || stalled === video))
 
   return (
     <div
@@ -33,10 +53,20 @@ export function RouteBackdrop() {
         preload
         quality={PHOTO_QUALITY}
         sizes="(max-width: 767px) max(60vw, 90vh), max(100vw, 150vh)"
-        className="object-cover"
-        style={{ objectPosition: entry.position ?? "center" }}
+        style={{
+          objectPosition: entry.position ?? "center",
+          transitionDuration: `${FADE_MS}ms`,
+          animation:
+            video && !hydrated
+              ? `zuula-show ${FADE_MS}ms ${STALL_MS}ms forwards`
+              : undefined,
+        }}
+        className={cn(
+          "object-cover transition-opacity motion-reduce:opacity-100",
+          !showPhoto && "opacity-0"
+        )}
       />
-      <BackdropVideos src={entry.video?.src} />
+      <BackdropVideos src={video} onStall={setStalled} />
       <div className="absolute inset-0 bg-black/60" />
     </div>
   )
@@ -59,6 +89,8 @@ const connection = () =>
   typeof navigator === "undefined"
     ? undefined
     : (navigator as Navigator & { connection?: NetworkInformation }).connection
+
+const noSubscribe = () => () => {}
 
 function subscribe(onChange: () => void) {
   const motion = window.matchMedia("(prefers-reduced-motion: reduce)")
@@ -83,6 +115,8 @@ function canPlayVideo() {
 }
 
 const FADE_MS = 700
+// A clip that hasn't started playing by now (failed, or autoplay blocked) shows the photo.
+const STALL_MS = 4000
 
 // Every background clip, so the one for the page you're heading to can be fetched ahead.
 const ALL_VIDEOS = [...new Set(ROUTE_VIDEOS)]
@@ -94,7 +128,13 @@ type Layer = { src: string; playing: boolean; leaving: boolean }
 // photo in between); moving to a page without a clip fades it out. Clips are muted, looping
 // and inline, so browsers allow autoplay, and greyscale, so the pair reads as one set.
 // The layout that renders this persists across auth pages, so the state survives navigation.
-function BackdropVideos({ src }: { src?: string }) {
+function BackdropVideos({
+  src,
+  onStall,
+}: {
+  src?: string
+  onStall: (src: string) => void
+}) {
   const allowed = useBackdropVideoAllowed()
   const wanted = allowed ? src : undefined
   const [layers, setLayers] = useState<Layer[]>([])
@@ -118,6 +158,12 @@ function BackdropVideos({ src }: { src?: string }) {
 
   const top = layers.at(-1)
   const topReady = !!top && top.playing && !top.leaving
+
+  useEffect(() => {
+    if (!wanted || topReady) return
+    const t = window.setTimeout(() => onStall(wanted), STALL_MS)
+    return () => window.clearTimeout(t)
+  }, [wanted, topReady, onStall])
 
   // Clips underneath are dropped when the top clip's fade-in finishes (transitionend, below);
   // this timer is only a fallback in case that event never fires.
@@ -165,7 +211,7 @@ function BackdropVideos({ src }: { src?: string }) {
               visible && "opacity-100"
             )}
           >
-            <VideoSources src={l.src} />
+            <VideoSources src={l.src} onError={() => onStall(l.src)} />
           </video>
         )
       })}
@@ -180,12 +226,13 @@ function BackdropVideos({ src }: { src?: string }) {
   )
 }
 
-// VP9 WebM first (smaller, and plays in browsers without H.264), then H.264 MP4.
-function VideoSources({ src }: { src: string }) {
+// VP9 WebM first (smaller, and plays in browsers without H.264), then H.264 MP4. A failed
+// source reports on the <source>, not the <video>; the last one failing means none played.
+function VideoSources({ src, onError }: { src: string; onError?: () => void }) {
   return (
     <>
       <source src={`${src}.webm`} type="video/webm" />
-      <source src={`${src}.mp4`} type="video/mp4" />
+      <source src={`${src}.mp4`} type="video/mp4" onError={onError} />
     </>
   )
 }

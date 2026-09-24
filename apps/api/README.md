@@ -187,6 +187,16 @@ the stub's demo account, and an unconfigured WhatsApp/Telegram webhook refuses e
 | WhatsApp | Graph API messages; inbound calls must carry a valid `X-Hub-Signature-256` | `WHATSAPP_*` |
 | Telegram | `sendMessage`; inbound calls must carry `X-Telegram-Bot-Api-Secret-Token` | `TELEGRAM_*` |
 
+**Languages (Sunbird AI).** `app/providers/language.py` detects which of the five languages a
+submission is in and translates between them and English with Sunbird AI's API
+(`/tasks/language_id`, `/tasks/nllb_translate`) whenever `SUNBIRD_API_KEY` is set, and with a
+stub that marks its "translations" `[stub-translation xx->yy]` otherwise. In the pipeline, the
+`language` step detects the language when the submitter chose `auto`; Luganda, Acholi,
+Runyankole and Ateso text is translated into English before `claims`; and the report's title,
+summary, what's false/true and claim reasons are translated back (FR-EXPLAIN-05). If Sunbird
+fails, the submission is still checked: untranslated, with an English explanation. See
+[ADR 0003](../../docs/adr/0003-language-provider.md).
+
 The hosted AI provider (`ANALYSIS_PROVIDER`, `ANALYSIS_PROVIDER_REGION`) is P4's, and stays
 switchable because sending submissions to a model hosted outside Uganda is an open
 data-protection question (ADR 0001).
@@ -208,7 +218,8 @@ app/
   webhooks/          Inbound WhatsApp/Telegram webhooks
   adapters/          The integrations: one interface, a real implementation and a dev stub
                      each; readiness.py picks between them and guards production
-  providers/         AnalysisProvider (the pipeline's AI step; a stub until P4)
+  providers/         AnalysisProvider (the pipeline's AI step; a stub until P4) and
+                     LanguageProvider (Sunbird AI detection and translation)
   realtime/          Redis clients and submission pub/sub
   worker/            Celery app, the pipeline, messaging, admin tasks, dispatch
 migrations/          Alembic (async env)

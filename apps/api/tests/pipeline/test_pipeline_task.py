@@ -109,3 +109,67 @@ async def test_low_confidence_verdicts_open_a_review_case(db, monkeypatch):
 async def test_chat_messages_become_submissions():
     assert chat_fields("https://example.com/story")["type"] == "url"
     assert chat_fields("Is it true schools close next week?")["type"] == "text"
+
+
+# ---- Language (ADR 0003): detect, translate into English, explain back ----
+
+LUGANDA = "Gavumenti egamba nti ssente zijja kweyongera, naye era abantu beewuunya."
+
+
+class _Recording:
+    """The stub, recording what the analysis provider was handed."""
+
+    def __init__(self):
+        self.seen = {}
+
+    def analyze(self, *, content_type, text, language):
+        from app.providers.analysis import StubAnalysisProvider
+
+        self.seen = {"text": text, "language": language}
+        return StubAnalysisProvider().analyze(content_type=content_type, text=text, language=language)
+
+
+async def test_ugandan_language_text_is_translated_in_and_explained_back(db, monkeypatch):
+    recording = _Recording()
+    monkeypatch.setattr("app.worker.pipeline.get_analysis_provider", lambda: recording)
+    s = await _submit(db, {"type": "text", "content": LUGANDA, "language": "auto"})
+    await run_pipeline(db, s.tracking_id)
+
+    report = (await db.scalars(select(m.FactCheckReport).where(m.FactCheckReport.tracking_id == s.tracking_id))).one()
+    # Detected as Luganda; the verdict engine read English; the reader gets Luganda back.
+    assert report.language == "Luganda"
+    assert recording.seen == {"text": f"[stub-translation lg->en] {LUGANDA}", "language": "en"}
+    assert report.summary.startswith("[stub-translation en->lg] ")
+    assert report.title.startswith("[stub-translation en->lg] ")
+    assert all(c["reason"].startswith("[stub-translation en->lg] ") for c in report.claims)
+    # What the person submitted is stored as they wrote it.
+    assert report.submitted_text == LUGANDA
+
+
+async def test_english_is_neither_translated_nor_relabelled(db, monkeypatch):
+    recording = _Recording()
+    monkeypatch.setattr("app.worker.pipeline.get_analysis_provider", lambda: recording)
+    text = "The minister said that fuel prices will double and this is the plan."
+    s = await _submit(db, {"type": "text", "content": text, "language": "auto"})
+    await run_pipeline(db, s.tracking_id)
+    report = (await db.scalars(select(m.FactCheckReport).where(m.FactCheckReport.tracking_id == s.tracking_id))).one()
+    assert report.language == "English" and recording.seen["text"] == text
+    assert "stub-translation" not in report.summary
+
+
+async def test_a_language_provider_outage_still_produces_a_report(db, monkeypatch):
+    class Down:
+        async def detect(self, *, text):
+            raise ConnectionError("Sunbird is down")
+
+        async def translate(self, **kwargs):
+            raise ConnectionError("Sunbird is down")
+
+    monkeypatch.setattr("app.worker.pipeline.get_language_provider", Down)
+    s = await _submit(db, {"type": "text", "content": LUGANDA, "language": "lg"})
+    await run_pipeline(db, s.tracking_id)
+    await db.refresh(s)
+    assert s.status == "completed"
+    report = (await db.scalars(select(m.FactCheckReport).where(m.FactCheckReport.tracking_id == s.tracking_id))).one()
+    # The explicit choice needs no detection; the explanation stays in English.
+    assert report.language == "Luganda" and "stub-translation" not in report.summary
